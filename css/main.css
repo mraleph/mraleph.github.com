@@ -1,0 +1,133 @@
+input { 
+    margin: 2px;    
+    width: 220px;
+    border: 1px solid #999;
+    font-size: 1em;
+}
+
+html {
+  height: 100%;
+}
+
+.icon {
+  background-color: #c00;
+}
+
+body {
+  font-family: Helvetica, "Century Gothic","Trebuchet MS","Arial Narrow",Arial,sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#prehead {
+  height: 5px;
+}
+
+#head {
+  text-align:  right;
+  font-family: 'Open Sans';
+  font-weight: 600;
+  font-size: 60px;
+  height:  60px;
+  background: top left url(/images/mraleph1.png) no-repeat;    
+}
+
+#container {
+  width:  760px;
+  text-align: right;
+  margin: 0 auto;
+  position: relative;
+  background: #fff;
+  padding: 0px 10px 0px 10px;
+  min-height: 100%;
+}
+
+.menu {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+
+#center {
+    text-align: justify;
+}
+
+a {
+  color: #c00;
+  text-decoration:  none;
+}
+
+a:hover {
+  text-decoration:  underline;
+}
+
+p, blockquote, li {
+  font-size:  14px;
+  line-height:  18px;
+  text-align:  left;
+  padding-left:  10px;
+  padding-right:  10px;
+}
+
+blockquote {
+  margin-left:  20px;
+  margin-right:  0px;
+}
+
+ul { 
+    list-style-type:square;
+}
+
+h1.title {
+    color: black;
+    font-weight:  normal;
+    font-size:  40px;
+    letter-spacing:  0.1em;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+h2.subtitle {
+    margin-top: 0px;
+}
+
+h3 {
+  font-weight:  normal;
+  border:  0px;
+  font-weight:  bold;
+  font-size:  16px;
+}
+
+.caps {
+  letter-spacing:  0.1em;
+  font-size:  12px;
+}
+
+pre {
+    text-align: left;
+}
+
+li {
+  margin-top: 3px;
+}
+
+.CodeMirror-wrapping {
+  background: white;
+  padding: 5px;
+  border:1px solid #888;
+}
+
+/* google-prettify */
+
+.str,.atv{color:#080}
+.kwd,.tag{color:#008}
+.com{color:#800}
+.typ,.atn,.dec{color:#606}
+.lit{color:#066}
+.pun{color:#660}
+.pln{color:#000}
+pre.prettyprint { 
+  padding: 5px;
+  border-left:1px solid #888
+}
