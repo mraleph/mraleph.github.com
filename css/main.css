@@ -25,12 +25,9 @@ body {
 }
 
 #head {
-  text-align:  right;
-  font-family: 'Open Sans';
-  font-weight: 600;
-  font-size: 60px;
-  height:  60px;
-  background: top left url(/images/mraleph1.png) no-repeat;    
+  text-align: left;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 #container {
