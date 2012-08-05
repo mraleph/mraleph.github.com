@@ -1,14 +1,41 @@
+---
+---
+
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
 <head>
 <link href='http://fonts.googleapis.com/css?family=Gloria+Hallelujah' rel='stylesheet' type='text/css'>
 <title>mraleph</title>
 <link rel="stylesheet" href="css/main.css" type="text/css">
+
+<style type="text/css">
+body {
+  background: whitesmoke;
+  font-family: 'Gloria Hallelujah', monospace, cursive;
+  margin-top: 2em;
+}
+
+.box {
+  width: 18em;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.whitebox {
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 8px #aaa;
+  border-radius: 5px;
+}
+
+
+</style>
+
 </head>
-<body style="background: whiteSmoke;">
-<div style="text-align: center; margin-top: 60px;">
-  <div style="display: inline-block; padding: 20px; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 8px #aaa; border-radius: 5px; padding-top: 5px;">
-    <div style="font-family: 'Gloria Hallelujah', monospace, cursive; font-size: 40pt;">
+<body>
+  <div class="box">
+    <div style="font-size: 40pt;">
       <span style="color: #CC0000;">MR</span>ALEPH
     </div>
     <div style="font-size: smaller; display: inline-block;">
@@ -19,14 +46,17 @@
       <a href="http://ru.linkedin.com/in/mraleph"><img src="http://linkedin.com/favicon.ico" alt="linkedin" title="linkedin"></a>
       <a href="http://www.last.fm/user/mraleph"><img src="http://www.last.fm/favicon.ico" alt="lastfm" title="lastfm"></a>
     </div>
-    <br/>
-    <div style="margin-top: 20px; clear:both; display: inline-block; font-family: 'Gloria Hallelujah', monospace, cursive;">
+    <div style="margin-top: 1em; margin-bottom: 1em;">
       Crazy Russian compiler engineer.
-    </div><br/>
-    <div style="margin-top: 0px; clear:both; display: inline-block; font-family: 'Gloria Hallelujah', monospace; font-size: 14px;">
-      &#12296;with a <a href="http://blog.mrale.ph">blog</a>&#12297;
     </div>
-
+  </div>
+  <br/>
+  <div class="box" style="text-align: justify; width: 40em; padding: 5px; background: whitesmoke; border: none;">
+    {% for post in site.posts %}
+      <article style="font-family: 'Gloria Hallelujah', monospace, cursive;">
+        <time datetime="{{ page.date }}" style="color: grey;">{{ post.date | date:'%d %b %Y' | downcase }}</time> <a href="{{ post.url }}">{{ post.title }}</a></h2>
+      </article>
+    {% endfor %}
   </div>
 </body>
 </html>

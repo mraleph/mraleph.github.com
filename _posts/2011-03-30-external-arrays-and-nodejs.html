@@ -1,0 +1,56 @@
+---
+layout: blogpost
+title: Improved V8 external arrays support and nodejs Buffer type
+date: 2011-03-30
+---
+
+<p><a href="http://code.google.com/p/v8/source/detail?r=7354">Recently</a> V8's optimizing pipeline (Crankshaft) got full support for external arrays (aka WebGL typed arrays). One of core NodeJS types - Buffer - is exposed to JavaScript code as <a href="https://github.com/joyent/node/blob/master/src/node_buffer.cc#L232">an external unsigned byte array</a>&nbsp;so I decided to do a small unscientific benchmark to see the improvement with my own eyes:</p>
+
+{% highlight javascript %}
+var LONG_STRING = "qwertyuiop";
+
+for (var i = 0; i < 13; i++) LONG_STRING += LONG_STRING;
+
+// force cons-string flattening outside of timed loop.
+LONG_STRING.charCodeAt();
+
+console.log("LONG_STRING is %s chars long", LONG_STRING.length);
+
+function Str2BufferJS(s) {
+  var length = s.length;
+  var b = new Buffer(length);
+  for (var i = 0; i < length; i++) b[i] = s.charCodeAt(i);
+  return b;
+}
+
+function Str2BufferNative(s) {
+  var length = s.length;
+  var b = new Buffer(length);
+  b.asciiWrite(s, 0);
+  return b;
+}
+
+var N = 1000;
+
+function LoopAndTime(name, f) {
+ var start = Date.now();
+ for (var i = 0; i < N; i++) f();
+ var end = Date.now();
+ console.log("%s took %s ms per %s calls", name, end - start, N);
+}
+
+LoopAndTime("Str2BufferNative", function() { Str2BufferNative(LONG_STRING); });
+LoopAndTime("Str2BufferJS", function() { Str2BufferJS(LONG_STRING); });
+{% endhighlight %}
+
+<p>Results were fascinating:</p>
+<pre># node 0.4.4 with V8 3.1.8.5
+LONG_STRING is 81920 chars long
+Str2BufferNative took 224 ms per 1000 calls
+Str2BufferJS took 1180 ms per 1000 calls
+# node 0.4.4. with V8 3.2.7 (current bleeding_edge)
+LONG_STRING is 81920 chars long
+Str2BufferNative took 254 ms per 1000 calls
+Str2BufferJS took 231 ms per 1000 calls
+</pre>
+<p>As you can see JS function optimized by Crankshaft is now on par with native implementation of <code>Buffer.writeAscii</code>.</p>

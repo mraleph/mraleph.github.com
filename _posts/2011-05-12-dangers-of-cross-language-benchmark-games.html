@@ -1,0 +1,81 @@
+---
+layout: blogpost
+title: Dangers of cross language benchmark games
+date: 2011-05-12
+---
+
+<p><small><strong>Disclaimer: This is my personal blog. The views expressed on this page are mine alone and not those of my employer.</strong></small></p>
+<p>Every time I stumble upon yet another cross language benchmark comparison I remember Fight Club. No,&nbsp;seriously! What can be more enjoyable than watching your favorite language pummel not-so-favorite languages?&nbsp;Developers <em>love</em> cross language benchmark games. There is no doubt about that. But they tend to forget the first rule of benchmark club:</p>
+<p><em>The first rule of benchmark club is you do not <strike>talk about benchmark club</strike>&nbsp;jump to conclusions.</em></p>
+<p>A couple of weeks ago one of my friends sent me a link to&nbsp;<a href="http://attractivechaos.wordpress.com/2011/04/25/my-programming-language-benchmarks-plb" target="_blank">Programming Language Benchmarks by Attractive Chaos</a>, a younger brother of <a href="http://shootout.alioth.debian.org/" target="_blank">The Computer Language Benchmarks Game&nbsp;maintained by Isaac Gouy</a>, and asked for some insight into V8's performance on <code>matmul_v1.js</code> benchmark.&nbsp;</p>
+<p>So I cloned <a href="https://github.com/attractivechaos/plb/">official PLB repo</a>,&nbsp;slightly <a href="https://gist.github.com/961280" target="_blank">patched <code>matmul_v1.js</code></a> to make it work with V8's shell instead of d8 (which I do not use) and started digging.&nbsp;</p>
+<pre>% svn info $V8 | grep Revision
+Revision: 7810
+% time $V8/shell matmul_v1.js
+-95.58358333329998
+$V8/shell matmul_v1.js  <strong>11.16s</strong> user 0.15s system 100% cpu 11.264 total
+</pre>
+<p><small>(measurements for this post were done on V8 r7810 so results are slightly different from the ones for r7677 shown in PLB table)</small></p>
+<p>Yikes. 11s are not very exciting especially when PyPy and LuaJIT2 show 8.5s and 2.7s respectively.&nbsp;</p>
+<h3>Foes of number representation</h3>
+<p>The only number type JavaScript and Lua provide is double precision floating point and requires 64 bits of memory. Thus VM implementers have a choice either to make <em>every</em> slot (local variables, objects properties, array elements) wide enough to contain a 64-bit double or to store 64-doubles as <em>boxed</em> values.</p>
+<p>V8 goes with the latter approach and <strong>boxes</strong><sup><a href="#boxing" id="boxing-ref" name="boxing-ref"></a>&dagger;</sup>&nbsp;every number that does not fit into 31-bit integer range. Here is for example a backing store of an array <code>[3.14, 1, 2.71, 2]</code> on 32-bit architecture:</p>
+<p><img src="http://s3.mrale.ph/images/v8-array-backing-store.png" /></p>
+<p>LuaJIT2 (as well as JSC and SpiderMonkey) on the other side uses a technique called <a href="http://blog.mozilla.com/rob-sayre/2010/08/02/mozillas-new-javascript-value-representation/" target="_blank">NaN-tagging</a>, which allows to store both pointers (or other 32-bit values) and doubles in 64-bit wide slots. Here is how the same array will look like in these VMs:</p>
+<p><img src="http://s3.mrale.ph/images/luajit-array-backing-store.png" /></p>
+<p>V8's approach allows to save heap space when numbers mostly fit into 31-bit integer range but it also incurs overhead of&nbsp;double indirection and extra allocation when application starts working with dense arrays of floating point numbers. Fortunately there is a solution: <a href="https://www.khronos.org/registry/typedarray/specs/latest/" target="_blank">WebGL typed arrays</a>.&nbsp;</p>
+<p><small><a id="boxing" name="boxing"></a>&dagger; - It should be noted here that V8's optimizing backend is able to keep local double values and temporaries on the stack and in xmm registers. Boxing only occurs when the value escapes optimized code (e.g. is stored to a property, passed as an arguments or returned from a function). Non-optimized code always works with boxed numbers. <a href="#boxing-ref">&uarr;</a></small></p>
+<h3>Float64Array</h3>
+<p>Typed array constructed with <code>new Float64Array(N)</code> behaves just like a normal JS object almost in every aspect:</p>
+<pre>% $V8/shell
+V8 version 3.3.5 (candidate)
+&gt; arr = new Float64Array(10)
+[object Object]
+&gt; arr.prop = "this is prop";
+this is prop
+&gt; Object.keys(arr)
+0,1,2,3,4,5,6,7,8,9,length,BYTES_PER_ELEMENT,prop
+&gt; arr.prop
+this is prop</pre>
+<p>The only observable difference is in semantics of <em>indexed</em> properties. This specialized semantics allows V8 to use unboxed backing stores for such typed arrays.</p>
+<p>Will it be <em>cheating</em> to use such specialized data type? I do not think so. We are trying to get some real world data and educate programmers about strength and weaknesses of a particular VM. Nobody uses <code>std::list&lt;std::list&lt;double&gt; &gt;</code> to represent dense matrices in C++. The same applies to all participating languages.&nbsp;For example PyPy's version of matmul benchmark <a href="https://github.com/attractivechaos/plb/blob/master/matmul/matmul_v2.py#L10" target="_blank">matmul_v2.py</a>&nbsp;uses module <a href="http://docs.python.org/library/array.html" target="_blank">array</a>, which provides Python's equivalent of typed arrays. Mike Pall contributed <a href="https://github.com/attractivechaos/plb/blob/master/matmul/matmul_v2.lua#L9" target="_blank">matmul_v2.lua</a>&nbsp;that relies on a low-level FFI type which is not even safe unlike it's Python and JavaScript counterparts:</p>
+<pre>% ./luajit-2.0/src/luajit
+LuaJIT 2.0.0-beta6 -- Copyright (C) 2005-2011 Mike Pall. http://luajit.org/
+JIT: ON CMOV SSE2 SSE3 SSE4.1 fold cse dce fwd dse narrow loop abc fuse
+&gt; ffi = require 'ffi'
+&gt; arr = ffi.new 'double[10]'
+&gt; for i = 0, 10000 do arr[i] = 0 end
+<strong>zsh: bus error ./luajit-2.0/src/luajit</strong>
+</pre>
+<p>So here is <a href="https://gist.github.com/961337" target="_blank"><code>matmul_v2.js</code></a> a slightly altered version of <code>matmul_v1.js</code> that uses <code>Float64Arrays</code> to store matrix rows. Some would probably notice that I <a href="https://gist.github.com/961337#L25" target="_blank">did not even bother</a> to manually hoist row's loads like somebody <a href="https://github.com/attractivechaos/plb/blob/master/matmul/matmul_v1.js#L22" target="_blank">did</a> for <code>matmul_v1.js</code>, because V8's optimizing backend is able to perform <a href="http://en.wikipedia.org/wiki/Loop-invariant_code_motion" target="_blank">loop invariant code motion</a> in this case.</p>
+<pre>% time $V8/shell matmul_v2.js
+-95.58358333329998
+$V8/shell matmul_v2.js  <strong>2.61s</strong> user 0.07s system 101% cpu 2.650 total</pre>
+<p>Using the right representation, as you can see, gives a nice 4.2x speedup which puts V8 pretty close to LuaJIT2 and low-level statically typed languages like C.</p>
+<h3>But LuaJIT2 is still faster! Why?</h3>
+<p>Indeed. LuaJIT2 is still faster.</p>
+<pre>% time $LUAJIT/luajit matmul_v1.lua 1000
+-95.5835833333
+$LUAJIT/luajit matmul_v1.lua 1000  <strong>2.26s</strong> user 0.05s system 99% cpu 2.325 total</pre>
+<p>There are two main reasons:</p>
+<ul>
+<li>V8 is missing array bounds check elimination. LuaJIT2 is able to hoist bounds checks out of the hot loop, V8 does not try to do that.</li>
+<li>V8 has <a href="http://code.google.com/p/v8/source/browse/trunk/include/v8.h#3015" target="_blank">termination</a> and <a href="http://code.google.com/p/v8/source/browse/trunk/include/v8-debug.h#256" target="_blank">debugging</a> API while LuaJIT2 does not. For example any script on the webpage can be interrupted from Chrome DevTools by the pause button. To support these APIs V8 has to insert an&nbsp;<em>interruption check </em>on the backedge of every loop.</li>
+</ul>
+<h3>When did you have to multiply two matrices last time?</h3>
+<p>Most of programmers don't have to deal with matrix multiplication, signal processing and DNA sequencing every day, but it's easy to forget about that when interpreting results of cross language benchmark games, especially if your favorite language implementation is <em>da winner.</em></p>
+<p>But it's really dangerous to base your language choice on such comparisons as they are pretty much one sided (tight numeric loops) and do not cover all important facets of a language implementation. &nbsp;</p>
+<p>Out of curiosity I've <a href="https://github.com/mraleph/deltablue.lua" target="_blank">rewritten DeltaBlue</a>,&nbsp;constraint solver written in a classical object-oriented style,&nbsp;included into <a href="http://blog.chromium.org/2010/10/v8-benchmark-suite-updated.html" target="_blank">V8 Benchmark Suite</a>&nbsp;from JavaScript into Lua.</p>
+<p>When porting benchmark's code from JavaScript to Lua I've used metatables to implement object hierarchy. This approach is widespread in Lua community and is <a href="http://www.lua.org/pil/16.2.html" target="_blank">described in the book</a> written by language authors. DeltaBlue does not use any weird JavaScript features so rewrite was very smooth and mostly done by Emacs's "Replace Regexp" :-) I've used Lua for 5 years so I am also pretty sure that result is as close to idiomatic Lua as possible. Original benchmark uses global namespace, which is considered bad taste in Lua, so I created two Lua versions: one directly converted from JavaScript (global variables became global variables) and one with all global variables turned into local variables.</p>
+<p>Surprisingly LuaJIT2 does not perform very well on this benchmark:</p>
+<pre>% time $LUAJIT/luajit deltablue-10000iterations.lua globals
+$LUAJIT/luajit deltablue-10000iterations.lua globals  <strong>55.03s</strong> user 0.09s system 99% cpu 55.630 total</pre>
+<pre>% time $LUAJIT/luajit deltablue-10000iterations.lua locals
+$LUAJIT/luajit deltablue-10000iterations.lua locals  <strong>26.72s</strong> user 0.04s system 99% cpu 26.824 total</pre>
+<pre>% time $V8/shell deltablue-10000iterations.js
+$V8/shell deltablue-10000iterations.js  <strong>4.64s</strong> user 0.04s system 89% cpu 5.213 total</pre>
+<p>As you can see V8 is roughly 5-12x times faster. Does it mean that LuaJIT2 is a worse compiler?&nbsp;Definitely&nbsp;not. It's probably just not <em>tuned</em> for this kind of workload. <small>(There is also a slight possibility that I screwed somewhere when doing search&amp;replace operations).</small></p>
+<h3>Conclusion</h3>
+<p>Everything has it's own strength and weaknesses. VMs, compilers and even benchmark suites. There is no simple answer when the question is "which language is better?". Even more: to compare two languages you need to be adept in <em>both.&nbsp;</em></p>
+<p>In the beginning of this post I've mentioned the first rule of benchmark club and I think it's appropriate to conclude by reminding you about the second rule.</p>
+<p><em>The second rule of benchmark club is you <strong>DO NOT</strong> jump to conclusions.</em></p>

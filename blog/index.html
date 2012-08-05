@@ -1,0 +1,46 @@
+---
+---
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<link href='http://fonts.googleapis.com/css?family=Gloria+Hallelujah' rel='stylesheet' type='text/css'>
+<title>mraleph</title>
+<link rel="stylesheet" href="/css/main.css" type="text/css">
+
+<style type="text/css">
+body {
+  background: whitesmoke;
+  font-family: 'Gloria Hallelujah', monospace, cursive;
+  margin-top: 2em;
+}
+
+.box {
+  width: 18em;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.whitebox {
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 8px #aaa;
+  border-radius: 5px;
+}
+
+
+</style>
+
+</head>
+<body>
+  <div class="box" style="text-align: justify; width: 40em; padding: 5px; background: whitesmoke; border: none;">
+    <p style="font-size: 16pt;">My posts:</p>
+    {% for post in site.posts %}
+      <article style="font-family: 'Gloria Hallelujah', monospace, cursive;">
+        <time datetime="{{ page.date }}" style="color: grey;">{{ post.date | date:'%d %b %Y' | downcase }}</time> <a href="{{ post.url }}">{{ post.title }}</a></h2>
+      </article>
+    {% endfor %}
+  </div>
+</body>
+</html>
