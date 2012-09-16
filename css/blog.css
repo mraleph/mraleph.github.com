@@ -1,5 +1,5 @@
 body {
-  font-family: Helvetica, "Century Gothic","Trebuchet MS","Arial Narrow",Arial,sans-serif;
+  font-family: 'Droid Sans', sans-serif;
 }
 
 .post-body, .post-title, .post-comments {
@@ -17,7 +17,6 @@ body {
   margin-top: 0.83em;
   margin-bottom: 0px;
   font-weight: bold;
-  font-family: 'Vollkorn', serif;
 }
 
 .post-title time {
@@ -32,5 +31,13 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Droid Serif', serif;
+}
+
+code, pre {
+  font-family: 'Droid Sans Mono', monospace;
 }
 
