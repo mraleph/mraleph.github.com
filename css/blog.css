@@ -13,6 +13,7 @@ body {
 }
 
 .post-title div {
+  font-family: 'Droid Sans Serif';
   font-size: 2em;
   margin-top: 0.83em;
   margin-bottom: 0px;
@@ -41,3 +42,7 @@ code, pre {
   font-family: 'Droid Sans Mono', monospace;
 }
 
+img.centered {
+  margin-left: auto;
+  margin-right: auto;
+}
