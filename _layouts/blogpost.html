@@ -4,6 +4,11 @@
   <link href="http://fonts.googleapis.com/css?family=Droid+Serif" rel="stylesheet" type="text/css">
   <link href="http://fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css">
   <link href="http://fonts.googleapis.com/css?family=Droid+Sans+Mono" rel="stylesheet" type="text/css">
+
+  {% for font in page.webfonts %}
+    <link href='http://fonts.googleapis.com/css?family={{ font }}' rel='stylesheet' type='text/css'>
+  {% endfor %}
+
   <link rel="stylesheet" href="/css/blog.css" type="text/css">
   <link rel="stylesheet" href="/css/pygments.css" type="text/css">
 
