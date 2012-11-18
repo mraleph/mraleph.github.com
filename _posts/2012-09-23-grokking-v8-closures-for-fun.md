@@ -404,6 +404,6 @@ V8 shares unoptimized code across all closures produced from the same function l
 
 There are multiple things that V8 could do better here like utilizing static information about immutability of bindings that parser can recover from the source and using `SharedFunctionInfo` identity instead of closure identity for call target feedback and inlining guards ([Issue 2206](https://code.google.com/p/v8/issues/detail?id=2206)).
 
-Another issue that can negatively impact performance of closure based code is that V8 supports inlining across context boundaries only on ia32. On other architectures callee will never be inlined into caller [if they have different context objects](http://code.google.com/p/v8/source/browse/trunk/src/hydrogen.cc?r=12566#6952).
+Another issue that can negatively impact performance of closure based code is that V8 supports inlining across context switch boundaries only on ia32. On other architectures callee will never be inlined into caller [if they have different contexts](http://code.google.com/p/v8/source/browse/trunk/src/hydrogen.cc?r=12566#6952).
 
 Until these issues are addressed classical objects might be a better choice if you are looking for a predictable performance. Though each individual case requires careful investigation (e.g. is it singleton or multiple objects are going to be produced? is it on hot path? etc). And of course don't optimize before you need to optimize :-)
