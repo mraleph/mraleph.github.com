@@ -249,7 +249,7 @@ Now, where did `(1)` come from? It stores `res` into a memory location (stack sl
 
 In our case `res` is spilled to the stack after the loop because we have a call to `Date.now`. This causes both `res` and `i` to be stored to their spill slots again and again on loop entry. It is surely suboptimal and can be fixed (see [Issue 2450](https://code.google.com/p/v8/issues/detail?id=2450) for more details).
 
-Essentially those spill stores and `stack-check` (that involves memory load) is what consumes most cycles when you time both loops above. Even if `str.length` was still inside the loop its cost would quite negligible compared to the cost of the loop itself.
+Essentially those spill stores and `stack-check` (that involves memory load) is what consumes most cycles when you time both loops. Even if `str.length` was still inside the loop its cost would be quite negligible compared to the cost of the loop itself.
 
 In any case right now overall difference between `CostOfLenthPlusLoop` and `CostOfLoop` is far too small for millisecond precision measurement even with `N = 1e9`.
 
