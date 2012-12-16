@@ -70,7 +70,7 @@ In fact many JavaScript programmers are actually performing LICM by hand when th
 
 Implementation of the LICM is usually pretty straightforward. It involves figuring out dependencies between different expressions inside the loop. For example stores can affect loads from the same location making them non-invariant if the stored value itself is non-invariant. Calls to function might potentially have completely unknown effects and so on. You can take a look at V8's [LICM pass](https://code.google.com/p/v8/source/browse/branches/bleeding_edge/src/hydrogen.cc?r=13193#1907) if you'd like to see how it can be done.
 
-<small>[IonMonkey as well <a href="http://hg.mozilla.org/mozilla-central/file/c8a1314aa449/js/src/ion/LICM.cpp">implements</a> a variation of the classical LICM. PyPy and LuaJIT2 tracing JITs apply a different approach: they combine loop peeling with CSE to achieve effect similar to LICM. You can read more in a paper <a href="https://bitbucket.org/pypy/extradoc/src/98f94d389f25/talk/dls2012/licm.pdf">Loop-Aware Optimizations in PyPy’s Tracing JIT</a> from PyPy developers. There were some indications that JavaScriptCore might go the <a href="http://lists.webkit.org/pipermail/webkit-dev/2012-February/019585.html">same route</a>.]</small>
+<small>[IonMonkey as well <a href="http://hg.mozilla.org/mozilla-central/file/c8a1314aa449/js/src/ion/LICM.cpp">implements</a> a variation of the classical LICM. PyPy and LuaJIT2 tracing JITs apply a different approach: they combine loop peeling with CSE to achieve effect similar to LICM. You can read more in a paper <a href="https://bitbucket.org/pypy/extradoc/src/98f94d389f25/talk/dls2012/licm.pdf">Loop-Aware Optimizations in PyPy's Tracing JIT</a> from PyPy developers. There were some indications that JavaScriptCore might go the <a href="http://lists.webkit.org/pipermail/webkit-dev/2012-February/019585.html">same route</a>.]</small>
 
 Lets now take a look at the *intermediate representation* that V8's optimizing compiler generates for a nicely warmed up and optimized version of `CostOfLength`:
 
@@ -253,8 +253,8 @@ Essentially those spill stores and `stack-check` (that involves memory load) is 
 
 In any case right now overall difference between `CostOfLenthPlusLoop` and `CostOfLoop` is far too small for millisecond precision measurement even with `N = 1e9`.
 
-Morale?
--------
+Moral?
+------
 
 *...and &#956;benchmarks, Sphinx, compiler engineer and our hero lived happily ever after*
 
