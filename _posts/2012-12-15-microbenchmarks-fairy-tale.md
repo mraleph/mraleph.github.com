@@ -59,7 +59,7 @@ and get the answer you were searching for. This was backed by a simple mathemati
 
 $$\frac{(N \cdot C_{op} + C_{loop}) - C_{loop}}{N} \approx C_{op}$$
 
-But this mathematical tranquility ended when JIT compilers arrived from [the other universe](http://en.wikipedia.org/wiki/Self_(programming_language) and started optimizing things.
+But this mathematical tranquility ended when JIT compilers arrived from <a href="http://en.wikipedia.org/wiki/Self_(programming_language)">the other universe</a> and started optimizing things.
 
 Loop-invariant code motion
 --------------------------
