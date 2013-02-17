@@ -59,7 +59,7 @@ and get the answer you were searching for. This was backed by a simple mathemati
 
 $$\frac{(N \cdot C_{op} + C_{loop}) - C_{loop}}{N} \approx C_{op}$$
 
-But this mathematical tranquility ended when JIT compilers arrived from [the other universe](http://en.wikipedia.org/wiki/Self_(programming_language) and started optimizing things.
+But this mathematical tranquility ended when JIT compilers arrived from <a href="http://en.wikipedia.org/wiki/Self_(programming_language)">the other universe</a> and started optimizing things.
 
 Loop-invariant code motion
 --------------------------
@@ -258,7 +258,7 @@ Moral?
 
 *...and &#956;benchmarks, Sphinx, compiler engineer and our hero lived happily ever after*
 
-I think the only way to win this game against the merciless Sphinx is to transcend the question and realize the there is no single right and simple answer to the question it asks.
+I think the only way to win this game against the merciless Sphinx is to transcend the question and realize that there is no single right and simple answer to it.
 
 The time when you could have easily guessed the cost of a single operation by simple observation is over. If you want to know something then sometimes the only way is to go and actually learn it from the inside out.
 
