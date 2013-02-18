@@ -29,7 +29,9 @@ For me the most important features of this tools are its universal availability 
 How does it work?
 -----------------
 
-<img src="/images/2013-02-17/methods-list.png" align="left" style="margin-right: 0.5em;"/> Quite simply: you take compilation artifacts produced by V8 or Dart VM and view them in the browser. IRHydra does not have any server component, it uses `FileReader` API so your files are not uploaded anywhere they are parsed and displayed locally.
+<img src="/images/2013-02-17/methods-list.png" align="left" style="margin-right: 0.5em;"/> 
+
+Quite simply: you take compilation artifacts produced by V8 or Dart VM and view them in the browser. IRHydra does not have any server component, it uses `FileReader` API so your files are not uploaded anywhere they are parsed and displayed locally.
 
 The way to obtain compilation artifacts depends on your platform. For example when using node.js you can do:
 
