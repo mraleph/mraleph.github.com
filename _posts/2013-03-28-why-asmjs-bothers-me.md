@@ -27,7 +27,7 @@ That's exactly what asm.js does. It fixes the language by saying: *fancy feature
 
 Additionally asm.js attaches static typing rules to various permitted syntactical constructs. Only code that is consistently typed is considered to be valid. Typing rules are straightforward but not completely trivial, because they for example capture distinction between real 32-bit integers (`signed`) and things that can be coerced to them (`intish`). This somewhat peculiar distinction follows from JavaScript semantics.
 
-For example `(x|0 + y|0)|0` would be typed as `signed`. This is perfectly aligned with the actual JavaScript semantics that essentially interprets this expression as `ToInt32(ToInt32(x) + ToInt32(x))`. If you ever programmed in an assembly or another not-so-high-level language then you'll notice that it exactly matches semantics of overflowing 32-bit integer addition.  I'll return to this expression later, so keep it mind.
+For example `(x|0 + y|0)|0` would be typed as `signed`. This is perfectly aligned with the actual JavaScript semantics that essentially interprets this expression as `ToInt32(ToInt32(x) + ToInt32(y))`. If you ever programmed in an assembly or another not-so-high-level language then you'll notice that it exactly matches semantics of overflowing 32-bit integer addition.  I'll return to this expression later, so keep it mind.
 
 The last part of asm.js is the notion of module. All asm.js must be packed into a function that looks like this:
 
@@ -94,7 +94,7 @@ also known as *It would be great to use asm.js to speed jQuery up!*
 
 Nope. OdinMonkey does not even speak JavaScript. It speaks a statically typed language that by chance looks like JavaScript.
 
-It can't allocate normal JavaScript objects or access normal JavaScript properties. No strings. Only arithmetic and typed arrays (a single one actually with multiple views). It can't call arbitrary JavaScript functions, only those that you imported explicitly into your code, and it can only pass numbers into them and get a number out.
+It can't allocate normal JavaScript objects or access normal JavaScript properties. No JavaScript strings. Only arithmetic and typed arrays (a single one actually with multiple views). It can't call arbitrary JavaScript functions, only those that you imported explicitly into your code, and it can only pass numbers into them and get a number out.
 
 Essentially OdinMonkey is a hammer that targets performance sweet spot that is narrower than anything we had before in JavaScript. It hits the spot perfectly but here is the catch, the first danger that I sense: *OdinMonkey is a hammer that will kill incentive to optimize JavaScript that humans write*.
 
@@ -111,11 +111,11 @@ This is the first one. Honestly I don't know the answer and I am not going to gu
 
 Somebody might say that we hit performance ceiling with JavaScript and no clever tricks will help us to make it faster than it already is, unless we give up on features and start considering only very assembly like subset.
 
-But I don't believe that normal JavaScript is *anywhere near the end of it's performance path*.
+But I don't believe that normal JavaScript is *anywhere near the end of it's performance path*. On the contrary I believe that JavaScript code of kinds from hand-written jQuery to a Emscripten-generated can be sped up even more!
 
 When I sit down and think about performance gains that asm.js-implementation OdinMonkey-style brings to the table I don't see anything that would not be possible to achieve within a normal JIT compilation framework and thus  simultaneously make human written and compiler generated output faster.
 
-When I take the code above and look at it, as a V8 engineer would look, I can clearly see ways to generate C++ quality code without actually relying on AOT or static typing.
+When I take the code above and look at it, as a V8 engineer would look, I can clearly see ways to generate C++ quality native code without actually relying on AOT or static typing.
 
 <small>[to be completely honest: there is a certainly a tricky bit with moving out-of-bounds access handling to protection violation handler and not-so-tricky one with actually having `imul` in ES standard to allow efficient number multiplication but neither really require AOT]</small>
 
@@ -125,7 +125,7 @@ Imagine in 2008 V8 would come out and say that it interprets all JavaScript with
 
 {% highlight javascript %}
 (function () {
-  "use hungrian";
+  "use hungarian";
 
   function Point(dX, dY) {
     this.dX = dX;  // dX means field of type double field
