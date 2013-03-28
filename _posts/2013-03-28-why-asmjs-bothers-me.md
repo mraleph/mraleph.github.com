@@ -55,8 +55,12 @@ function M(stdlib, foreign, heap) {
 
 
 var module = M(window, {
-  // Truncate double to integer JS style. There is no way
-  // to do it while staying inside asm.js
+  // Truncate double to integer JS style.
+  // x | 0 does not validate as asm.js code, so you can't use it inline.
+  // at the same time ~~x would validate as an asm.js code. I misread the
+  // spec while writing code and thus decided to use FFI instead of ~~.
+  // In any case the fact that ~~x validates while x|0 does not is very
+  // confusing.
   truncate: function (x) {
     return x | 0;
   }
@@ -69,15 +73,15 @@ There are some important things to notice here:
 * `heap` a single `ArrayBuffer` that is going to be a data storage for all the code inside the module as asm.js rules do not allow any allocation besides creating a number of `ArrayBufferView` objects upon module entry.
 * `foreign` is an object that contains *external* functions that you can call from inside your module, you have to explicitly "import" them into local variables upon module entry.
 * asm.js is *very* strict, if you remove a single `+` or `|` the code above will be rejected by the validator;
-* asm.js puts compiler ahead of human e.g. you have to initialize `a` with `0` to tell validator/compiler that `a` is a variable of type int. in practice this is *already* a no-op for any serious compiler;
-* asm.js tries very hard to look just JavaScript but sometimes it fails. `imul` is the best example here. In JavaScript with its single number type there was no way to write overflowing 32bit integer multiplication as something atomically small that is easy to recognize. 32bit addition is simple because sum of two 32bit integers is at most 33bit integer and can be represented without loss in a double precision floating point number (which can represent 53bit integers precisely). Product of two 32bit integers however can overflow this precision range. You can shim 32bit multiplication but if you use this shim directly you'll need to complicate your specialized asm.js compiler with fragile pattern matching that recognizes this shim and emits a single assembly instruction. Solution? Push for standardization of `Math.imul` function that performs overflowing 32bit integer multiplication.
+* asm.js puts the compiler's interest before human's e.g. you have to initialize `a` with `0` to tell the validator/compiler that `a` is a variable of type int. In practice this is *already* a no-op for any serious compiler;
+* asm.js tries very hard to look just JavaScript but sometimes it fails. `imul` is the best example here. In JavaScript with its single number type there was no way to write overflowing 32bit integer multiplication as something atomically small that is easy to recognize. 32bit addition is simple because the sum of two 32bit integers is at most a 33bit integer and can be represented without loss in a double precision floating point number (which can represent 53bit integers precisely). The product of two 32bit integers however can overflow this precision range. You can shim 32bit multiplication but if you use this shim directly you'll need to complicate your specialized asm.js compiler with fragile pattern matching that recognizes this shim and emits a single assembly instruction. Solution? Push for standardization of `Math.imul` function that performs overflowing 32bit integer multiplication.
 
 What is OdinMonkey?
 -------------------
 
 You probably heard about IonMonkey: SpiderMonkey's optimization pipeline for generic JavaScript code similar to V8's Crankshaft.
 
-Modern JavaScript engine are multi-tiered: they have a way to start executing things quickly (using baseline code generator or interpreter) and a way to produce highly specialized optimized code with an optimizing compiler. Optimized code is usually valid only under certain assumptions that must be verified either internally at the points where optimized code itself relies on them or externally when runtime system tracks invariants that different optimized code objects rely on and ensures that dependent code objects are discarded when these invariants become invalid.
+Modern JavaScript engine are multi-tiered: they have a way to start executing things quickly (using a baseline code generator or interpreter) and a way to produce highly specialized optimized code with an optimizing compiler. Optimized code is usually valid only under certain assumptions that must be verified either internally at the points where optimized code itself relies on them or externally when the runtime system tracks invariants that different optimized code objects rely on and ensures that dependent code objects are discarded when these invariants become invalid.
 
 OdinMonkey is a different beast. It's a module built on top of IonMonkey that takes asm.js code (detected by `"use asm"` annotation), verifies that it is consistently typed and compiles it *ahead of time* into optimized native code.
 
@@ -111,7 +115,7 @@ But I don't believe that normal JavaScript is *anywhere near the end of it's per
 
 When I sit down and think about performance gains that asm.js-implementation OdinMonkey-style brings to the table I don't see anything that would not be possible to achieve within a normal JIT compilation framework and thus  simultaneously make human written and compiler generated output faster.
 
-When I take the code above and look at it, as a V8 engineer would look, I can clearly see way to generate C++ quality code without actually relying on AOT or static typing.
+When I take the code above and look at it, as a V8 engineer would look, I can clearly see ways to generate C++ quality code without actually relying on AOT or static typing.
 
 <small>[to be completely honest: there is a certainly a tricky bit with moving out-of-bounds access handling to protection violation handler and not-so-tricky one with actually having `imul` in ES standard to allow efficient number multiplication but neither really require AOT]</small>
 
@@ -138,18 +142,18 @@ Imagine in 2008 V8 would come out and say that it interprets all JavaScript with
 });
 {% endhighlight %}
 
-Even as thought experiment it looks ridiculous does not it? But that is approximately how I see asm.js. It's a capitulation before JavaScript dynamism, but it is hyped as a victory.
+Even as thought experiment it looks ridiculous doesn't it? But that is approximately how I see asm.js. It's a capitulation before JavaScript dynamism, but it is hyped as a victory.
 
-Why asm.js is a JavaScript subset?
+Why is asm.js a JavaScript subset?
 ----------------------------------
 
-This is the second question that bothers me. It is pretty obvious that asm.js is not really a JavaScript. It is essentially a *bytecode* that looks like JavaScript. This distinction is further highlighted by the fact that SpiderMonkey team is planning to implement *a separate parser for asm.js* instead of using generic JS parser because generic parser needs to much memory when you have to AOT compile huge multi-megabyte asm.js module.
+This is the second question that bothers me. It is pretty obvious that asm.js is not really a JavaScript. It is essentially a *bytecode* that looks like JavaScript. This distinction is further highlighted by the fact that SpiderMonkey team is planning to implement *a separate parser for asm.js* instead of using the generic JS parser because the generic parser needs too much memory when you have to AOT compile a huge multi-megabyte asm.js module.
 
-Another thing that makes me thinking is addition of things like `Math.imul` to the language, it is essentially like adding a bytecode instruction.
+Another thing that makes me thinking is the addition of things like `Math.imul` to the language, it is essentially like adding a bytecode instruction.
 
-Why then we are building this infrastructure on top of JavaScript language?
+Why then we are building this infrastructure on top of the JavaScript language?
 
-Lets be honest and make it explicit: if you want to ship performance critical cross-platform code across the wire define a set of bytecode instructions. You don't need anything fancy: arithmetic, access to typed heap, calls to named functions (API), calls to local functions, etc.
+Let's be honest and make it explicit: if you want to ship performance critical cross-platform code across the wire define a set of bytecode instructions. You don't need anything fancy: arithmetic, access to typed heap, calls to named functions (API), calls to local functions, etc.
 
 It has multiple advantages:
 
@@ -162,9 +166,9 @@ Somebody might say that *it does not run everywhere*. Nope. It does run everywhe
 
 Layers of polyfills will start piling up in any case as soon as asm.js will proceed to add more "bytecodes" targeted for more efficient execution: e.g. `int64` and `BinaryData` objects. All these features will not be available in older browsers anyway.
 
-Another example of a bytecode like functionality that host language itself has not use for is [FunctionFuture](https://bugzilla.mozilla.org/show_bug.cgi?id=854627) that asm.js needs to solve its startup issues, as type-checking and generating native code for the whole module takes noticable time it is several megabytes. This API is geared towards off-thread compilation and ability to cache generated native code.
+Another example of a bytecode like functionality that the host language itself has not use for is [FunctionFuture](https://bugzilla.mozilla.org/show_bug.cgi?id=854627) that asm.js needs to solve its startup issues, as type-checking and generating native code for the whole module takes noticable time if its source is several megabytes. This API is geared towards off-thread compilation and ability to cache generated native code.
 
-<small>[Here it should be noted that normal JIT has not issues with off-thread and lazy compilation and solves this issues transparently]</small>
+<small>[Here it should be noted that normal JIT does not have issues with off-thread and lazy compilation and solves these issues transparently]</small>
 
 Grau ist alle Theorie
 ---------------------
@@ -173,6 +177,6 @@ Summarizing my concerns:
 
 * **Performance side**: I am concerned that asm.js might negatively impact the size of JavaScript's performance sweet spot. In 6-12 months from now I would like to discover that I am wrong. How? An arbitrary piece of emscripten compiled code should execute with the same speed with or with out `"use asm"` annotation. I don't believe that anything like asm.js is needed to generate highly efficient native code, it's a leaky abstraction. Neither do I want developers to be penalized because they forgot a single `+` sign somewhere when cranking out asm.js style code manually.
 
-* **Bytecode side**: I am concerned that we are trying to hide a bytecode inside a normal high-level language. Even more: we are trying to enrich high-level language with features that only bytecode needs. If I believed that JavaScript hit performance ceiling that it cannot surpass I would step forward and propose a bytecode that can go beyond that ceiling. But I don't believe that, see above.
+* **Bytecode side**: I am concerned that we are trying to hide a bytecode inside a normal high-level language. Even more: we are trying to enrich a high-level language with features that only bytecode needs. If I believed that JavaScript has already hit a performance ceiling that it cannot surpass I would step forward and propose a bytecode that can go beyond that ceiling. But I don't believe that, see above.
 
 <small>[At this point I have spent several hours writing these things down and I ate all the food that I stashed for Easter holidays. I am starting to think that I failed to clearly convey my thoughts and my feelings so it will be appropriate to starve to death. Thanks for reading anyway.]</small>
