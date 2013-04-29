@@ -11,6 +11,10 @@
     <link href='http://fonts.googleapis.com/css?family={{ font }}' rel='stylesheet' type='text/css'>
   {% endfor %}
 
+  {% for stylesheet in page.stylesheets %}
+    <link href='{{ stylesheet }}' rel='stylesheet' type='text/css'>
+  {% endfor %}
+
   <link rel="stylesheet" href="/css/blog.css" type="text/css">
   <link rel="stylesheet" href="/css/pygments.css" type="text/css">
 
