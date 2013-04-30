@@ -39,7 +39,7 @@ As you can see they are just computing sum of squares. Both case also check that
 Usually when I need to quickly measure performance I use a relatively naive approach with two loops: one for warm up a function and another one to measure performance of the optimized code. This time however I decided to additionally run my code through [Benchmark.js](http://benchmarkjs.com/) which is a much more sophisticated benchmarking framework that powers [jsPerf](http://jsperf.com) itself.
 
 {% highlight javascript %}
-load("benchmark.js");  // from http://benchmarkjs.com/
+load("benchmark.js");  // from https://raw.github.com/bestiejs/benchmark.js/v1.0.0/benchmark.js
 
 // Naive measuring loop that invokes the same function big number of times.
 function measure(name, f) {
@@ -83,6 +83,8 @@ function run(benchmarks) {
   suite.run();
 }
 {% endhighlight %}
+
+<div><span style=" color: white; border: 1px #7A0026 solid; padding: 0px 2px; background: #7a0026;">Update 30 April 2013</span> Notice that measurements below apply to a concrete version of Benchmark.js, <a href="https://twitter.com/jdalton">John-David Dalton</a> already <a href="https://github.com/bestiejs/benchmark.js/commit/dbaf5931b7667f45e8971505867c5c98c7c8b29a">pushed changes</a> into the development branch of the library that change described behavior. Details available at the end of the post.</div>
 
 When I run test cases in the fresh build of V8's shell I saw the following results:
 
@@ -168,7 +170,7 @@ Disassembly is compiler engineer's best friend
 
 <small>[disassembly can be obtained from V8 with `--print-opt-code --code-comments` if V8 was built with `disassembler=on`]</small>
 
-Looking at the disassembly for `i * i` case in Benchmark.js variant reveals quite an unfortunate register allocation decision on V8 part (I am prettyfied assembly):
+Looking at the disassembly for `i * i` case in Benchmark.js variant reveals quite an unfortunate register allocation decision on V8 part (I have prettified assembly to make it easier to read):
 
 {% highlight nasm %}
 loop:
@@ -366,9 +368,32 @@ Morale
 
 NOW it is time for morale. Which is quite simple: measuring things is hard, predicting performance without measuring is even harder. Performance is like weather, requires gut feeling and hi-tech meteorological satellites to predict the rain reliably.
 
-<small>Here is <a href="http://jsperf.com/pow2/3">original</a> jsPerf case that prompted this blog post.</small>
+<small>And here is <a href="http://jsperf.com/pow2/3">original</a> jsPerf case that prompted this blog post.</small>
 
 
+<h2><div><span style="color: white; border: 1px #7A0026 solid; padding: 0px 2px; background: #7a0026; font-size: 0.5em;">Update 30 April 2013</span></div>Benchmark.js hardens mangling scheme</h2>
 
+With this [commit](https://github.com/bestiejs/benchmark.js/commit/dbaf5931b7667f45e8971505867c5c98c7c8b29a) Benchmark.js no longer generates exactly the *same* source for every measuring function: each sample is collected using a newly compiled function in which identifiers are mangled with a id unique for that sample.
 
+This prevents V8 (and I suspect other engines) from reusing even non-optimized compiled code. At the same time it prevents V8 from manifesting [Issue 2637](
+https://code.google.com/p/v8/issues/detail?id=2637) because measuring functions are no longer backed by the same `SharedFunctionInfo`.
 
+With updated version of the library I get the following result on my testing script *without bumping `--max-opt-count`*:
+
+<pre>
+% out/ia32.release/d8 test.js
+[naive] pow(i, 2) x 643,501 ops/sec.
+[naive] Math.pow(i, 2) x 4,608,295 ops/sec.
+[naive] Math.pow(i, 2) [no check] x 5,464,481 ops/sec.
+[naive] Math.pow(i, 2)|0 x 5,524,862 ops/sec.
+[naive] i * i x 5,649,718 ops/sec.
+[naive] sum = i * i + sum x 5,555,556 ops/sec.
+[benchmark.js] pow(i, 2) x 640,942 ops/sec &plusmn;1.02% (65 runs sampled)
+[benchmark.js] Math.pow(i, 2) x 4,671,581 ops/sec &plusmn;0.88% (68 runs sampled)
+[benchmark.js] Math.pow(i, 2) [no check] x 5,074,812 ops/sec &plusmn;1.19% (66 runs sampled)
+[benchmark.js] Math.pow(i, 2)|0 x 3,756,236 ops/sec &plusmn;0.70% (67 runs sampled)
+[benchmark.js] i * i x 3,677,572 ops/sec &plusmn;0.49% (66 runs sampled)
+[benchmark.js] sum = i * i + sum x 5,658,358 ops/sec &plusmn;1.02% (66 runs sampled)
+</pre>
+
+As you can see naive and Benchmark.js results are aligned much better now and the only difference that remained is between `sum = sum + i * i` and `sum = i * i + sum` cases which is explained by the register allocator decisions and is not affected by change in the mangling scheme.
