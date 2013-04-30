@@ -397,3 +397,5 @@ With updated version of the library I get the following result on my testing scr
 </pre>
 
 As you can see naive and Benchmark.js results are aligned much better now and the only difference that remained is between `sum = sum + i * i` and `sum = i * i + sum` cases which is explained by the register allocator decisions and is not affected by change in the mangling scheme.
+
+<small>[Note that this update is yet to come to jsPerf]</small>
