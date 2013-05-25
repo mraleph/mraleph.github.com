@@ -85,6 +85,10 @@ In this code closure `innerG` stored in the variable `o` will retain:
 
 <img src="/images/2012-09-23/contexts-1.png" class="centered"/>
 
+<div><span style=" color: white; border: 1px #7A0026 solid; padding: 0px 2px; background: #7a0026;">Update 25 May 2013</span> In fact picture looks a bit more complicated: contexts retain closures that created them. For the code above it means that <code>inner</code> itself will survive as long as <code>o</code> points to <code>innerG</code>, because <code>inner</code> is retained by the context it created for <code>innerF</code> and <code>innerG</code>. The same is true for <code>outer</code> (except that <code>outer</code> is also retained through global variable, so there is no leak): context it created for <code>inner</code> points back to it. For the asynchronous code with deeply nested callbacks it might mean that outermost callback will be kept alive until the inner most dies. This will in turn increase the pressure on garbage collection and in the worst case outer callback might even end up being promoted to the old generation. Avoiding deep callback nesting in hot places might improve your app's performance by reducing the pressure on GC.</div>
+
+<img src="/images/2012-09-23/contexts-1-v2.png" class="centered"/>
+
 It is useful to keep this picture in mind when debugging memory leaks in *callback-centric* code bases.
 
 In addition to normal rules governing outer scope references certain language constructs force variables to be context allocated:
