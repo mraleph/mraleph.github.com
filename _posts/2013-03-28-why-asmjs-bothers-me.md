@@ -180,3 +180,32 @@ Summarizing my concerns:
 * **Bytecode side**: I am concerned that we are trying to hide a bytecode inside a normal high-level language. Even more: we are trying to enrich a high-level language with features that only bytecode needs. If I believed that JavaScript has already hit a performance ceiling that it cannot surpass I would step forward and propose a bytecode that can go beyond that ceiling. But I don't believe that, see above.
 
 <small>[At this point I have spent several hours writing these things down and I ate all the food that I stashed for Easter holidays. I am starting to think that I failed to clearly convey my thoughts and my feelings so it will be appropriate to starve to death. Thanks for reading anyway.]</small>
+
+
+<p><span style=" color: white; border: 1px #7A0026 solid; padding: 0px 2px; background: #7a0026;">Update 18 July 2013</span> I have been told that my post can be read as if I am arguing that idiomatic JavaScript can easily achieve performance of asm.js-style code. I would like to clarify that this is not  what I am trying to say here. Without a doubt asm.js-style code comes with its own benefits: it eliminates non-trivial JavaScript objects and automatic memory management from the picture, reducing things to arithmetic and typed array manipulation. This reduces the pressure on the garbage collector, similar to manual JS-object pooling, and allows to avoid obscure corner cases in heuristics that are used by VMs to make inherently shapeless JavaScript objects fast. Thus asm.js-style code indeed has certain performance advantages over idiomatic JavaScript code (I argued the same <a href="http://mrale.ph/blog/2011/11/05/the-trap-of-the-performance-sweet-spot.html">over a year ago</a>) and discussing whether or not similar gains can be achieved by pure restructuring of the idiomatic code and advances in JIT compilation is out of scope for this post. </p>
+
+This post concentrates on my belief that asm.js-style code can be JIT compiled without reliance on "use asm" and show performance comparable to AOT-compiled (think OdinMonkey) asm.js code. This is what I am arguing: asm.js in general and "use asm" in particular are not needed because JIT compilers can and should infer this information purely from JavaScript semantics. Instead we are being forced into false language dichotomy, without actually gaining access to a new shiny bytecode / language and still confined to JavaScript limitations.
+
+At the same time I strongly believe that JIT compilers should strive to achieve **continuous performance** in the sense that *reasonable* perturbations to the input source should cause *reasonable* changes in the performance. Programmer must not be forced to write meaningless `e = +e` to tell VM that `e` is a double. In the *right* world there should be no difference in performance between the following two ways of doing the same thing:
+
+{% highlight javascript %}
+// Fully typed asm.js-style
+var x = (function () {
+  "use asm";
+  var floor = stdlib.Math.floor;
+  function x(e) {
+    e = +e;
+    // This is what you need to write in FF Nightly 25.0a1 (2013-07-18)
+    // to coerce result of floor to integer and return it
+    // if you what the code to validate as asm.js code.
+    return ~~+floor(e)|0;
+  }
+  return { x: x };
+})(window).x;
+{% endhighlight %}
+
+{% highlight javascript %}
+// Reasonable-style
+function x(e) { return floor(e)|0; }
+{% endhighlight %}
+
