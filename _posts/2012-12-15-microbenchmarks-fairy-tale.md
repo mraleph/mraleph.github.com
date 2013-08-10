@@ -1,6 +1,6 @@
 ---
 layout: blogpost
-title: &#956;benchmarks fairy tale
+title: microbenchmarks fairy tale
 date: 2012-12-15
 webfonts: [UnifrakturMaguntia]
 ---
