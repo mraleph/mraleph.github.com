@@ -45,4 +45,5 @@ code, pre {
 img.centered {
   margin-left: auto;
   margin-right: auto;
+  display: block;
 }
