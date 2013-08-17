@@ -353,13 +353,13 @@ Please don't do it.
 
 This benchmark might look like it is comparing different class emulation approaches, but we saw that it does not and ultimately several months in the future it might simply become an empty loop benchmark once JavaScript VMs implement some sort of *scalar replacement of aggregates*
 
-Scalar replacement of aggregates is an optimization that essentially promotes fields of aggregates into local variables and eliminates aggregates themselves. Classical scalar replacement relies on escape analysis to find objects do not escape current activation frame. However for speculatively specialized code it is usually impossible to find aggregates that do not escape in the strictest sense, because majority of allocated objects can escape through deoptimization exits. This issue is solved by treating deoptimization exits in a special way: optimizing common path with scalar replacement and performing aggregate *rematerialization* on deoptimizations. This optimization is known as *allocation sinking* because it sinks allocation of aggregates from the common path to uncommon (deoptimization) paths. More information can be found in [LuaJIT wiki](Allocation Removal by Partial Evaluation in a Tracing JIT) and the paper [Allocation Removal by Partial Evaluation in a Tracing JIT](https://bitbucket.org/pypy/extradoc/src/2ca3043ec4e0/talk/pepm2011/escape-tracing.pdf) published by PyPy authors.
+Scalar replacement of aggregates is an optimization that essentially promotes fields of aggregates into local variables and eliminates aggregates themselves. Classical scalar replacement relies on escape analysis to find objects do not escape current activation frame. However for speculatively specialized code it is usually impossible to find aggregates that do not escape in the strictest sense, because majority of allocated objects can escape through deoptimization exits. This issue is solved by treating deoptimization exits in a special way: optimizing common path with scalar replacement and performing aggregate *rematerialization* on deoptimizations. This optimization is known as *allocation sinking* because it sinks allocation of aggregates from the common path to uncommon (deoptimization) paths. More information can be found in [LuaJIT wiki](http://wiki.luajit.org/Allocation-Sinking-Optimization) and the paper [Allocation Removal by Partial Evaluation in a Tracing JIT](https://bitbucket.org/pypy/extradoc/src/2ca3043ec4e0/talk/pepm2011/escape-tracing.pdf) published by PyPy authors.
 
 In fact allocation sinking is not the only way compiler could render this microbenchmark useless. It could, for example, apply *loop peeling*: take first iteration out of the loop and start loop on the second iteration. Peeling would turn benchmarking code into something like this (after inlining):
 
 {% highlight javascript %}
 function (N) {
-  // ....
+  // ...
   if (0 < N) {
     var name = prototypeColor._name;
     prototypeColor._name = 'blue';
