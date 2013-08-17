@@ -293,7 +293,7 @@ Closure x <span style="color: green;">603,675,310</span> ops/sec &plusmn;0.60% (
 Prototype x <span style="color: green;">602,932,682</span> ops/sec &plusmn;0.84% (66 runs sampled)
 </pre>
 
-So our preliminary conclusion would be:
+Preliminary conclusions:
 
 * Initial difference in performance between two test cases was caused by the invisible polymorphism that "leaked" from the pretest run.
 * Overall performance was degraded due to LICM being disabled due to incorrect propagation of the "deoptimizes" marking through the graph.
