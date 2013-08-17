@@ -343,7 +343,13 @@ What just happened here? Nothing good. V8 usually tries to represent properties 
 Benchmarking microhorse
 -----------------------
 
-I would like to conclude beating microbenchmarking horse again. It is hard to write meaningful microbenchmarks. It is hard to interpret their results. Please don't do it.
+I would like to conclude by beating microbenchmarking horse again.
+
+It is hard to write meaningful microbenchmarks.
+
+It is even harder to interpret their results.
+
+Please don't do it.
 
 This benchmark might look like it is comparing different class emulation approaches, but we saw that it does not and ultimately several months in the future it might simply become an empty loop benchmark once JavaScript VMs implement *allocation sinking*.
 
