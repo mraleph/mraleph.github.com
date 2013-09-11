@@ -189,6 +189,8 @@ Before running generated function with a big number of iterations `N` Benchmark.
 
 Now the source of polymorphism is apparent: by executing benchmarking function twice, we executed setup section twice which each time produced objects with different hidden classes. Essentially hidden classes from pretest have flown into ICs and "polluted" them.
 
+<div><span style=" color: white; border: 1px #7A0026 solid; padding: 0px 2px; background: #7a0026;">Update 10 September 2013</span> Pretest related observations apply to an older version of Benchmark.js and this behavior should no longer be reproducible on jsPerf as <a href="https://twitter.com/jdalton">John-David Dalton</a> <a href="https://github.com/bestiejs/benchmark.js/commit/1c579e8b0a3091b141f4ad13a0da6eb50544048e">pushed changes</a> which ensure that each compiled benchmarking function is executed just once.</div>
+
 Wait! Why do we have both poly- and mono- checks?
 -------------------------------------------------
 
