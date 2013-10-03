@@ -23,7 +23,7 @@ To keep this story short I will assume that you read my other posts about V8's i
 We start by throwing together a simple standalone test case that can be run in the `d8` shell:
 
 {% highlight javascript %}
-// Load tip-of-the-tree versions of lodash and benchmark.js
+// Load top-of-the-tree versions of lodash and benchmark.js
 load("lodash.js");
 load("benchmark.js");
 
