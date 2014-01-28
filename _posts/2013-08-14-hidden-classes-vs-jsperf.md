@@ -83,7 +83,7 @@ Diving into IR (take a deep breath)
 
 Lets compare hydrogen IR that V8 generated for benchmarking loops in both cases
 
-<small>[I am stripping away some cruft in both cases to highlight the difference]</small>
+<p><small>[I am stripping away some cruft in both cases to highlight the difference]</small></p>
 
 <pre class="hydrogen">
      ;; Closure case

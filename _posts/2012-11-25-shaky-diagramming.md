@@ -17,7 +17,7 @@ So back in the late 90s Delphi suddenly became my tool of choice for literally e
 
 However somewhere in 00s Delphi disappeared from my life and did not come back ever since.
 
-<small>[<a href="http://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Wirth_languages">Wirth languages</a> however did come back and I had a lot of fun at <a href="http://www.excelsior-usa.com/">Excelsior</a> writing mostly Modula-2 and <a href="http://en.wikipedia.org/wiki/Oberon-2_(programming_language)">Oberon-2</a>.]</small>
+<p><small>[<a href="http://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Wirth_languages">Wirth languages</a> however did come back and I had a lot of fun at <a href="http://www.excelsior-usa.com/">Excelsior</a> writing mostly Modula-2 and <a href="http://en.wikipedia.org/wiki/Oberon-2_(programming_language)">Oberon-2</a>.]</small></p>
 
 Surprisingly in my life it was largely replaced by a tool that was never intended to become an IDE replacement. These days if I suddenly need to create an interactive application that layouts and lets me explore a [CFG](http://en.wikipedia.org/wiki/Control_flow_graph) produced by an optimizing compiler I just launch an editor, throw together some HTML/CSS/JavaScript, start my browser and it will do the job.
 
@@ -48,7 +48,7 @@ So how do I get shaky line out of a B&eacute;zier curve? Quite easy actually: if
 
 Here is a small function in Dart that implements this idea:
 
-<small>[Why Dart? Because I like to eat my own dog food.]</small>
+<p><small>[Why Dart? Because I like to eat my own dog food.]</small></p>
 
 {% highlight dart %}
 import 'dart:math' as Math;

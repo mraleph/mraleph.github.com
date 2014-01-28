@@ -34,7 +34,7 @@ Run it in a directory containing `chrome.exe` and script will patch the executab
 
     chrome.exe --no-sandbox --js-flags="--trace-opt --trace-bailout --trace-deopt"
 
-<small>[[`--no-sandbox` is apparently required to allow renderers to write to a shared console. But don't browse around with this flag :-)]]</small>
+<p><small>[`--no-sandbox` is apparently required to allow renderers to write to a shared console. But don't browse around with this flag :-)]</small></p>
 
 <div style="text-align: center; padding-top: 20px;">
 <img height="400" src="http://s3.mrale.ph/images/chrome-windows-v8-output.png" width="700" />

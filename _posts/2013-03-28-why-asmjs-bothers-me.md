@@ -117,7 +117,7 @@ When I sit down and think about performance gains that asm.js-implementation Odi
 
 When I take the code above and look at it, as a V8 engineer would look, I can clearly see ways to generate C++ quality native code without actually relying on AOT or static typing.
 
-<small>[to be completely honest: there is a certainly a tricky bit with moving out-of-bounds access handling to protection violation handler and not-so-tricky one with actually having `imul` in ES standard to allow efficient number multiplication but neither really require AOT]</small>
+<p><small>[to be completely honest: there is a certainly a tricky bit with moving out-of-bounds access handling to protection violation handler and not-so-tricky one with actually having `imul` in ES standard to allow efficient number multiplication but neither really require AOT]</small></p>
 
 This might sound weird and hyperbolic, but for me pattern matching a statically typed subset inside JavaScript before exhausting all other possibilities is equal to giving up my pride as a compiler engineer.
 
@@ -168,7 +168,7 @@ Layers of polyfills will start piling up in any case as soon as asm.js will proc
 
 Another example of a bytecode like functionality that the host language itself has not use for is [FunctionFuture](https://bugzilla.mozilla.org/show_bug.cgi?id=854627) that asm.js needs to solve its startup issues, as type-checking and generating native code for the whole module takes noticable time if its source is several megabytes. This API is geared towards off-thread compilation and ability to cache generated native code.
 
-<small>[Here it should be noted that normal JIT does not have issues with off-thread and lazy compilation and solves these issues transparently]</small>
+<p><small>[Here it should be noted that normal JIT does not have issues with off-thread and lazy compilation and solves these issues transparently]</small></p>
 
 Grau ist alle Theorie
 ---------------------
@@ -179,8 +179,7 @@ Summarizing my concerns:
 
 * **Bytecode side**: I am concerned that we are trying to hide a bytecode inside a normal high-level language. Even more: we are trying to enrich a high-level language with features that only bytecode needs. If I believed that JavaScript has already hit a performance ceiling that it cannot surpass I would step forward and propose a bytecode that can go beyond that ceiling. But I don't believe that, see above.
 
-<small>[At this point I have spent several hours writing these things down and I ate all the food that I stashed for Easter holidays. I am starting to think that I failed to clearly convey my thoughts and my feelings so it will be appropriate to starve to death. Thanks for reading anyway.]</small>
-
+<p><small>[At this point I have spent several hours writing these things down and I ate all the food that I stashed for Easter holidays. I am starting to think that I failed to clearly convey my thoughts and my feelings so it will be appropriate to starve to death. Thanks for reading anyway.]</small></p>
 
 <p><span style=" color: white; border: 1px #7A0026 solid; padding: 0px 2px; background: #7a0026;">Update 18 July 2013</span> I have been told that my post can be read as if I am arguing that idiomatic JavaScript can easily achieve performance of asm.js-style code. I would like to clarify that this is not  what I am trying to say here. Without a doubt asm.js-style code comes with its own benefits: it eliminates non-trivial JavaScript objects and automatic memory management from the picture, reducing things to arithmetic and typed array manipulation. This reduces the pressure on the garbage collector, similar to manual JS-object pooling, and allows to avoid obscure corner cases in heuristics that are used by VMs to make inherently shapeless JavaScript objects fast. Thus asm.js-style code indeed has certain performance advantages over idiomatic JavaScript code (I argued the same <a href="http://mrale.ph/blog/2011/11/05/the-trap-of-the-performance-sweet-spot.html">over a year ago</a>) and discussing whether or not similar gains can be achieved by pure restructuring of the idiomatic code and advances in JIT compilation is out of scope for this post. </p>
 

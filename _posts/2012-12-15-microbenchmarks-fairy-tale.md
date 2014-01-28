@@ -70,7 +70,7 @@ In fact many JavaScript programmers are actually performing LICM by hand when th
 
 Implementation of the LICM is usually pretty straightforward. It involves figuring out dependencies between different expressions inside the loop. For example stores can affect loads from the same location making them non-invariant if the stored value itself is non-invariant. Calls to function might potentially have completely unknown effects and so on. You can take a look at V8's [LICM pass](https://code.google.com/p/v8/source/browse/branches/bleeding_edge/src/hydrogen.cc?r=13193#1907) if you'd like to see how it can be done.
 
-<small>[IonMonkey as well <a href="http://hg.mozilla.org/mozilla-central/file/c8a1314aa449/js/src/ion/LICM.cpp">implements</a> a variation of the classical LICM. PyPy and LuaJIT2 tracing JITs apply a different approach: they combine loop peeling with CSE to achieve effect similar to LICM. You can read more in a paper <a href="https://bitbucket.org/pypy/extradoc/src/98f94d389f25/talk/dls2012/licm.pdf">Loop-Aware Optimizations in PyPy's Tracing JIT</a> from PyPy developers. There were some indications that JavaScriptCore might go the <a href="http://lists.webkit.org/pipermail/webkit-dev/2012-February/019585.html">same route</a>.]</small>
+<p><small>[IonMonkey as well <a href="http://hg.mozilla.org/mozilla-central/file/c8a1314aa449/js/src/ion/LICM.cpp">implements</a> a variation of the classical LICM. PyPy and LuaJIT2 tracing JITs apply a different approach: they combine loop peeling with CSE to achieve effect similar to LICM. You can read more in a paper <a href="https://bitbucket.org/pypy/extradoc/src/98f94d389f25/talk/dls2012/licm.pdf">Loop-Aware Optimizations in PyPy's Tracing JIT</a> from PyPy developers. There were some indications that JavaScriptCore might go the <a href="http://lists.webkit.org/pipermail/webkit-dev/2012-February/019585.html">same route</a>.]</small></p>
 
 Lets now take a look at the *intermediate representation* that V8's optimizing compiler generates for a nicely warmed up and optimized version of `CostOfLength`:
 
@@ -108,7 +108,7 @@ for (var i = 0; i < 1000; i++) CostOfLength(1e5);
   Goto <b>B2</b>
 </pre>
 
-<small>[I prettified hydrogen manually by throwing out some irrelevant details but did not remove anything important.]</small>
+<p><small>[I prettified hydrogen manually by throwing out some irrelevant details but did not remove anything important.]</small></p>
 
 As you can see string length access was hoisted out of the loop entirely and is now sitting right above the loop entry block `B2`. This turned our pretty mathematical formula for $C_{op}$ into something strange:
 
@@ -235,7 +235,7 @@ mov ecx, ebx ;; (2)
 jmp B5
 {% endhighlight %}
 
-<small>[Confusing <code>stack-check</code> inside both loops is emitted by V8 to allow interruption of long running loops. If V8 for some reason (debugging, preemption, GC request etc) needs to pause JavaScript execution it will just set stack limit (located at `0xba5adc` for the runs above) and any currently running loop will pass control to the runtime system.]</small>
+<p><small>[Confusing <code>stack-check</code> inside both loops is emitted by V8 to allow interruption of long running loops. If V8 for some reason (debugging, preemption, GC request etc) needs to pause JavaScript execution it will just set stack limit (located at `0xba5adc` for the runs above) and any currently running loop will pass control to the runtime system.]</small></p>
 
 Indeed two strange moves appeared in `CostOfLenthPlusLoop`. My math was wrong again!
 
@@ -243,7 +243,7 @@ $$C_{loop'} = C_{loop} + N(C_{(1)} + C_{(2)})$$
 
 The second one `(2)` is easy to explain: it came from the &phi;-function for the variable `res`. This variable is `0` (if loop was not executed) and is equal to `str.length` after the first iteration. That's exactly what this move does - initializes `res` at the backedge of the loop.
 
-<small>[Attentive readers with a bit of compiler background could have noticed that if the loop was peeled then this move would disappear because `res` never changes after the first iteration.]</small>
+<p><small>[Attentive readers with a bit of compiler background could have noticed that if the loop was peeled then this move would disappear because `res` never changes after the first iteration.]</small></p>
 
 Now, where did `(1)` come from? It stores `res` into a memory location (stack slot) that is never read again inside the loop. This does not make much sense! Indeed it does not, but it's actually a long story. It's an artifact of the simple approach that V8 uses in its register allocator to place spill stores: if the value is spill somewhere during its lifetime then it is spilled at its definition.
 

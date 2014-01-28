@@ -34,7 +34,7 @@ run({
 
 As you can see they are just computing sum of squares. Both case also check that the `sum` is correct both to verify that the code is doing the right thing and prevent DCE. A more advanced compiler can still sacrifice compilation time and constant fold the whole loop but V8 does not, so I did not try to guard against optimizations any further.
 
-<small>[In fact at the moment V8 would not be able to DCE these computations even if I were not checking `sum` after the loop because it is <em>scared</em> by variable assignments. Nevertheless I still like to have my benchmarks verified at completion to catch bug in the optimizer if anything.]</small>
+<p><small>[In fact at the moment V8 would not be able to DCE these computations even if I were not checking `sum` after the loop because it is <em>scared</em> by variable assignments. Nevertheless I still like to have my benchmarks verified at completion to catch bug in the optimizer if anything.]</small></p>
 
 Usually when I need to quickly measure performance I use a relatively naive approach with two loops: one for warm up a function and another one to measure performance of the optimized code. This time however I decided to additionally run my code through [Benchmark.js](http://benchmarkjs.com/) which is a much more sophisticated benchmarking framework that powers [jsPerf](http://jsperf.com) itself.
 
@@ -130,7 +130,7 @@ function (t) {
 
 As you can notice Benchmark.js directly inlined benchmark body *as text* into timed loop. If benchmark has `setup` and `teardown` phases they would be inlined in the same way but would reside outside of the timed region.
 
-<small>[That's why you can declare local variables in <code>setup</code> phase and reference them from the benchmark body despite the fact that both of them look like separate functions.]</small>
+<p><small>[That's why you can declare local variables in <code>setup</code> phase and reference them from the benchmark body despite the fact that both of them look like separate functions.]</small></p>
 
 But there is another thing to know about Benchmark.js: it compiles a new measuring function for every collected sample. For example above it said that 58 runs were sampled for `i * i` and each run was using a newly compiled measuring function with *the same source*.
 
@@ -168,7 +168,7 @@ Hmm. That's quite unexpected is not it? The rain just turned into a hail. Varian
 Disassembly is compiler engineer's best friend
 ----------------------------------------------
 
-<small>[disassembly can be obtained from V8 with `--print-opt-code --code-comments` if V8 was built with `disassembler=on`]</small>
+<p><small>[disassembly can be obtained from V8 with `--print-opt-code --code-comments` if V8 was built with `disassembler=on`]</small></p>
 
 Looking at the disassembly for `i * i` case in Benchmark.js variant reveals quite an unfortunate register allocation decision on V8 part (I have prettified assembly to make it easier to read):
 
@@ -398,4 +398,4 @@ With updated version of the library I get the following result on my testing scr
 
 As you can see naive and Benchmark.js results are aligned much better now and the only difference that remained is between `sum = sum + i * i` and `sum = i * i + sum` cases which is explained by the register allocator decisions and is not affected by change in the mangling scheme.
 
-<small>[Note that this update is yet to come to jsPerf]</small>
+<p><small>[Note that this update is yet to come to jsPerf]</small></p>
