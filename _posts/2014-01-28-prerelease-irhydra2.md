@@ -65,8 +65,6 @@ Known issues and limitations
 
 Requires applying a [patch](https://code.google.com/p/irhydra/source/browse/patches/v8.r18822.patch?name=polymerized) on top of V8 to work.
 
-Does not work in Firefox (neither Stable nor Nightly), but works in Chrome Dev and Safari.
-
 Future plans
 ------------
 
