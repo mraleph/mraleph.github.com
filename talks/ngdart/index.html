@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+
+<html ng-app>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="js/highlight.min.js"></script>
+    <style type="text/css">
+      view-source ^^ pre {
+        font-size: 20pt;
+      }
+
+      input[type=text], input[type=number] { font-size: 1em; }
+
+      h1 > input[type=text], h1 > input[type=number] { width: 1em; }
+
+      h2 > b {
+        color: #a6120d;
+      }
+
+      p.bigger {
+        font-size: 2em !important;
+      }
+
+      .wrong {
+        border: 10px dashed #c00;
+        background: rgba(255, 0, 0, 0.5);
+      }
+    </style>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/reveal-simple.css" id="theme">
+    <!-- <link rel="stylesheet" href="css/idea.min.css" id="theme"> -->
+    <link rel="stylesheet" href="packages/NgTalk/view-source/view-source.css" id="theme">
+
+    <script src="js/head.min.js"></script>
+  </head>
+  <body ng-cloak>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>AngularDart <br/>&amp;<br/> Polymer.dart</h1>
+          <h2>by a compiler engineer</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim class="cpp">
+__ cmpl(FieldAddress(field_reg,
+                     Field::guarded_cid_offset()),
+        Immediate(kDynamicCid));
+__ j(EQUAL, &amp;ok);
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="html">
+&lt;cmpl&gt; &lt;FieldAddress&gt;&hellip;&lt;/FieldAddress&gt;,
+       &lt;Immediate&gt;kDynamicCid&lt;/Immediate&gt;&lt;/cmpl&gt;
+&lt;j cond="EQUAL" href="#ok"&gt;&lt;/j&gt;
+</code></pre>
+        </section>
+
+
+        <section>
+          <h1>when we were kids</h1>
+        </section>
+
+        <section>
+          <h1><b>D</b>HTML</h1>
+        </section>
+
+        <section>
+          <h1><b>X</b>SLT</h1>
+        </section>
+
+        <section>
+          <h1><b>$</b>HTML</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript">
+          var $ul = $("&lt;ul/&gt;", {class: "nav nav-tabs"});
+
+for (var i = 0; i &lt; tabs.length; i++) {
+  $("&lt;li/&gt;").append($("&lt;a href='#'/&gt;").text(tabs[i]))
+            .appendTo($ul);
+}
+
+$ul.appendTo($menu);
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript">
+item(title) =&gt;
+  new LIElement()..nodes.add(
+      new AnchorElement(href: "#")
+        ..text = title);
+
+menu.nodes.add(
+  new UListElement()
+    ..classes.addAll(["nav", "nav-tabs"])
+    ..nodes.addAll(tabs.map(item)));
+</code></pre>
+        </section>
+
+        <section>
+          <h1>hmm?</h1>
+        </section>
+
+        <section>
+          <h1>AngularDart</h1>
+        </section>
+
+        <section>
+          <h2>Model-View-Controller</h2>
+        </section>
+
+        <section>
+          <h2>Model-View-Whatever</h2>
+        </section>
+
+        <section>
+          <h2>View: DOM</h2>
+        </section>
+
+        <section>
+          <h2>M&amp;C: Dart objects</h2>
+        </section>
+
+        <section>
+          <h2>V&hArr;M&amp;C</h2>
+          <h3>is managed automatically</h3>
+        </section>
+
+        <section>
+          <h1>2 + 2 = {{2 + 2}}</h1>
+        </section>
+
+        <section>
+          <view-source>
+            <h1>2 + 2 = {{2 + 2}}</h1>
+          </view-source>
+        </section>
+
+        <section>
+          <view-source>
+            <h1>
+              <input type="number" ng-model="v1"> +
+              <input type="number" ng-model="v2"> =
+              {{v1 + v2}}
+            </h1>
+          </view-source>
+        </section>
+
+        <section>
+          <view-source>
+            <h1>
+              <input type="number" ng-model="V"> +
+              <input type="number" ng-model="V"> =
+              {{V + V}}
+            </h1>
+          </view-source>
+        </section>
+
+        <section>
+            <view-source>
+                <h3>Hello {{name | uppercase}}!</h3>
+                Name: <input type="text" ng-model="name">
+            </view-source>
+        </section>
+
+        <section>
+            <h2>But is it extensible?</h2>
+        </section>
+
+        <section>
+            <h1>Yes!</h1>
+        </section>
+
+        <section>
+            <h2><code>uppercase</code><br/>is a <b>filter</b></h2>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+@NgFilter(name: 'capitalize')
+class Capitalize {
+  call(val) {
+    if (val is String) {
+      return (val.length <= 1) ? val.toUpperCase() :
+        val[0].toUpperCase() +
+        val.substring(1).toLowerCase();
+    }
+    return val;
+  }
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+// Tell Angular about the new filter we made.
+ngBootstrap(new Module()
+  ..type(Capitalize));
+</code></pre>
+        </section>
+
+        <section>
+            <view-source>
+                <h3>Hello {{name | capitalize}}!</h3>
+                Name: <input type="text" ng-model="name">
+            </view-source>
+        </section>
+
+        <section>
+            <h2><code>ng-model</code><br/>is a <b>directive</b></h2>
+        </section>
+
+        <section>
+            <p class=bigger>directives<br/>&asymp;<br/>decorators</p>
+        </section>
+
+        <section>
+            <view-source>
+                <h3 ng-if="name != 'Big'">Hello {{name}}!</h3>
+                <h1 ng-if="name == 'Big'">Hello {{name}}!</h1>
+                Name: <input type="text" ng-model="name">
+            </view-source>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+@NgDirective(
+  selector: 'input[type=text][my-integer-validator]'
+)
+class MyIntegerValidator {
+  // ...
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+var el;
+
+MyIntegerValidator(dom.Element this.el) {
+  el.onChange.listen((_) =&gt; validate());
+  el.onKeyUp.listen((_) =&gt; validate());
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+validate() {
+  var intValue =
+      int.parse(el.value, onError: (_) => null);
+  if (el.value == "" || intValue != null) {
+    el.classes.remove("wrong");
+  } else {
+    el.classes.add("wrong");
+  }
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+// Tell Angular about directive we made.
+ngBootstrap(new Module()
+  ..type(Capitalize)
+  ..type(MyIntegerValidator));
+</code></pre>
+        </section>
+
+        <section>
+            <view-source>
+                <h1><input type="text" my-integer-validator></h1>
+            </view-source>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+// Why constructor looks this way?
+MyIntegerValidator(dom.Element this.el) {
+  // ...
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+// Can we ask for more than an element itself?
+MyIntegerValidator(dom.Element this.el) {
+  // ...
+}
+</code></pre>
+        </section>
+
+        <section>
+            <h2>Dependency Injection</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+// We can ask for services (@NgInjectableService)
+// or for other directives on this element, etc.
+// Injection is type based.
+MyIntegerValidator(dom.Element this.el, Http http) {
+  // ...
+}
+</code></pre>
+        </section>
+
+        <section>
+            <h1>Components</h1>
+        </section>
+
+        <section>
+            <view-source>
+                <hljs source="&lt;!-- I am actually a component --&gt;">
+                </hljs>
+            </view-source>
+        </section>
+
+        <section>
+          <view-source>
+            <view-source>
+                <hljs source="&lt;!-- We need to go deeper --&gt;">
+                </hljs>
+            </view-source>
+          </view-source>
+        </section>
+
+
+        <section>
+          <pre><code data-trim class="dart">
+@NgComponent(
+    selector: 'hljs',
+    templateUrl: 'packages/NgTalk/hljs/hljs.html',
+    cssUrl: 'packages/NgTalk/hljs/hljs.css',
+    resetStyleInheritance: true,
+    map: const {
+      "source": "@source"
+    }
+)
+class HighlightJS {
+  set source (val) =&gt; doHighlight(val);
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="html">
+&lt;!-- packages/NgTalk/hljs/hljs.html --&gt;
+&lt;div class="container"&gt;&lt;/div&gt;
+</code></pre>
+        </section>
+
+        <section>
+            <h2>Shadow DOM</h2>
+        </section>
+
+        <section>
+            <h2>Controllers</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+@NgController(
+  selector: '[slides]',
+  publishAs: 'slides')
+class SlidesController {
+  // ...
+}
+</code></pre>
+        </section>
+
+        <section>
+            <p class=bigger>Create scope</p>
+            <p class=bigger>Define business logic</p>
+            <p class=bigger>No DOM manipulation</p>
+        </section>
+
+        <section>
+            <h2>Routes &amp; Views</h2>
+        </section>
+
+        <section>
+            <view-source>
+                <ng-view></ng-view>
+            </view-source>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+router.root
+  ..addRoute(
+      name: 'slideid',
+      path: '/:slideId',
+      enter: view('view/slideid.html'));
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="html" ng-non-bindable>
+&lt;!-- view/slideid.html --&gt;
+&lt;h1 slide-id&gt;Slide #{{ctrl.slideId}}&lt;/h1&gt;
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart">
+@NgController(
+  selector: '[slide-id]',
+  publishAs: 'ctrl')
+class SlideIdController {
+  final routeProvider;
+
+  SlideIdController(RouteProvider this.routeProvider);
+
+  get slideId => routeProvider.parameters['slideId'];
+}
+</code></pre>
+        </section>
+
+        <section>
+            <h2>Those were the basics</h2>
+        </section>
+
+        <section>
+            <h2>There is more to it</h2>
+            <p>Various built in directives, components, filters.</p>
+            <p>Everything is composable</p>
+        </section>
+
+        <section>
+            <h2><b>angulardart.org</b></h2>
+            <p>There are tutorials and samples there.</p>
+        </section>
+
+        <section>
+            <h2>Polymer.dart?</h2>
+        </section>
+
+        <section data-background="architecture-diagram.png" data-background-size="contain">
+        </section>
+
+        <section>
+            <h2>It's all about<br/> <i>custom</i> elements</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim class="html" ng-non-bindable>
+&lt;polymer-element name="tabs"&gt;
+  &lt;template&gt;
+    &lt;ul&gt;
+      &lt;template repeat="{{item in items}}"&gt;
+        &lt;li on-click="{{hadler}}"&gt;{{item}}&lt;/li&gt;
+      &lt;/template&gt;
+    &lt;/ul&gt;
+  &lt;/template&gt;
+  &lt;script type="application/dart" src="tabs.dart"&gt;&lt;/script&gt;
+&lt;/polymer-element&gt;
+
+&lt;tabs&gt;&lt;/tabs&gt;
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart" ng-non-bindable>
+@CustomTag('tabs')
+class TabsElement extends PolymerElement {
+  @observable var items = toObservable([]);
+
+  enteredView() { /* */ }
+
+  leftView() { /* */ }
+
+  handler(event, detail, target) {
+    // handle click.
+  }
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart" ng-non-bindable>
+@CustomTag('tabs')
+class TabsElement extends PolymerElement {
+  @observable var items = toObservable([]);
+
+  itemsChanged() {
+    // Will be called automatically if items changes.
+  }
+}
+</code></pre>
+        </section>
+
+
+        <section>
+          <pre><code data-trim class="dart" ng-non-bindable>
+@CustomTag('tabs')
+class TabsElement extends PolymerElement {
+  @published var items;
+}
+</code></pre>
+          <pre><code data-trim class="html" ng-non-bindable>
+&lt;tabs items="{{items}}"&gt;&lt;/tabs&gt;
+</code></pre>
+        </section>
+
+
+        <section>
+          <pre><code data-trim class="dart" ng-non-bindable>
+@CustomTag('tabs')
+class TabsElement extends UListElement {
+  // ...
+}
+</code></pre>
+        </section>
+
+        <section>
+          <p class="bigger">Elements from Polymer.js are being ported to Dart</p>
+        </section>
+
+        <section>
+          <pre><code data-trim class="html" ng-non-bindable>
+&lt;polymer-ui-icon-button&gt; &lt;polymer-ui-accordion&gt;
+&lt;polymer-ui-menu&gt;        &lt;polymer-ui-arrow&gt;
+&lt;polymer-ui-menu-button&gt; &lt;polymer-ui-breadcrumbs&gt;
+&lt;polymer-ui-menu-item&gt;   &lt;polymer-ui-card&gt;
+&lt;polymer-ui-nav-arrow&gt;   &lt;polymer-ui-collapsible&gt;
+&lt;polymer-ui-overlay&gt;     &lt;polymer-ui-dropdown&gt;
+&lt;polymer-ui-pages&gt;       &lt;polymer-ui-dropup&gt;
+&lt;polymer-ui-ratings&gt;     &lt;polymer-ui-field&gt;
+&lt;polymer-ui-scaffold&gt;    &lt;polymer-ui-icon&gt;
+              <!-- etc... -->
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="html" ng-non-bindable>
+&lt;polymer-ajax&gt;         &lt;polymer-localstorage&gt;
+&lt;polymer-anchor-point&gt; &lt;polymer-media-query&gt;
+&lt;polymer-animation&gt;    &lt;polymer-meta&gt;
+&lt;polymer-collapse&gt;     &lt;polymer-mock-data&gt;
+&lt;polymer-cookie&gt;       &lt;polymer-overlay&gt;
+&lt;polymer-file&gt;         &lt;polymer-page&gt;
+&lt;polymer-flex-layout&gt;  &lt;polymer-scrub&gt;
+&lt;polymer-google-jsapi&gt; &lt;polymer-selection&gt;
+&lt;polymer-grid-layout&gt;  &lt;polymer-selector&gt;
+&lt;polymer-jsonp&gt;        &lt;polymer-shared-lib&gt;
+&lt;polymer-key-helper&gt;   &lt;polymer-signals&gt;
+&lt;polymer-layout&gt;       &lt;polymer-view-source-link&gt;
+</code></pre>
+        </section>
+
+        <section>
+          <p class="bigger">Custom element<br/>is just an Element.</p>
+        </section>
+
+        <section>
+          <p class="bigger">Polymer.dart<br/><b>+</b><br/>AngularDart</p>
+        </section>
+
+        <section>
+          <pre><code data-trim class="html" ng-non-bindable>
+&lt;my-polymer-list ng-smth&gt;
+  &lt;li ng-repeat="x in ctrl.xs"&gt;
+
+  &lt;/li&gt;
+&lt;/my-polymer-list&gt;
+</code></pre>
+        </section>
+
+        <section>
+          <h1>Thanks! <br/> Q&amp;A</h1>
+        </section>
+      </div>
+    </div>
+
+    <script src="packages/shadow_dom/shadow_dom.min.js"></script>
+    <script type="application/dart" src="index.dart"></script>
+    <script type="text/javascript" src="packages/browser/dart.js"></script>
+    <script src="packages/browser/interop.js"></script>
+
+    <script src="js/reveal.js"></script>
+    <script>
+    Reveal.initialize({
+
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Vertical centering of slides
+        center: true,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // Hides the address bar on mobile devices
+        hideAddressBar: true,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style
+        transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Transition speed
+        transitionSpeed: 'default', // default/fast/slow
+
+        // Transition style for full page slide backgrounds
+        backgroundTransition: 'default', // default/none/slide/concave/convex/zoom
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Parallax background image
+        parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'"
+
+        // Parallax background size
+        parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+        dependencies: [
+          { src: 'js/reveal-hljs.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+    });
+    </script>
+  </body>
+</html>

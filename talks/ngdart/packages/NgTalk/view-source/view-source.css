@@ -1,0 +1,13 @@
+
+.rendered, .template {
+  position: relative;
+  border: 1px solid black !important;
+}
+
+.rendered {
+  padding: 5px;
+}
+
+.host {
+  padding: 10px;
+}

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+
+<html ng-app>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="js/highlight.min.js"></script>
+    <style type="text/css">
+      view-source ^^ pre {
+        font-size: 20pt;
+      }
+
+      input[type=text], input[type=number] { font-size: 1em; }
+
+      h1 > input[type=text], h1 > input[type=number] { width: 1em; }
+
+      h2 > b {
+        color: #a6120d;
+      }
+
+      p.bigger {
+        font-size: 2em !important;
+      }
+
+      p.bigger-x { font-size: 1.5em !important; }
+
+      .wrong {
+        border: 10px dashed #c00;
+        background: rgba(255, 0, 0, 0.5);
+      }
+
+      .lefty { text-align: justify; }
+      .lefty { padding-left: 5em !important;}
+
+      code.dart b { font-weight: 700; color: #c00;}
+
+      code.dart em { color: gold; font-weight: 700; }
+    </style>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/reveal-simple.css" id="theme">
+    <link rel="stylesheet" href="css/idea.min.css" id="theme">
+
+    <script src="js/head.min.js"></script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>Dart VM</h1>
+          <h2>by a frontend developer</h2>
+        </section>
+
+        <section>
+          <h1>Dart VM</h1>
+          <h2>by a <s>frontend developer</s></h2>
+          <h2>still a compiler engineer</h2>
+        </section>
+
+        <section>
+          <h1>Three VM whales</h1>
+        </section>
+
+        <section class="lefty">
+          <h2>Representation</h2>
+          <h2>Resolution</h2>
+          <h2>Redundancy</h2>
+        </section>
+
+        <section>
+          <h1>JavaScript</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+var p = Object.create({
+  len: function () {
+    return Math.sqrt(this.x * this.x +
+                     this.x * this.y);
+  }
+});
+p.x = 10;
+p.y = 20;
+</code></pre>
+        </section>
+
+        <section>
+          <h2>size of <code>p</code>?</h2>
+        </section>
+
+        <section>
+          <h2>where <code>p.x</code> goes?</h2>
+        </section>
+
+        <section>
+          <h2>what is <code>p.len()</code>?</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+var arr = [0,1,2,3,,5];
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+var arr = [0,1,2,3, /* I am a hole! */,5];
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+Array.prototype[4] = "Hello, from the Hole";
+var arr = [0,1,2,3,,5];
+console.log(arr[4]);
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+var arr = [0,1,2,3,,5];
+console.log(arr["1"]);
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+var dblArr = [0,1.0,2.1,3.0,,5.0];
+// can dblArr be almost as efficient as Float64Array?
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+var dblArr = [0,1.0,2.1,3.0,,5.0];
+dblArr[6] = dblArr[6] * Math.PI;
+// dblArr[6] is NaN now
+</code></pre>
+        </section>
+
+        <section>
+          <h3>properties come and go</h3>
+          <h3>methods <i>are</i> properties</h3>
+          <h3>no early errors</h3>
+        </section>
+
+        <section>
+          <h3><b>MUST</b>: for each object <br/>find efficient representation<br/><i>while program runs</i></h3>
+        </section>
+
+        <section>
+          <h2>hidden classes <br/>&amp;<br/> transitions</h2>
+        </section>
+
+        <section>
+          <h2>very powerful</h2>
+          <h2>very complex</h2>
+        </section>
+
+        <section>
+          <h2>very powerful</h2>
+          <h2>very complex</h2>
+          <h2 style="font-family: 'Comic Sans', Oswald, Impact;">much heuristic</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+p /* => class {
+  x: @1, y: @2,
+  proto => class {
+    len: @const function
+  }
+}*/
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+dblArr /* => class {
+  elements: DOUBLES,
+  holes: true
+}*/
+</code></pre>
+        </section>
+
+        <section>
+          <h2>same hidden class</h2>
+          <h2>means</h2>
+          <h2>same structure</h2>
+        </section>
+
+        <section>
+          <h2>hidden classes<br/>enable<br/> inline caching</h2>
+        </section>
+
+        <section>
+          <h2>inline caching</h2>
+          <h3>old fundamental optimization</h3>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+p.x // remember what we saw
+    // where we found x.
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+p.x /* => {
+  [class 0xf3123bc5]: { @1 }
+}*/
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="javascript" ng-non-bindable>
+x * y /* => {
+  [DOUBLE, DOUBLE]: {
+    result: DOUBLE
+  },
+  [SMI, SMI]: {
+    result: INT32
+  }
+}*/
+</code></pre>
+        </section>
+
+        <section>
+          <h1>Now Dart</h1>
+        </section>
+
+        <section>
+          <h2>fixed class objects</h2>
+        </section>
+
+        <section>
+          <h2>real arrays<br/><small>(fixed length too)</small></h2>
+        </section>
+
+        <section>
+          <h2><code>int</code>, <code>double</code>, <code>simd</code><br/> separated</h2>
+        </section>
+
+        <section>
+          <h2>early errors and lack of coercions</h2>
+          <h3>predictable for VM &amp; programmer</h3>
+        </section>
+
+        <section>
+          <h2>Still <i>dynamically</i> typed</h2>
+        </section>
+
+        <section>
+          <h2>Still use ICs</h2>
+          <h3>simple PICs not V8's specialized IC stubs</h3>
+        </section>
+
+        <section>
+          <h2>Still use ICs</h2>
+          <h3>simple PICs not V8's specialized IC stubs</h3>
+        </section>
+
+        <section>
+          <h2>non-opt + opt compilation pipeline</h2>
+        </section>
+
+        <section data-background="dart-compiler.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <p class="bigger-x">inlining, type inferencing, range inferencing, primitive unboxing, constant propagation, common subexpression elimination, loop invariant code motion, load forwarding, dead store elimination, allocation sinking, block reordering, branch folding</p>
+        </section>
+
+        <section>
+          <p class="bigger-x">optimizations simplified or enabled by semantics</p>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+for (...) {
+  CheckClass(x, A);
+  CallSmth();
+  /* x is <b>still</b> A */
+}
+</code></pre>
+        </section>
+
+        <section>
+          <h2>load forwarding &amp; allocation sinking</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart" ng-non-bindable>
+for (var x in list) {
+  // use x
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart" ng-non-bindable>
+var iter = list.iterator;
+while (it.moveNext()) {
+  var x = it.current;
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart" ng-non-bindable>
+var iter = new ListIterator(list);
+while (it.moveNext()) {
+  var x = it.current;
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim class="dart" ng-non-bindable>
+var iter = $alloc(ListIterator);
+iter.list = list;
+iter.idx = -1;
+while (++iter.idx &lt; it.list.length) {
+  var x = it.list[it.idx];
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+var iter = $alloc(ListIterator);
+<b>iter.list</b> = list;
+iter.idx = -1;
+while (++iter.idx &lt; <b>it.list</b>.length) {
+  var x = <b>it.list</b>[it.idx];
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+var iter = $alloc(ListIterator);
+<b>iter.list</b> = <em>list</em>;
+iter.idx = -1;
+while (++iter.idx &lt; <b>it.list</b>.length) {
+  var x = <b>it.list</b>[it.idx];
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+var iter = $alloc(ListIterator);
+iter.list = <em>list</em>;
+iter.idx = -1;
+while (++iter.idx &lt; <em>list</em>.length) {
+  var x = <em>list</em>[it.idx];
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+var iter = $alloc(ListIterator);
+iter.list = list;
+<em>var $idx</em> = iter.idx = -1;
+while (<em>(iter.idx = ++$idx)</em> &lt; list.length) {
+  var x = list[<em>$idx</em>];
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+var iter = $alloc(ListIterator);
+iter.list = list;
+var $idx = iter.idx = -1;
+<em>var $list_length = list.length;</em> // LICM
+while ((iter.idx = ++$idx) &lt; <em>$list_length</em>) {
+  var x = list[$idx];
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+/* var iter = $alloc(ListIterator); */
+/* iter.list = list; */
+var $idx /* = iter.idx */ = -1;
+var $list_length = list.length;
+while ((/* iter.idx = */ ++$idx) &lt; $list_length) {
+  var x = list[$idx];
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+var $idx = -1;
+var $list_length = list.length;
+while (++$idx &lt; $list_length) {
+  var x = list[$idx];
+  // use(x)
+}
+</code></pre>
+        </section>
+
+        <section>
+          <h2>not limited to iterators!</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart" ng-non-bindable>
+class Vec2 {
+  final x;
+  final y;
+  Vec2(this.x, this.y);
+
+  operator + (other) =>
+     new Vec2(x + other.x, y + other.y);
+  operator * (other) => x * other.x + y * other.y;
+}
+
+final v = (v1 + v2) * (v3 + v4);
+// 0 allocations
+</code></pre>
+        </section>
+
+        <section>
+          <h1>Thanks! <br/> Q&amp;A</h1>
+        </section>
+      </div>
+    </div>
+
+    <script src="js/reveal.js"></script>
+    <script>
+    Reveal.initialize({
+
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Vertical centering of slides
+        center: true,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // Hides the address bar on mobile devices
+        hideAddressBar: true,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style
+        transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Transition speed
+        transitionSpeed: 'default', // default/fast/slow
+
+        // Transition style for full page slide backgrounds
+        backgroundTransition: 'default', // default/none/slide/concave/convex/zoom
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Parallax background image
+        parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'"
+
+        // Parallax background size
+        parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+        dependencies: [
+          { src: 'js/reveal-hljs.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+    });
+    </script>
+  </body>
+</html>
