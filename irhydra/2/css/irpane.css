@@ -1,0 +1,98 @@
+.irpane {
+  font-family: monospace;
+}
+
+.irpane > tr > td:first-child,
+.irpane > tbody > tr > td:first-child {
+  background-color: #F7F7F7;
+  border-right: 1px solid #EEE;
+  min-width: 4em;
+  color: #AAA;
+  text-align: right;
+  padding-right: 2px;
+}
+
+.irpane > tr > td:last-child,
+.irpane > tbody > tr > td:last-child {
+  padding-left: 2px;
+  background-color: white;
+  color: #333;
+  text-align: left;
+}
+
+.irpane pre {
+  -moz-border-radius: 0;
+  -webkit-border-radius: 0;
+  -o-border-radius: 0;
+  border-radius: 0;
+  border-width: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  word-wrap: normal;
+  color: inherit;
+}
+
+.irpane,
+.irpane > tr,
+.irpane > tr > td,
+.irpane > tbody > tr,
+.irpane > tbody > tr > td {
+  margin: 0px;
+  padding: 0px;
+  outline: 0px;
+  border-spacing: 0px;
+  border-collapse: collapse;
+}
+
+/** Styles for the floating panel used to display references. */
+.irpane-refs {
+  position: fixed;
+  font-size: 11px;
+  background-color: #ffffff;
+  z-index: 1010;
+  padding: 1px;
+  -webkit-background-clip: padding-box;
+  -moz-background-clip: padding;
+  background-clip: padding-box;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.irpane-refs > div {
+  overflow-x: auto;
+  margin: 1px;
+  padding-left: 3px;
+  padding-bottom: 14px;
+}
+
+.irpane-refs > div::-webkit-scrollbar {
+  height: 4px;
+}
+
+.irpane-refs > div::-webkit-scrollbar-track {
+}
+
+.irpane-refs > div::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+}
+
+.irpane-refs .close {
+  line-height: 15px;
+  color: black;
+  padding-right: 3px;
+  font-size: 11px;
+}
+
+.known-opcode {
+  cursor: help;
+}

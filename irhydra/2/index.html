@@ -1,0 +1,875 @@
+<!DOCTYPE html><html><head><script src="packages/shadow_dom/shadow_dom.debug.js"></script>
+<script src="packages/custom_element/custom-elements.debug.js"></script>
+<script src="packages/browser/interop.js"></script>
+
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <script>
+    // Provide a getTag hook to ensure that Shadow DOM polyfill wrappers
+    // are unwrapped before applying getTag to it. This ensures that
+    // correct interceptor is used.
+    (dartNativeDispatchHooksTransformer =
+      window.dartNativeDispatchHooksTransformer || []).push(function (hooks) {
+      var getTag = hooks.getTag;
+      hooks.getTag = function (obj) {
+        // Unwrap Shadow DOM polyfill wrapper.
+        if (obj.constructor.name === "GeneratedWrapper") {
+          return getTag(obj.impl);
+        }
+
+        return getTag(obj);
+      };
+      return hooks;
+    });
+    </script>
+
+    <link href="http://fonts.googleapis.com/css?family=Oswald:400,700" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Lato:400,700,900" rel="stylesheet" type="text/css">
+
+    <link type="text/css" href="css/irpane.css" rel="stylesheet">
+    <link type="text/css" href="css/hydra.css" rel="stylesheet">
+
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
+
+    
+    <script src="index.html_bootstrap.dart.js"></script>
+    
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/spin.js/1.3.2/spin.min.js"></script>
+
+    <script src="deps/codemirror-3.21/codemirror.js"></script>
+    <script src="deps/codemirror-3.21/modes/javascript.js"></script>
+    <link rel="stylesheet" href="deps/codemirror-3.21/codemirror.css">
+
+    <script src="jquery-2.0.3.js"></script>
+    <script src="bootstrap/js/bootstrap.js"></script>
+  </head>
+
+  <body><polymer-element name="ir-descriptions-v8">
+  <template>
+    <style type="text/css" scoped="">
+      div[data-hir], div[data-lir] { display: none; };
+    </style>
+    <div data-hir="CheckMaps" data-lir="check-maps">
+      <p>Checks whether value's hidden class matches expected value and deoptimizes if this is not the case.</p>
+      <p>Deoptimization at <code>CheckMaps</code> usually indicates that the code is polymorphic.</p>
+    </div>
+    <div data-hir="Deoptimize" data-lir="deoptimize">
+      <p>When executed this instruction always deoptimizes.</p>
+      <p>V8 generates then on control flow paths that were never executed before and thus contain no actionable type feedback that could be used to optimize the code.</p>
+      <p>For a function with a long running loop it is not uncommon to hit at OSR in the loop and then deoptimize on a <code>Deoptimize</code> emitted after the loop</p>
+    </div>
+    <div data-lir="lazy-bailout">
+      <p>This is a pseudo instruction that follows every call. </p>
+      <p>Some assumptions V8's optimizing compiler makes are not explicitly checked in the optimized code itself. Instead they are guarded globally in the runtime system. When a change happens that violates an assumption all optimized code depending on this assumption has to be discarded.</p>
+      <p>If dependant code is currently active on the call stack it is marked for <em>lazy deoptimization</em>, i.e. deoptimization that will happen as soon as control returns into it. That's why lazy deoptimization always follows a call.</p>
+      <p>Reasons for invalidating currently running optimized code via lazy deoptimization code can be numerous:</p>
+      <ul>
+        <li>activation of the debugger;</li>
+        <li>deoptimization of the same function down the call stack;</li>
+        <li>change in the shape of prototype for an object. V8 tries to omit checks that verify each object in the prototype chain and instead guards then in the runtime system;</li>
+        <li>representation tracking transition tree deprecation.</li>
+      </ul>
+    </div>
+    <div data-hir="Change">
+      <p>This instruction converts value from one internal representation to another.</p>
+      <p>It will deoptimize if the value can't be converted</p>
+    </div>
+    <div data-lir="tagged-to-i">
+      <p>Conversion from a tagged representation to a 32-bit signed integer. Can be either truncating or exact (see if hydrogen counterpart is marked with <code>truncating-int32</code>.</p>
+      <p>Deoptimizes when source is not representable in this format. Truncating conversions deoptimize when value is too big for an int32 type or not a number or <code>undefined</code>. Exact conversions deoptimize if <code>ToInt32(val) != val</code></p>
+    </div>
+    <div data-lir="check-smi">
+      <p>Checks that value is a tagged smi (<b>sm</b>all <b>i</b>nteger): it is a tagged integer representation used by V8.</p>
+      <p>On 32bit platforms smi can contain 31-bit signed integers and on 64bit platforms they are wide enough for 32bit signed integers.</p>
+      <p>If numeric value does not fit into a smi it has to be boxed as a <em>heap number</em>.</p>
+    </div>
+  </template>
+  
+</polymer-element><polymer-element name="dropdown-element">
+  <template>
+    <style>
+      .ui-dropdown {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .ui-dropdown-options {
+        display: none;
+      }
+
+      .open > .ui-dropdown-options {
+        display: block;
+      }
+
+      .ui-dropdown-selected:active,
+      .ui-dropdown-selected:focus {
+        outline: 0;
+      }
+
+      .ui-dropdown-caret {
+        display: inline-block;
+        font-family: FontAwesome;
+        font-style: normal;
+        font-weight: normal;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .ui-dropdown-caret:before {
+        content: "\f0d7";
+      }
+
+      .ui-dropdown-options {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        background-clip: padding-box;
+        display: none;
+      }
+    </style>
+    <div class="ui-dropdown">
+      <a class="ui-dropdown-selected" data-toggle="dropdown" href="#">{{valueText}}&nbsp;<i class="ui-dropdown-caret"></i></a>
+      <div class="ui-dropdown-options" on-click="{{selectAction}}">
+        <content></content>
+      </div>
+    </div>
+  </template>
+  
+</polymer-element>
+<polymer-element name="deopt-links">
+  <template>
+    <style>
+      a {
+        text-decoration: none;
+      }
+
+      .x-deopt-link {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .x-deopt-link > a {
+        font-family: 'Lato';
+        font-weight: bold;
+        letter-spacing: 0.05em;
+        position: relative;
+        display: block;
+        padding: 10px 8px;
+        color: #ffffff;
+        margin-right: 2px;
+        line-height: 1.428571429;
+        border: 0px solid transparent;
+        text-decoration: none;
+      }
+
+      .x-deopt-link a:active,
+      .x-deopt-link a:focus {
+        outline: 0;
+      }
+
+      .x-deopt-link-eager > a {
+        background-color: #C0392B;
+      }
+
+      .x-deopt-link-eager > a:hover {
+        background-color: #E74C3C;
+      }
+
+      .x-deopt-link-lazy > a {
+        background-color: #F39C12;
+      }
+
+      .x-deopt-link-lazy > a:hover {
+        background-color: #F1C40F;
+      }
+
+      .x-deopt-link-soft > a {
+        background-color: #8E44AD;
+      }
+
+      .x-deopt-link-soft > a:hover {
+        background-color: #9B59B6;
+      }
+    </style>
+    <template repeat="{{deopt in deoptInfo | enumerate}}">
+      <div class="x-deopt-link x-deopt-link-{{deopt.value.type}}">
+        <a href="#deopt-ir-{{deopt.value.id}}" on-click="{{jumpToDeoptAction}}" on-mouseenter="{{enterDeoptAction}}" on-mouseleave="{{leaveDeoptAction}}" data-target="{{deopt.index}}">deopt @{{deopt.value.id}}</a>
+      </div>
+    </template>
+  </template>
+  
+</polymer-element>
+<polymer-element name="graph-pane">
+  <template>
+    <style>
+      #graph {
+        margin: 0px auto;
+      }
+    </style>
+    <div>
+      <div id="graph"></div>
+    </div>
+  </template>
+  
+</polymer-element><polymer-element name="ir-pane">
+  <template>
+    <style type="text/css" scoped="">
+      /**
+       * Styles are in web/css/irpane.css.
+       *
+       * Not using scoped style for now because we need classes be visible
+       * globally to style xref popup the same way and it is currently created
+       * by bootstrap from a raw HTML not a component.
+       */
+    </style>
+    <div style="display: inline-block; position: relative;">
+      <table id="rows" class="irpane"></table>
+    </div>
+  </template>
+  
+</polymer-element><polymer-element name="method-list" apply-author-styles="">
+  <template>
+    <style>
+      .method-list {
+        display: -webkit-flex;
+        display: flex;
+
+        -webkit-flex-flow: column;
+        flex-flow: column;
+
+        -webkit-flex-direction: column;
+        flex-direction: column;
+
+        min-height: 0px;
+      }
+
+      .method-list-methods {
+        flex: 1 1;
+        -webkit-flex: 1 1 auto;
+        overflow-y: auto;
+        min-height: 0px;
+      }
+
+      .method-list-methods h3 {
+        color: white;
+      }
+
+      .method-list-footer {
+        min-height: 30px;
+        padding: 5px;
+      }
+
+      .method-list-methods::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+      }
+
+      .method-list-methods::-webkit-scrollbar-track,
+      .method-list-methods::-webkit-scrollbar-corner {
+        background: inherit;
+      }
+
+      .method-list-methods::-webkit-scrollbar-thumb {
+        background: #BDC3C7;
+        border-radius: 5px;
+      }
+
+      .nav > li > h3 {
+        font-family: 'Lato';
+        white-space: nowrap;
+      }
+
+      .phases {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .nav > li > h3 {
+        padding-left: 5px;
+        font-weight: 400;
+      }
+
+      .nav > li > h3 > a {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .nav > li > h3 > a:hover,
+      .nav > li > h3 > a:focus {
+        text-decoration: none;
+        background-color: #34495E;
+      }
+
+      .phases > li > a {
+        color: white;
+        display: block;
+        padding: 2px 15px;
+      }
+
+      .phases > li > a:hover,
+      .phases > li > a:focus {
+        text-decoration: none;
+        background-color: #34495E;
+      }
+
+      h3.deopt-eager {
+        color: #C0392B;
+        font-weight: 500 !important;
+      }
+
+      h3.deopt-lazy {
+        color: #F39C12;
+        font-weight: 500 !important;
+      }
+
+      h3.deopt-soft {
+        color: #8E44AD;
+        font-weight: 500 !important;
+      }
+
+      .toggle {
+        text-align: center;
+        width: 40px;
+        height: 40px;
+        border: none;
+        -webkit-appearance: none;
+        -ms-appearance: none;
+        -o-appearance: none;
+        appearance: none;
+        cursor: pointer;
+      }
+
+      .toggle:hover {
+        background: #34495E;
+      }
+
+      .toggle:after {
+        content: '\f071';
+        font-size: 16pt;
+        font-family: FontAwesome;
+        font-style: normal;
+        font-weight: normal;
+        line-height: 40px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        color: white;
+      }
+
+      .toggle:checked:after {
+        color: red;
+      }
+
+      .method-name-source {
+        font-size: 0.6em;
+        font-weight: bold;
+        /* background-color: #1ABC9C; */
+        padding: 2px;
+        border-radius: 4px;
+        border: 1px dashed #95A5A6;
+      }
+    </style>
+
+    <div class="method-list">
+      <div class="method-list-methods">
+        <ul class="nav nav-list">
+          <template repeat="{{method in filteredMethods | enumerate }}">
+            <li>
+              <template if="{{!method.value.hasSinglePhase}}">
+                <h3 class="deopt-{{method.value.worstDeopt}}">
+                  <template if="{{method.value.name.source != null}}">
+                    <div><span class="method-name-source">{{method.value.name.source}}</span></div>
+                  </template>
+                  {{method.value.name.display}}
+                </h3>
+                <ul class="phases">
+                  <template repeat="{{phase in method.value.phases | enumerate}}">
+                    <li><a href="#" on-click="{{selectPhase}}" data-phase="{{method.index}},{{phase.index}}">{{phase.value.name}}</a></li>
+                  </template>
+                </ul>
+              </template>
+              <template if="{{method.value.hasSinglePhase}}">
+                <h3 class="deopt-{{method.value.worstDeopt}}">
+                  <template if="{{method.value.name.source != null}}">
+                    <div><span class="method-name-source">{{method.value.name.source}}</span></div>
+                  </template>
+                  <a href="#" on-click="{{selectPhase}}" data-phase="{{method.index}},0">{{method.value.name.display}}</a>
+                </h3>
+              </template>
+            </li>
+          </template>
+        </ul>
+      </div>
+
+      <div class="method-list-footer">
+        <input type="text" placeholder="Filter methods" on-key-up="{{filterUpdated}}" on-changed="{{filterChanged}}" value="{{filter}}">
+        <input type="checkbox" class="toggle" checked="{{sortByDeopts}}" data-title="Sort by deopts">
+      </div>
+    </div>
+  </template>
+  
+</polymer-element><polymer-element name="open-file-button" apply-author-styles="">
+  <template>
+    <style scoped="">
+      input[type=file] {
+        visibility: hidden;
+        width: 0px;
+        height: 0px;
+        margin: 0px;
+        padding: 0px;
+      }
+
+      span.hidden {
+        position: absolute;
+        width: 0px;
+        height: 0px;
+        overflow: hidden;
+      }
+
+      button {
+        background: #2C3E50;
+        border: 0px;
+        color: white;
+        width: 40px;
+        height: 40px;
+        font-size: 16pt;
+      }
+
+      button:hover {
+        background: #34495E;
+      }
+    </style>
+    <span class="hidden">
+      <input id="file-input" type="file" multiple="multiple" on-change="{{changed}}">
+    </span>
+    <button on-click="{{clicked}}"><content></content></button>
+  </template>
+  
+</polymer-element>
+<polymer-element name="code-mirror">
+  <template>
+    <div id="editor"></div>
+  </template>
+  
+</polymer-element><polymer-element name="source-pane" attributes="method path">
+  <link rel="import" href="packages/irhydra/src/ui/code-mirror.html">
+  <template>
+    <code-mirror id="editor" lines="{{source}}" widgets="{{widgets}}">
+    </code-mirror>
+  </template>
+  
+</polymer-element><polymer-element name="source-path">
+  <template>
+    <style>
+      .source-path {
+        color: white;
+        background-color: #2C3E50;
+        font-family: 'Lato';
+        font-weight: bold;
+        padding: 10px 8px;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .source-path a,
+      .source-path a:hover,
+      .source-path a:focus {
+        text-decoration: none;
+        outline: 0;
+      }
+
+      .source-path a {
+        color: white;
+      }
+
+      .source-path a:hover {
+        color: #1ABC9C;
+      }
+    </style>
+    <span class="source-path">
+      <template if="{{!path.isEmpty}}">
+        [
+        <template repeat="{{f in path | enumerate}}">
+          <a href="#" on-click="{{switchAction}}" data-target="{{f.index}}">{{f.value.source.name}}</a> <i class="fa fa-angle-double-right"></i>
+        </template>
+      </template>
+    </span>
+  </template>
+  
+</polymer-element><polymer-element name="spinner-element">
+  <template>
+    <style>
+      #spinner {
+        width: 40px;
+        height: 40px;
+        display: block;
+        float: right;
+      }
+    </style>
+    <span id="spinner">&nbsp;</span>
+  </template>
+  
+</polymer-element>
+<polymer-element name="switching-scope">
+  <template>
+    <content></content>
+  </template>
+  
+</polymer-element>
+<polymer-element name="hydra-app">
+  <link rel="import" href="packages/irhydra/src/modes/v8/ui/descriptions.html">
+  <link rel="import" href="packages/irhydra/src/ui/dropdown-element.html">
+  <link rel="import" href="packages/irhydra/src/ui/deopt-links.html">
+  <link rel="import" href="packages/irhydra/src/ui/graph-pane.html">
+  <link rel="import" href="packages/irhydra/src/ui/ir-pane.html">
+  <link rel="import" href="packages/irhydra/src/ui/method-list.html">
+  <link rel="import" href="packages/irhydra/src/ui/open-file-button.html">
+  <link rel="import" href="packages/irhydra/src/ui/source-pane.html">
+  <link rel="import" href="packages/irhydra/src/ui/source-path.html">
+  <link rel="import" href="packages/irhydra/src/ui/spinner-element.html">
+  <link rel="import" href="packages/irhydra/src/ui/util/switching-scope.html">
+  <template>
+    <style>
+      @host {
+         *, :scope, scrollable-table {
+           position: fixed;
+           left: 0px;
+           right: 0px;
+           top: 0px;
+           bottom: 0px;
+           display: -webkit-flex;
+           display: flex;
+           -webkit-flex-flow: column;
+           flex-flow: column;
+         }
+      }
+
+      .header {
+        height: 40px;
+        padding: 0px;
+        background: #2C3E50;
+      }
+
+      button {
+        background: #2C3E50;
+        border: 0px;
+        color: white;
+        width: 40px;
+        height: 40px;
+        font-size: 16pt;
+      }
+
+      button:hover {
+        background: #34495E;
+      }
+
+      button:disabled {
+        color: #95A5A6;
+      }
+
+      button:disabled:hover {
+        background: #2C3E50;
+      }
+
+      .pane {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-flex-flow: row;
+        flex-flow: row;
+        position: relative;
+        -webkit-flex: 1 1;
+        flex: 1 1;
+      }
+
+      .sidebar {
+        min-width: 250px;
+        max-width: 250px;
+        background: #2C3E50;
+      }
+
+      .pane > * {
+        -webkit-flex: 1 1;
+        flex: 1 1;
+      }
+
+      .pane-controls {
+        position: absolute;
+        left: 250px;
+        top: 0px;
+        height: 40px;
+        padding-left: 0;
+        margin-bottom: 0;
+        margin-top: 0;
+        list-style: none;
+        background-color: #2C3E50;
+      }
+
+      .pane-controls:before,
+      .pane-controls:after {
+        display: table;
+        content: " ";
+      }
+
+      .pane-controls:after {
+        clear: both;
+      }
+
+      .pane-controls > div {
+        position: relative;
+        display: block;
+        text-align: center;
+        min-width: 4em;
+        float: left;
+        margin-bottom: -1px;
+      }
+
+      .pane-controls > :not(.tab-header) {
+        display: none !important;
+      }
+
+      .pane-controls > :not(.tab-header).active {
+        display: block !important;
+      }
+
+      /* @polyfill .pane-controls > div > a, .pane-controls > div > dropdown-element .ui-dropdown-selected */
+      .pane-controls > div > a,
+      .pane-controls > div > dropdown-element ^ .ui-dropdown-selected {
+        font-family: 'Lato';
+        font-weight: bold;
+        letter-spacing: 0.05em;
+        position: relative;
+        display: block;
+        padding: 10px 8px;
+        color: #ffffff;
+        margin-right: 2px;
+        line-height: 1.428571429;
+        border: 0px solid transparent;
+        text-decoration: none;
+      }
+
+      .pane-controls > div > a:hover {
+        color: #1ABC9C;
+        text-decoration: none;
+      }
+
+      .pane-controls > div.active > a,
+      .pane-controls > div.active > a:hover,
+      .pane-controls > div.active > a:focus {
+        color: #ffffff;
+        cursor: default;
+        background-color: #16A085;
+        border: 0px solid #16A085;
+        border-bottom-color: transparent;
+      }
+
+
+      /* @polyfill .pane-controls .ui-dropdown-options > a */
+      .pane-controls dropdown-element > a {
+        display: block;
+        padding: 3px 20px;
+        clear: both;
+        font-weight: normal;
+        line-height: 1.428571429;
+        color: #fff;
+        white-space: nowrap;
+        z-index: 9999;
+      }
+
+      /* @polyfill .pane-controls .ui-dropdown-options > a:hover, .pane-controls .ui-dropdown-options > a:focus */
+      .pane-controls dropdown-element > a:hover,
+      .pane-controls dropdown-element > a:focus {
+        color: #fff;
+        text-decoration: none;
+        background-color: #34495E;
+       }
+
+      /* @polyfill .pane-controls .ui-dropdown-options */
+      .pane-controls > div > dropdown-element ^ .ui-dropdown-options {
+        background-color: #2C3E50;
+      }
+
+      .panes > div {
+        display: none;
+      }
+
+      .panes > div.active {
+        display: block;
+      }
+
+      .pane > switching-scope {
+        display: -webkit-flex;
+        display: flex;
+        overflow: auto;
+      }
+
+      .panes, .panes > div {
+        -webkit-flex: 1 1;
+        flex: 1 1;
+      }
+
+      .ir-placeholder {
+        display: -webkit-flex;
+        display: flex;
+        -webkit-justify-content: center;
+        justify-content: center;
+        -webkit-align-items: center;
+        align-items: center;
+        text-align: center;
+        font-size: 6em;
+        font-family: Lato;
+        font-weight: 700;
+        background: #ECF0F1;
+        color: #BDC3C7;
+      }
+    </style>
+
+    <div class="header">
+      <open-file-button on-opened="{{openCompilation}}" data-title="Load Compilation Artifacts"><i class="fa fa-folder-open"></i></open-file-button>
+      <template if="{{files != null}}">
+        <button href="#" on-click="{{reloadCurrentFiles}}" title="Reload Current Files"><i class="fa fa-repeat"></i></button>
+      </template>
+      <spinner-element id="spinner"></spinner-element>
+      <template if="{{ir != null}}">
+        <switching-scope active="{{activeTab}}" class="pane-controls">
+          <div when-ir="" class="tab-header"><a href="#ir">IR</a></div>
+          <div when-graph="" class="tab-header"><a href="#graph">Graph</a></div>
+          <template if="{{!sourcePath.isEmpty}}">
+            <div when-source="" class="tab-header"><a href="#source">Source</a></div>
+          </template>
+          <div when-ir="">
+            <dropdown-element selected="{{codeMode}}">
+              <a href="#" data-value="split">Split Disassembly</a>
+              <a href="#" data-value="inline">Inline Disassembly</a>
+              <a href="#" data-value="none">Hide Disassembly</a>
+            </dropdown-element>
+          </div>
+          <div when-ir="" when-source="">
+            <deopt-links deopts="{{method.deopts}}" on-deopt-click="{{navigateToDeoptAction}}" on-deopt-enter="{{enterDeoptAction}}" on-deopt-leave="{{leaveDeoptAction}}">
+            </deopt-links>
+          </div>
+          <div when-source="">
+            <source-path path="{{sourcePath}}">
+            </source-path>
+          </div>
+        </switching-scope>
+      </template>
+    </div>
+
+    <div class="pane">
+      <template if="{{methods != null &amp;&amp; !methods.isEmpty}}">
+        <div class="sidebar">
+          <method-list methods="{{methods}}" on-selected="{{displayPhase}}"></method-list>
+        </div>
+        <template if="{{ir == null}}">
+          <div class="ir-placeholder">
+            <span>select a method</span>
+          </div>
+        </template>
+        <template if="{{ir != null}}">
+          <switching-scope active="{{activeTab}}" class="panes">
+            <div when-ir="">
+              <ir-pane id="ir-pane" ir="{{ir}}" codemode="{{codeMode}}"></ir-pane>
+            </div>
+            <div when-graph="">
+              <graph-pane ir="{{ir}}" on-block-mouse-over="{{showBlockAction}}" on-block-mouse-out="{{hideBlockAction}}">
+              </graph-pane>
+            </div>
+            <div when-source="">
+              <source-pane id="source-pane" path="{{sourcePath}}" on-deopt-enter="{{enterDeoptAction}}" on-deopt-leave="{{leaveDeoptAction}}">
+              </source-pane>
+            </div>
+          </switching-scope>
+        </template>
+      </template>
+    </div>
+  </template>
+  
+</polymer-element>
+    <div id="welcome-splash">
+      <div class="welcome-message">
+        <h1>IRHydra 2.0<span id="splash-spinner"></span></h1>
+        <p class="lead">This is an <span class="alpha-warning">alpha preview</span> of the tool that can display intermediate representations used by V8 and Dart VM optimizing compilers.</p>
+        <p>Originally it was intended for compiler developers but since release of the first version has been used by JavaScript/Dart developers investigating performance of their applications.</p>
+        <p>If it's you first time trying IRHydra consider watching the following screencast showcasing its main features:</p>
+        <p><iframe width="420" height="315" src="https://www.youtube.com/embed/pycQWDuCBN8" frameborder="0" allowfullscreen=""></iframe></p>
+        <h2>Demos</h2>
+        <p>Try clicking on the links below to explore features that IRHydra provides. Each link loads compilation artifacts collected from a single V8 or Dart VM run on a given source file.</p>
+        <ul>
+          <li>
+            <h3>V8</h3>
+            <ul>
+              <li><a href="#demo-1">demo #1</a> [<a href="https://code.google.com/p/irhydra/source/browse/web/demos/v8/deopt-eager/demo.js?name=polymerized" target="_blank">source file</a>]</li>
+              <li><a href="#demo-2">demo #2</a> [<a href="https://code.google.com/p/irhydra/source/browse/web/demos/v8/deopt-lazy/demo.js?name=polymerized" target="_blank">source file</a>]</li>
+              <li><a href="#demo-3">demo #3</a> [<a href="https://code.google.com/p/irhydra/source/browse/web/demos/v8/deopt-soft/demo.js?name=polymerized" target="_blank">source file</a>]</li>
+            </ul>
+          </li>
+          <li>
+            <h3>Dart VM</h3>
+            <ul>
+              <li><a href="#demo-4">demo #4</a> [<a href="https://code.google.com/p/irhydra/source/browse/web/demos/dart/demo.dart?name=polymerized" target="_blank">source file</a>]</li>
+            </ul>
+          </li>
+        </ul>
+        <h2>Compilation Artifacts Cheatsheet</h2>
+        <p>If you already have some artifacts collected go ahead and explore them with&nbsp;<i class="fa fa-folder-open"></i>&nbsp;otherwise here is how you can collect some.</p>
+        <h3>V8</h3>
+        <p class="alpha-warning">Currently you need to apply a <a href="https://code.google.com/p/irhydra/source/browse/patches/v8.r18822.patch?name=polymerized">patch</a> to your <em>recent version</em> of V8 to be able to collect all necessary information.</p>
+        <p>You need to pass the following flags to V8 to collect IR and deoptimization artifacts and be able to use source level view:</p>
+        <pre><span data-toggle="tooltip" data-title="Produce hydrogen.cfg containing high-level and low-level intermediate representations used by Crankshaft optimizing compiler.">--trace-hydrogen</span>
+<span data-toggle="tooltip" data-title="Dump only IR from the very last phase">--trace-phase=Z</span>
+<span data-toggle="tooltip" data-title="Print information about every deoptimization">--trace-deopt</span>
+<span data-toggle="tooltip" data-title="Emit comments as part of generated native code. Makes deoptimization traces more informative.">--code-comments</span>
+<span data-toggle="tooltip" data-title="Track precise source position information during optimization">--emit-opt-code-positions</span>
+<span data-toggle="tooltip" data-title="Redirect disassembly, source dumps and deoptimizations from stdout.">--redirect-code-traces</span>
+<span data-toggle="tooltip" data-title="Redirect disassembly, source dumps and deoptimizations from stdout into code.asm">--redirect-code-traces-to=code.asm</span>
+</pre>
+<p>Additionally you can pass the following flags to enable disassembly view. <span class="alpha-warning">This requires building V8 with <code>v8_enable_disassembler=1</code> GYP flag.</span></p>
+<pre><span data-toggle="tooltip" data-title="Output disassembly for every generated optimized function">--print-opt-code</span>
+</pre>
+        <p>When run with this flags V8 will produce two files <code>hydrogen.cfg</code> and <code>code.asm</code> both of which should be loaded into IRHydra.</p>
+        <p>When running in Chromium use <code>--js-flags="..."</code> to pass V8 flags and <code>--no-sandbox</code> to allow V8 to write <code>hydrogen.cfg</code> and <code>code.asm</code>.</p>
+        <h3>Dart VM</h3>
+        <p>You need to pass the following flags to Dart VM to collect IR and disassemble artifacts:</p>
+        <pre><span data-toggle="tooltip" data-title="Dump intermediate representation used by the optimizing compiler.">--print-flow-graph-optimized</span>
+<span data-toggle="tooltip" data-title="Disassemble every generated optimized method">--disassemble-optimized</span>
+<span data-toggle="tooltip" data-title="Annotate disassembly with comments to make it more readable">--code-comments</span>
+</pre>
+        <p>All data is dumped into standard output.</p>
+        <p>When running in Dartium use <code>DART_FLAGS</code> environment variable to pass flags.</p>
+        <p class="alpha-warning">Deoptimization matching and source level view is not currently available for Dart VM.</p>
+      </div>
+    </div>
+    <script>
+      (function () {
+        $("[data-toggle=tooltip]").tooltip();
+
+        var spinner = new Spinner({  color: '#2980B9' }).spin(document.getElementById("splash-spinner"));
+
+        document.addEventListener("HydraReady", function () {
+          spinner.stop();
+        }, false);
+
+        document.location.hash = "";
+      })();
+
+      function DESTROY_SPLASH() {
+        var splash = document.querySelector("#welcome-splash");
+        if (splash) {
+          splash.parentNode.removeChild(splash);
+        }
+      }
+    </script>
+    <hydra-app></hydra-app>
+  
+
+</body></html>

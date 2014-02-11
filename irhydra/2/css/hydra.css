@@ -1,0 +1,231 @@
+.sidebar-nav {
+  padding: 9px 0;
+}
+pre { white-space: pre; }
+
+span.boldy {
+  font-weight: bold;
+  line-height: 18px !important;
+}
+
+pre.highlighted-instruction {
+  background: rgba(255, 255, 0, 0.4) !important;
+}
+
+.hir-constant, .native-code-constant {
+  color: purple;
+}
+
+span.hir-range, span.hir-type, span.hir-changes, span.lir-env, span.lir-map {
+  color: rgba(0, 0, 0, 0.25);
+}
+span.hir-changes-all {
+  color: red;
+}
+
+span.lir-env, span.lir-map { display: none; }
+
+.lir-line {
+  background: rgba(125, 167, 217, 0.15) !important;
+}
+
+.native-code > td {
+  background: rgba(125, 167, 217, 0.05) !important;
+  font-size: 0.9em;
+}
+
+.highlight-ref {
+  background: gold;
+}
+
+#ir-pane {
+  background: white;
+}
+
+.xref .tooltip-inner {
+  max-width: 100% !important;
+}
+
+.tooltip.in.xref {
+  opacity: 1 !important;
+}
+
+.brand {
+  font-family: 'Roboto';
+}
+
+.tooltip.xref pre {
+  -moz-border-radius: 0;
+  -webkit-border-radius: 0;
+  -o-border-radius: 0;
+  border-radius: 0;
+  border-width: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: monospace;
+  font-size: inherit;
+  word-wrap: normal;
+  color: inherit;
+}
+
+.popover.xref, .popover.deopt {
+  max-width: 500px !important;
+}
+
+.deopt-marker, .deopt-marker:hover {
+  color: white;
+  cursor: pointer;
+}
+
+.deopt-marker-eager {
+  background-color: #C0392B;
+}
+
+.deopt-marker-eager:hover {
+  background-color: #E74C3C;
+}
+
+.deopt-marker-lazy {
+  background-color: #F39C12;
+}
+
+.deopt-marker-lazy:hover {
+  background-color: #F1C40F;
+}
+
+.deopt-marker-soft {
+  background-color: #8E44AD;
+}
+
+.deopt-marker-soft:hover {
+  background-color: #9B59B6;
+}
+
+#graph-pane {
+  margin-bottom: 500px;
+}
+
+.inline-marker {
+  cursor: pointer;
+  z-index: 1000;
+  color: #428bca;
+}
+
+.inline-marker:hover {
+  color: #2a6496;
+}
+
+.deopt-bookmark {
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.deopt-bookmark-eager {
+  color: #C0392B;
+}
+
+.deopt-bookmark-eager:hover {
+  color: #E74C3C;
+}
+
+.deopt-bookmark-lazy {
+  color: #F39C12;
+}
+
+.deopt-bookmark-lazy:hover {
+  color: #F1C40F;
+}
+
+.deopt-bookmark-soft {
+  color: #8E44AD;
+}
+
+.deopt-bookmark-soft:hover {
+  color: #9B59B6;
+}
+
+.CodeMirror {
+  font-size: 16pt;
+}
+
+.popover.deopt > .popover-content > pre {
+  font-size: 0.7em;
+}
+
+.popover.deopt .deopt-marker {
+  display: none;
+}
+
+h4.deopt-header:first-letter {
+  text-transform: capitalize;
+}
+
+h4.deopt-header-eager > .first-word {
+  color: #C0392B;
+}
+
+h4.deopt-header-lazy > .first-word {
+  color: #F39C12;
+}
+
+h4.deopt-header-soft > .first-word {
+  color: #8E44AD;
+}
+
+.welcome-message {
+  font-family: 'Lato';
+}
+
+.welcome-message h1, .welcome-message h2, .welcome-message h3 {
+  font-family: 'Oswald';
+}
+
+.welcome-message {
+  margin: 0 auto;
+  width: 600px;
+  font-size: 16px;
+  padding: 5em 0;
+}
+
+.alpha-warning {
+  color: #E74C3C;
+}
+
+#welcome-splash {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  top: 40px;
+  bottom: 0px;
+  z-index: 1000;
+  overflow: auto;
+}
+
+#splash-spinner {
+  display: inline-block;
+  position: absolute;
+  width: 2em;
+  height: 2em;
+  left: -2em;
+  right: 0px;
+  top: -0.5em;
+}
+
+.welcome-message h1 {
+  position: relative;
+}
+
+.welcome-message pre > span {
+  cursor: help;
+}
+
+.welcome-message pre > span:hover {
+  border-bottom: 1px dashed #ccc;
+}
+
+.welcome-message pre, .welcome-message code {
+  font-size: inherit;
+  color: inherit;
+  background: inherit;
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sourceRoot": "",
+  "sources": ["file:///Users/mraleph/src/irhydra/web/demos/dart/demo.dart"],
+  "names": ["loop","x","y","main"],
+  "mappings": "A;A,a,kB;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A,C;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;A,E,a,Y,A,A,C,C,C,C;A,E,C,E,C;A,C,C,C;A,E,C,G,C,C,A,E,I,6D,A,A,C,C,C,C;A,E,C,E,C;A,E,CAkBAA,uBAEE;MAXYC,MAAQC,MAAF,AAAJ,IAAQ,YAWJ,2BAA2B,AAC7C;SACF,A,C;A,E,CAQAC,WAEEH,uBAGAA;mCACF,A,C;A,E,C,C;A,E,C,O,C,C;A,E,C,C;A,E,C,W,C,C,E,E;A;A;A,uB;A,C,C,E,C,C;A,C,C,E,C,I;A,C,C,E,C,I;A;A,I,C,e,C,C,C;e,E;A;A;A;;;;A;;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;A;;;;;;;;;;;;;;;;;;;;;;;;;;;;;A;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;gB;A"
+}
