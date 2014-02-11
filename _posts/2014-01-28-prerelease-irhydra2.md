@@ -5,7 +5,7 @@ date: 2014-01-28
 ---
 
 <center style="margin-top: 5px; margin-bottom: 5px;"><iframe width="420" height="315" src="https://www.youtube.com/embed/pycQWDuCBN8" frameborder="0" allowfullscreen="">
-</iframe><br/><a href="http://alpha.irhydra.googlecode.com/git/build/index.html"><span style="font-size: 1.3em">deployed IRHydra 2.0</span></a></center>
+</iframe><br/><a href="http://mrale.ph/irhydra/2/"><span style="font-size: 1.3em">deployed IRHydra 2.0</span></a></center>
 
 It's been almost a year since I [released IRHydra](http://mrale.ph/blog/2013/02/17/release-the-irhydra.html), a tool that can visualize V8 and Dart VM compilation artifacts, help you navigate them and grok what JIT compiler does to your code.
 
@@ -63,7 +63,7 @@ IRHydra 2.0 UI was rewritten to use Polymer.dart. Uses bits of Bootstrap for sty
 Known issues and limitations
 ----------------------------
 
-Requires applying a [patch](https://code.google.com/p/irhydra/source/browse/patches/v8.r18822.patch?name=polymerized) on top of V8 to work.
+Requires applying a [patch](https://github.com/mraleph/irhydra/blob/polymerized/patches/v8.r18822.patch) on top of V8 to work.
 
 Future plans
 ------------

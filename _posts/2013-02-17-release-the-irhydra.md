@@ -13,9 +13,9 @@ that C1Visualizer, visualization tool created for C1 HotSpot compiler, can diges
 
 So one sleepless night back in 2011 I became tired of not smiling and hacked together a bunch of HTML and JavaScript that survived two years, multiple rewrites (one of them turning code base into Dart). Now I would like to share this code with everybody who by stroke of fate has to look at IR and native code produced by V8 and Dart VM's optimizing compilers.
 
-[Hosted version](http://web.irhydra.googlecode.com/git/hydra.html)
+[Hosted version](http://mrale.ph/irhydra/1/)
 
-[Source code](https://code.google.com/p/irhydra/)
+[Source code](https://github.com/mraleph/irhydra)
 
 Disclaimer
 ----------
@@ -29,7 +29,7 @@ For me the most important features of this tools are its universal availability 
 How does it work?
 -----------------
 
-<img src="/images/2013-02-17/methods-list.png" align="left" style="margin-right: 0.5em;"/> 
+<img src="/images/2013-02-17/methods-list.png" align="left" style="margin-right: 0.5em;"/>
 
 Quite simply: you take compilation artifacts produced by V8 or Dart VM and view them in the browser. IRHydra does not have any server component, it uses `FileReader` API so your files are not uploaded anywhere they are parsed and displayed locally.
 
@@ -72,7 +72,7 @@ Additionally viewer supports attaching descriptions to HIR and LIR instructions 
 
 <div style="text-align: center;"><img src="/images/2013-02-17/description.png"/></div>
 
-Only a handful of instructions is annotated right now but don't hesitate to file bugs against those that are not. If you are familiar with V8 IR you can even send me patches against [descriptions.html](https://code.google.com/p/irhydra/source/browse/lib/src/modes/v8/descriptions.html).
+Only a handful of instructions is annotated right now but don't hesitate to file bugs against those that are not. If you are familiar with V8 IR you can even send me patches against [descriptions.html](https://github.com/mraleph/irhydra/blob/master/lib/src/modes/v8/descriptions.html).
 
 Disassembly
 -----------

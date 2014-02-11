@@ -40,8 +40,8 @@
 
     <script src="jquery-2.0.3.js"></script>
     <script src="bootstrap/js/bootstrap.js"></script>
-    
-    
+
+
   </head>
 
   <body><polymer-element name="ir-descriptions-v8">
@@ -84,7 +84,7 @@
       <p>If numeric value does not fit into a smi it has to be boxed as a <em>heap number</em>.</p>
     </div>
   </template>
-  
+
 </polymer-element><polymer-element name="dropdown-element">
   <template>
     <style>
@@ -141,7 +141,7 @@
       </div>
     </div>
   </template>
-  
+
 </polymer-element>
 <polymer-element name="deopt-links">
   <template>
@@ -205,7 +205,7 @@
       </div>
     </template>
   </template>
-  
+
 </polymer-element>
 <polymer-element name="graph-pane">
   <template>
@@ -218,7 +218,7 @@
       <div id="graph"></div>
     </div>
   </template>
-  
+
 </polymer-element><polymer-element name="ir-pane">
   <template>
     <style type="text/css" scoped="">
@@ -234,7 +234,7 @@
       <table id="rows" class="irpane"></table>
     </div>
   </template>
-  
+
 </polymer-element><polymer-element name="method-list" apply-author-styles="">
   <template>
     <style>
@@ -415,7 +415,7 @@
       </div>
     </div>
   </template>
-  
+
 </polymer-element><polymer-element name="open-file-button" apply-author-styles="">
   <template>
     <style scoped="">
@@ -452,20 +452,20 @@
     </span>
     <button on-click="{{clicked}}"><content></content></button>
   </template>
-  
+
 </polymer-element>
 <polymer-element name="code-mirror">
   <template>
     <div id="editor"></div>
   </template>
-  
+
 </polymer-element><polymer-element name="source-pane" attributes="method path">
   <link rel="import" href="packages/irhydra/src/ui/code-mirror.html">
   <template>
     <code-mirror id="editor" lines="{{source}}" widgets="{{widgets}}">
     </code-mirror>
   </template>
-  
+
 </polymer-element><polymer-element name="source-path">
   <template>
     <style>
@@ -503,7 +503,7 @@
       </template>
     </span>
   </template>
-  
+
 </polymer-element><polymer-element name="spinner-element">
   <template>
     <style>
@@ -516,13 +516,13 @@
     </style>
     <span id="spinner">&nbsp;</span>
   </template>
-  
+
 </polymer-element>
 <polymer-element name="switching-scope">
   <template>
     <content></content>
   </template>
-  
+
 </polymer-element>
 <polymer-element name="hydra-app">
   <link rel="import" href="packages/irhydra/src/modes/v8/ui/descriptions.html">
@@ -791,11 +791,11 @@
       </template>
     </div>
   </template>
-  
+
 </polymer-element>
     <div id="welcome-splash">
       <div class="welcome-message">
-        <h1>IRHydra 2.0<span id="splash-spinner"></span></h1>
+        <h1>IRHydra<sup>2</sup> <span id="splash-spinner"></span></h1>
         <p class="lead">This is an <span class="alpha-warning">alpha preview</span> of the tool that can display intermediate representations used by V8 and Dart VM optimizing compilers.</p>
         <p>Originally it was intended for compiler developers but since release of the first version has been used by JavaScript/Dart developers investigating performance of their applications.</p>
         <p>If it's you first time trying IRHydra consider watching the following screencast showcasing its main features:</p>
@@ -870,7 +870,7 @@
     <hydra-app></hydra-app>
 
     <script src="index.html_bootstrap.dart.js"></script>
-    
-  
+
+
 
 </body></html>
