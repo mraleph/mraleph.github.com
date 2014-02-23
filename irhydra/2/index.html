@@ -34,6 +34,9 @@
 
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/spin.js/1.3.2/spin.min.js"></script>
 
+    <script src="deps/esprima.js"></script>
+    <script src="deps/estraverse.js"></script>
+
     <script src="deps/codemirror-3.21/codemirror.js"></script>
     <script src="deps/codemirror-3.21/modes/javascript.js"></script>
     <link rel="stylesheet" href="deps/codemirror-3.21/codemirror.css">
@@ -465,7 +468,7 @@
 </polymer-element><polymer-element name="source-pane" attributes="method path">
   <link rel="import" href="packages/irhydra/src/ui/code-mirror.html">
   <template>
-    <code-mirror id="editor" lines="{{source}}" widgets="{{widgets}}">
+    <code-mirror id="editor" lines="{{source}}" widgets="{{widgets}}" lineclasses="{{lineClasses}}">
     </code-mirror>
   </template>
   
@@ -837,13 +840,13 @@
         <h2>Compilation Artifacts Cheatsheet</h2>
         <p>If you already have some artifacts collected go ahead and explore them with&nbsp;<i class="fa fa-folder-open"></i>&nbsp;otherwise here is how you can collect some.</p>
         <h3>V8</h3>
-        <p class="alpha-warning">Currently you need to apply a <a href="https://code.google.com/p/irhydra/source/browse/patches/v8.r18822.patch?name=polymerized">patch</a> to your <em>recent version</em> of V8 to be able to collect all necessary information.</p>
+        <p class="alpha-warning">You need V8 version &gt;= 2.24.39 to use IRHydra<sup>2</sup>. You can check <code>about:version</code> to see if your browser comes with the suitable version.</p>
         <p>You need to pass the following flags to V8 to collect IR and deoptimization artifacts and be able to use source level view:</p>
         <pre><span data-toggle="tooltip" data-title="Produce hydrogen.cfg containing high-level and low-level intermediate representations used by Crankshaft optimizing compiler.">--trace-hydrogen</span>
 <span data-toggle="tooltip" data-title="Dump only IR from the very last phase">--trace-phase=Z</span>
 <span data-toggle="tooltip" data-title="Print information about every deoptimization">--trace-deopt</span>
 <span data-toggle="tooltip" data-title="Emit comments as part of generated native code. Makes deoptimization traces more informative.">--code-comments</span>
-<span data-toggle="tooltip" data-title="Track precise source position information during optimization">--emit-opt-code-positions</span>
+<span data-toggle="tooltip" data-title="Track precise source position information during optimization">--hydrogen-track-positions</span>
 <span data-toggle="tooltip" data-title="Redirect disassembly, source dumps and deoptimizations from stdout.">--redirect-code-traces</span>
 <span data-toggle="tooltip" data-title="Redirect disassembly, source dumps and deoptimizations from stdout into code.asm">--redirect-code-traces-to=code.asm</span>
 </pre>
@@ -851,7 +854,16 @@
 <pre><span data-toggle="tooltip" data-title="Output disassembly for every generated optimized function">--print-opt-code</span>
 </pre>
         <p>When run with this flags V8 will produce two files <code>hydrogen.cfg</code> and <code>code.asm</code> both of which should be loaded into IRHydra.</p>
-        <p>When running in Chromium use <code>--js-flags="..."</code> to pass V8 flags and <code>--no-sandbox</code> to allow V8 to write <code>hydrogen.cfg</code> and <code>code.asm</code>.</p>
+        <p>When running in Chromium use <code>--js-flags="..."</code> to pass V8 flags and <code>--no-sandbox</code> to allow V8 to write <code>hydrogen-&lt;pid&gt;-&lt;id&gt;.cfg</code> and <code>code-&lt;pid&gt;-&lt;id&gt;.asm</code>.</p>
+        <pre>--no-sandbox                           \
+--js-flags="--trace-hydrogen           \
+            --trace-phase=Z            \
+            --trace-deopt              \
+            --code-comments            \
+            --hydrogen-track-positions \
+            --redirect-code-traces"
+</pre>
+        <p>Notice that there is no need to pass <code>--redirect-code-traces-to=code.asm</code> flag, this guarantees that in the presence of multiple renderer processes compilation artifacts are correctly split between separate files.</p>
         <h3>Dart VM</h3>
         <p>You need to pass the following flags to Dart VM to collect IR and disassemble artifacts:</p>
         <pre><span data-toggle="tooltip" data-title="Dump intermediate representation used by the optimizing compiler.">--print-flow-graph-optimized</span>
