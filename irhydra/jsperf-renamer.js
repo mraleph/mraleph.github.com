@@ -20,7 +20,7 @@
           cases.push({
             // Cleanup case name, we will use it as a function name in dynamically
             // generated JS source.
-            name: 'case$' + name.replace(/[^\w]/g, '_'),
+            name: 'Benchmark$' + name.replace(/[^\w]/g, '_'),
 
             // Wrap case body just like Benchmark.js wraps it. This will allow to avoid
             // some false-positives when one test case is a prefix of another.
