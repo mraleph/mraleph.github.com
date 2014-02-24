@@ -39,11 +39,37 @@ h1, h2, h3, h4 {
 }
 
 code, pre {
-  font-family: 'Droid Sans Mono', monospace;
+  font-family: 'Inconsolanta', monospace;
 }
 
 img.centered {
   margin-left: auto;
   margin-right: auto;
   display: block;
+}
+
+.hydrogen {
+  background-color: white !important;
+}
+
+.hydrogen > table > tbody > tr > td:first-child {
+  background-color: #F7F7F7;
+  text-align: right;
+  min-width: 3em;
+}
+
+.hydrogen > table > tbody > tr > td:last-child {
+  background-color: white;
+}
+
+.hydrogen .ir-ref {
+  color: #428bca;
+}
+
+.hydrogen .boldy {
+  font-weight: bold;
+}
+
+.hydrogen .lir {
+  background: rgba(125, 167, 217, 0.15) !important;
 }

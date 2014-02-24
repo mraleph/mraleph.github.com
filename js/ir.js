@@ -1,6 +1,6 @@
 (function () {
-  function row(a, b) {
-    return '<tr><td style="border-right: 1px solid #ccc;">' + a + '</td><td>' + b + ' </td></tr>';
+  function row(a, b, k) {
+    return '<tr><td style="border-right: 1px solid #ccc;">' + a + '</td><td class="' + k + '">' + b + ' </td></tr>';
   }
 
   function span(k, v) {
@@ -11,8 +11,8 @@
     [ /^0x[a-f0-9]+/, "mh" ],
     [ /^\d+/, "mi" ],
     [ /^".*?"/, "s1" ],
-    [ /^[idstv]\d+/, "nb" ],
-    [ /^B\d+/, "nf" ],
+    [ /^[idstv]\d+/, "ir-ref" ],
+    [ /^B\d+/, "ir-ref boldy" ],
     [ /^;;.*$/, "c1" ]
   ];
 
@@ -37,19 +37,21 @@
   for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i];
     var lines = node.innerText.split("\n").map(function (line) {
-      var m = line.match(/^([Bidstv]\d+)?(\s+(\w+)?(.*))?$/);
+      var m = line.match(/^([Bidstv]?\d+)?(\s+([-\w]+)?(.*))?$/);
       if (m === null) {
         return row("", "");
       }
 
       var val = m[1];
-      if (val === void 0) {
+      var isLir = false;
+      if (typeof val === "undefined") {
         val = "";
       } else {
-        val = span((val[0] === "B") ? "nf" : "nb", val);
+        isLir = /^\d+$/.test(val);
+        val = span((val[0] === "B") ? "ir-ref boldy" : "ir-ref", val);
       }
 
-      return row(val, span("nf", m[3] || "") + hi(m[4] || ""));
+      return row(val, span("boldy", m[3] || "") + hi(m[4] || ""), isLir ? "lir" : "");
     });
 
     node.innerHTML = '<table style="border-spacing: 0px; border-collapse: collapse;">' + lines.join('') + '</table>';
