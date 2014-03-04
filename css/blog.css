@@ -1,5 +1,5 @@
 body {
-  font-family: 'Droid Sans', sans-serif;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .post-body, .post-title, .post-comments {
@@ -13,7 +13,7 @@ body {
 }
 
 .post-title div {
-  font-family: 'Droid Sans Serif';
+  font-family: 'Oswald', serif;
   font-size: 2em;
   margin-top: 0.83em;
   margin-bottom: 0px;
@@ -35,7 +35,7 @@ a:hover {
 }
 
 h1, h2, h3, h4 {
-  font-family: 'Droid Serif', serif;
+  font-family: 'Oswald', serif;
 }
 
 code, pre {
