@@ -27,7 +27,7 @@ Back in the glorious days of interpreted JavaScript you could write:
 {% highlight javascript %}
 function CostOfLoop(N) { /* let the cost of empty loop be $C_{loop}$ */
   var start = Date.now();
-  for(var i = 0; i &lt; N; i++) {
+  for(var i = 0; i < N; i++) {
     /* Nothing to do here. */
   }
   var end = Date.now();
@@ -39,7 +39,7 @@ function CostOfLengthPlusLoop(N) {
   var res = 0;
 
   var start = Date.now();
-  for(var i = 0; i &lt; N; i++) {
+  for(var i = 0; i < N; i++) {
     res = str.length; /* let cost of a single operation be $C_{op}$ */
   }
   var end = Date.now();
@@ -76,7 +76,7 @@ Lets now take a look at the *intermediate representation* that V8's optimizing c
 
 {% highlight javascript %}
 // WARM UP
-for (var i = 0; i &lt; 1000; i++) CostOfLength(1e5);
+for (var i = 0; i < 1000; i++) CostOfLength(1e5);
 {% endhighlight %}
 
 <pre class="hydrogen">
@@ -131,15 +131,15 @@ It's quite easy to try out by adding a simple canonicalization rule for `HString
 
 {% highlight cpp %}
 HValue* HStringLength::Canonicalize() {
-  if (value()-&gt;IsConstant() &&
-      HConstant::cast(value())-&gt;representation().IsTagged() &&
-      HConstant::cast(value())-&gt;handle()->IsString()) {
+  if (value()->IsConstant() &&
+      HConstant::cast(value())->representation().IsTagged() &&
+      HConstant::cast(value())->handle()->IsString()) {
     // If value is string then replace this instruction with length of that string.
-    Handle&lt;String&gt; string_value =
-        Handle&lt;String&gt;::cast(HConstant::cast(value())-&gt;handle());
-    HConstant* length = new(block()-&gt;zone())
-        HConstant(string_value-&gt;length(), Representation::Integer32());
-    length-&gt;InsertBefore(this);
+    Handle<String>; string_value =
+        Handle<String>::cast(HConstant::cast(value())->handle());
+    HConstant* length = new(block()->zone())
+        HConstant(string_value->length(), Representation::Integer32());
+    length->InsertBefore(this);
     return length;
   }
   return this;
@@ -148,33 +148,33 @@ HValue* HStringLength::Canonicalize() {
 
 With this trivial 14 lines change most of which is just boilerplate code `StringLength` disappears entirely from the optimized version of `CostOfLength` function and mathematics of the microbenchmark is distorted further:
 
-<pre>
-<b>B0:</b>
-  t4 = Parameter 1 <em>/* N */</em>
-  Goto <b>B1</b>
+<pre class="hydrogen">
+B0
+t4 Parameter 1 // N
+   Goto B1
 
-<b>B1:</b>
-  i20 = Constant 0
-  i51 = Constant 1
-  t19 = Constant "Hello"
-  t25 = CallConstantFunction <em>Date.now</em>
-  t51 = StringLength t19
-  i147 = Constant 5 <em>/* StringLength was evaluated during compilation! */</em>
-  i138 = Change t4 tagged to int
-  Goto <b>B2</b>
+B1
+i20  Constant 0
+i51  Constant 1
+t19  Constant "Hello"
+t25  CallConstantFunction Date.now<
+t51  StringLength t19
+i147 Constant 5 // StringLength was evaluated during compilation!
+i138 Change t4 tagged to int
+     Goto B2
 
-<b>B2:</b> <em>/* loop entry */</em>
-  i32 = &#966;(i20, i147) <em>/* res */</em>
-  i34 = &#966;(i20, i53)  <em>/* i */ </em>
-  CompareIDAndBranch (i34 &lt; i138) goto (<b>B3</b>, <b>B5</b>)
+B2 // loop entry
+i32 Phi [i20, i147] // res
+i34 Phi [i20, i53]  // i 
+    CompareIDAndBranch (i34 &lt; i138) goto (B3, B5)
 
-<b>B3:</b>
-  Goto <b>B4</b>
+B3
+  Goto B4
 
-<b>B4:</b>
+B4
   StackCheck
-  i53 = Add i34 i52 <em>/* i++ */</em>
-  Goto <b>B2</b>
+  i53 Add i34 i52 // i++
+  Goto B2
 </pre>
 
 $$\frac{(0 \cdot C_{op} + C_{loop}) - C_{loop}}{N} \approx \frac{0}{N} = 0$$
