@@ -41,7 +41,7 @@
       var comment = "";
       if (m !== null) {
         line = m[1];
-        comment = "<em>" + m[2] + "</em>";
+        comment = span("c1", m[2]);
       }
       m = line.match(/^([Bidstv]?\d+)?(\s+([-\w]+)?(.*))?$/);
       if (m === null) {
