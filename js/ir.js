@@ -37,7 +37,13 @@
   for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i];
     var lines = node.innerText.split("\n").map(function (line) {
-      var m = line.match(/^([Bidstv]?\d+)?(\s+([-\w]+)?(.*))?$/);
+      var m = line.match("^(.*?)(//.*?)$");
+      var comment = "";
+      if (m !== null) {
+        line = m[1];
+        comment = "<em>" + m[2] + "</em>";
+      }
+      m = line.match(/^([Bidstv]?\d+)?(\s+([-\w]+)?(.*))?$/);
       if (m === null) {
         return row("", "");
       }
@@ -51,7 +57,7 @@
         val = span((val[0] === "B") ? "ir-ref boldy" : "ir-ref", val);
       }
 
-      return row(val, span("boldy", m[3] || "") + hi(m[4] || ""), isLir ? "lir" : "");
+      return row(val, span("boldy", m[3] || "") + hi(m[4] || "") + comment, isLir ? "lir" : "");
     });
 
     node.innerHTML = '<table style="border-spacing: 0px; border-collapse: collapse;">' + lines.join('') + '</table>';
