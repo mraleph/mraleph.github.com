@@ -157,7 +157,7 @@ B1
 i20  Constant 0
 i51  Constant 1
 t19  Constant "Hello"
-t25  CallConstantFunction Date.now<
+t25  CallConstantFunction Date.now
 t51  StringLength t19
 i147 Constant 5 // StringLength was evaluated during compilation!
 i138 Change t4 tagged to int
