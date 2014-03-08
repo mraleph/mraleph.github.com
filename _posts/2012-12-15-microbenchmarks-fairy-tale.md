@@ -272,12 +272,6 @@ Take care and don't fall into the Sphinx's fairy tale trap again.
     }
   });
 </script>
-<script>
-(function() {
-  var el = document.querySelector("[type='text/x-mathjax-config']");
-  el.text = el.text.replace("<![CDATA[", "").replace("]]>", "");
-})();
-</script>
 <script type="text/javascript"
   src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
