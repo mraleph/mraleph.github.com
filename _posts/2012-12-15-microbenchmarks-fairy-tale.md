@@ -264,16 +264,7 @@ The time when you could have easily guessed the cost of a single operation by si
 
 Take care and don't fall into the Sphinx's fairy tale trap again.
 
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [['$','$'], ['\\(','\\)']],
-      skipTags: ["script","noscript","style","textarea"]
-    }
-  });
-</script>
-<script type="text/javascript"
-  src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+<script type="text/javascript" src="/js/mathjax.js">
 </script>
 <script type="text/javascript" src="/js/ir.js">
 </script>
