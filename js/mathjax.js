@@ -1,7 +1,7 @@
 (function() {
   var CONFIG = "MathJax.Hub.Config({"
              + "  tex2jax: {"
-             + "    inlineMath: [['$','$'], ['\\(','\\)']],"
+             + "    inlineMath: [['$','$'], ['\\\\(','\\\\)']],"
              + "    skipTags: ['script','noscript','style','textarea']"
              + "  }"
              + "});";
