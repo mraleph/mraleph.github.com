@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>JIT compilation - TechTalksNSU - March 2014</title>
+
+		<meta name="description" content="V8 - CWP 2013 Fall">
+		<meta name="author" content="Vyacheslav Egorov">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/simple.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="css/googlecode.css">
+
+    <style type="text/css">
+      .golden {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      span.golden-block {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.greenish-block {
+        background: rgba(0, 255, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.redish {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      .ic-arithm {
+        background: rgba(22, 160, 133, 0.6) !important;
+        border-radius: 10px;
+        padding: 0px 10px !important;
+      }
+
+      .ic-prop {
+        background: rgba(142, 68, 173, 0.6) !important;
+        border-radius: 10px;
+        padding: 0px 10px !important;
+      }
+
+      .uuu {
+        color: #2980B9 !important;
+        text-transform: uppercase !important;
+        font-size: 3.0em !important;
+        font-family: Impact, sans-serif !important;
+      }
+    </style>
+
+    <style>
+
+      .link-transition {
+        fill: none;
+        stroke: #D35400;
+        stroke-width: 1.5px;
+        stroke-dasharray: 0,2 1;
+      }
+
+      .link-ref {
+        fill: none;
+        stroke: black;
+        stroke-width: 1.5px;
+      }
+
+      #arrow-ref {
+        fill: black;
+      }
+
+      #arrow-transition {
+        fill: #D35400;
+      }
+
+      .klass {
+        fill: #2980B9;
+        stroke: #2980B9;
+        stroke-width: 1.5px;
+      }
+
+      text {
+        font: 10pt "Monaco";
+        pointer-events: none;
+        text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+      }
+
+      .object-slot-text {
+        font: 10px monospace !important;
+        pointer-events: none;
+        text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+      }
+
+      .object-slot {
+        fill: white;
+        stroke: black;
+        stroke-width: 1px;
+      }
+
+      .invisible { visibility: hidden; }
+
+    </style>
+
+
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<![endif]-->
+
+    <script src="js/jquery.js"></script>
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-6701581-4']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+          <h1><b>V8 &amp; DartVM</b></h1>
+          <p>Вячеслав Егоров</p>
+          <p><a href="https://twitter.com/mraleph">@mraleph</a>, <a href="mailto:me@mrale.ph">me@mrale.ph</a></p>
+          <p>Tech Talks NSU, March 2014</p>
+				</section>
+
+        <section>
+          <h4>V8 - JS VM<br/>внутри <b>Chrome</b> и <b>node.js</b></h4>
+        </section>
+
+        <section>
+          <h4>Dart - новый язык для вебпрограммирования</h4>
+        </section>
+
+        <section>
+          <h3><em>VM</em> - это просто</h3>
+        </section>
+
+        <section>
+          <h3><em><b><span style="color: #C0392B;">Быстрая</span></b></em> VM - сложнее</h3>
+        </section>
+
+        <section>
+          <h3>В чем проблема?</h3>
+        </section>
+
+        <section data-background="images/slides/slide-1-004.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-1-005.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-1-006.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-1-007.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-1-008.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Adding integers.
+function add(a, b) {
+  return a + b;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Adding doubles.
+function add(a, b) {
+  return a + b;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Concatenating strings.
+function add(a, b) {
+  return a + b;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Arrays are just objects with
+// properties "0", "1", "2", ...
+Array.prototype[1] = "ha!";
+var arr = [0, /* hole */ , 2];
+arr[1] // => "ha!"
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Making a "class".
+function Dog(name, breed) {
+  this.name  = name;
+  this.breed = breed;
+}
+
+Dog.prototype.woof = function () {
+  /* ... */
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Inheriting from a class.
+function Dog(name, breed) {
+  Animal.call(this, name);
+  this.breed = breed;
+}
+
+Dog.prototype =
+   Object.create(Animal.prototype);
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Another way to create a dog.
+var dog = {
+  name: name,
+  breed: breed,
+  woof: function () { /* ... */ }
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Yet another way.
+function makeADog(name, breed) {
+  // name and breed are now "private"
+  return {
+    woof: function () { /* ... */ }
+  }
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Yet another way.
+var Dog = {
+  woof: function () { /* ... */ }
+};
+
+function makeADog() {
+  var dog = Object.create(Dog);
+  dog.name = name;
+  dog.breed = name;
+  return dog;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h4>Dart is simpler</h4>
+          <ul>
+            <li>Real frozen classes</li>
+            <li>Real arrays (fixed length and growable)</li>
+            <li>int vs. double separation</li>
+            <li><span style="color: #C0392B;">still dynamically typed</span></li>
+          </ul>
+        </section>
+
+
+        <section>
+          <h3>
+          <ul>
+            <li>Representation</li>
+            <li>Resolution</li>
+            <li>Redundancy</li>
+          </ul>
+          </h3>
+        </section>
+
+        <section>
+          <h3 class="uuu">Representation</h3>
+        </section>
+
+        <section data-background="images/boxing.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h4>Use <em>tagging</em> to avoid boxing everything</h4>
+        </section>
+
+        <section>
+          <h4>Pointer has last bit unused<br/> due to alignment</h4>
+        </section>
+
+        <section>
+          <p>pointer: <code>xx...x<b>1</b></code></p>
+          <pre><code data-trim data-noescape>
+function tag(ptr) { // ptr & 1 === 0
+  return ptr | 1;
+}
+
+function untag(val) {
+  return val & ~1;
+}
+
+function isPtr(val) {
+  return (val & 1) === 1;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <p><em>small</em> integer: <code>xx...x<b>0</b></code></p>
+          <pre><code data-trim data-noescape>
+function tag(val) {
+  return val << 1;
+}
+
+function untag(val) {
+  return val >> 1;
+}
+
+function isSmi(val) {
+  return (val & 1) === 0
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h4>Double arithmetic <br/> &rArr; boxing</h4>
+        </section>
+
+        <section>
+          <h3>Objects?</h3>
+        </section>
+
+        <section data-background="images/cloud.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h3>Hidden classes</h3>
+          <h3>&approx; <em>maps</em> from Self VM</h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="1">
+          <pre><code data-trim data-noescape>
+function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+<span class="golden">var p1 = new Point(1, 2);</span>
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="2">
+          <pre><code data-trim data-noescape>
+<span class="golden">function Point(x, y) {</span>
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="3">
+          <pre><code data-trim data-noescape>
+function Point(x, y) {
+  <span class="golden">this.x = x;</span>
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="4">
+          <pre><code data-trim data-noescape>
+function Point(x, y) {
+  this.x = x;
+  <span class="golden">this.y = y;</span>
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="5">
+          <pre><code data-trim data-noescape>
+function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+<span class="golden">var p2 = new Point(3, 4);</span>
+          </code></pre>
+        </section>
+
+        <section data-stage="6">
+          <pre><code data-trim data-noescape>
+<span class="golden">function Point(x, y) {</span>
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="7">
+          <pre><code data-trim data-noescape>
+function Point(x, y) {
+  <span class="golden">this.x = x;</span>
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="8">
+          <pre><code data-trim data-noescape>
+function Point(x, y) {
+  this.x = x;
+  <span class="golden">this.y = y;</span>
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section  data-stage="9">
+          <pre><code data-trim data-noescape>
+function Point(x, y) {
+  this.x = x;
+  this.y = y;</span>
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+<span class="golden">p2.z = 5;</span>
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Approximates <em>static</em> structure <em>dynamic</em>ally.</h3>
+        </section>
+
+        <section>
+          <h3>Essential in V8, <br/> not needed in DartVM.</h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+var arr = [];
+for (var i = 0; i < 101; i++)
+  arr[i] = Math.sqrt(i);
+          </code></pre>
+        </section>
+
+        <section data-background="images/array-boxed.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/array-unboxed.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h3>Track <em>denseness</em> and (un)box!</h3>
+        </section>
+
+        <section data-background="images/array-transitions.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h3>Same for properties</h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// Want "real" fast method calls
+C.prototype.methodFoo = function () {
+  /* ... */
+};
+C.prototype.methodBar = function () {
+  /* ... */
+};
+
+obj.methodFoo();
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Don't want (pseudo-code)
+m = LoadProperty(obj, "methodFoo")
+CheckIfFunction(m)
+Invoke(m, obj)
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Want (pseudo-code)
+CheckClass(obj, klass0);
+Invoke(methodFoo, obj);
+          </code></pre>
+        </section>
+
+        <section>
+          <h4><em>Promote</em> functions to hidden class</h4>
+        </section>
+
+        <section data-background="images/methods.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h4>Catch: The <em>whole</em> closure is promoted!</h4>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+// What is "perf-unfriendly" here?
+function buyDog() {
+  return {
+    woof: function () {
+      /* ... */
+    }
+  }
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h4>different <code>woof</code>&rArr;<br/>different classes</h4>
+        </section>
+
+        <section>
+          <h4>Track field types.</h4>
+          <h5>(Dart VM does this too)</h5>
+        </section>
+
+        <section data-background="images/field-types.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h4>allows to reuse boxes</h4>
+        </section>
+
+        <section data-background="images/reusable-box.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h4>store directly</h4>
+          <h4>copy on load</h4>
+        </section>
+
+        <section data-background="images/obj-structure.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h4>objects are not always structures</h4>
+          <ul>
+            <li>too many properties</li>
+            <li><code>delete obj.prop</code></li>
+          </ul>
+        </section>
+
+        <section data-background="images/obj-dictionary.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h3 class="uuu">Resolution</h3>
+        </section>
+
+        <section>
+          <pre style="font-size: .3em;"><code data-trim data-noescape>
+function Load(receiver, property) {
+ var O = ToObject(receiver);
+ var P = ToString(property);
+ var desc = O.[[GetProperty]](P);
+ if (desc === $undefined) return $undefined;
+ if (IsDataDescriptor(desc)) return desc.Value;
+ assert(IsAccessorDescriptor(desc));
+ var getter = desc.Get;
+ if (getter === $undefined) return $undefined;
+ return getter.[[Call]](receiver);
+}
+
+JSObject.prototype.[[GetProperty]] = function (P) {
+ var prop = this.[[GetOwnProperty]](P);
+ if (prop !== $undefined) return prop;
+ var proto = this.[[Proto]];
+ if (proto === $null) return $undefined;
+ return proto.[[GetPropery]](P);
+};
+
+JSObject.prototype.[[GetOwnProperty]] = function (P) {
+ return this.properties.get(P);
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: .3em;"><code data-trim data-noescape>
+function Load(receiver, property) {
+ var O = ToObject(receiver);
+ var P = ToString(property);
+ var desc = O.[[GetProperty]](P);
+ if (desc === $undefined) return $undefined;
+ if (IsDataDescriptor(desc)) return desc.Value;
+ assert(IsAccessorDescriptor(desc));
+ var getter = desc.Get;
+ if (getter === $undefined) return $undefined;
+ return getter.[[Call]](receiver);
+}
+
+JSObject.prototype.[[GetProperty]] = function (P) {
+ var prop = this.[[GetOwnProperty]](P);
+ if (prop !== $undefined) return prop;
+ var proto = this.[[Proto]];
+ if (proto === $null) return $undefined;
+ return proto.[[GetPropery]](P);
+};
+
+JSObject.prototype.[[GetOwnProperty]] = function (P) {
+ return this.<span class="redish"> properties.get(P);</span>
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: .3em;"><code data-trim data-noescape>
+function Load(receiver, property) {
+ var O = ToObject(receiver);
+ var P = ToString(property);
+ var desc = O.[[GetProperty]](P);
+ if (desc === $undefined) return $undefined;
+ if (IsDataDescriptor(desc)) return desc.Value;
+ assert(IsAccessorDescriptor(desc));
+ var getter = desc.Get;
+ if (getter === $undefined) return $undefined;
+ return getter.[[Call]](receiver);
+}
+
+JSObject.prototype.[[GetProperty]] = function (P) {
+ var prop = this.[[GetOwnProperty]](P);
+ if (prop !== $undefined) return prop;
+ var proto = this.[[Proto]];
+ if (proto === $null) return $undefined;
+ return proto.[[GetPropery]](P);
+};
+
+JSObject.prototype.[[GetOwnProperty]] = function (P) {
+return this.<span class="redish" style="font-size: 4em;"> properties.get(P);</span>
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <h4>tons of code<br>+<br>dictionary lookup</h4>
+        </section>
+
+        <section>
+          <h4>can we do better?</h4>
+        </section>
+
+        <section>
+          <h4>we have to do <em>first</em> lookup</h4>
+          <h4>do we have to do <em>second</em>?</h4>
+        </section>
+
+        <section>
+          <h4>same hidden class &rArr; <br/> same structure</h4>
+        </section>
+
+        <section data-background="images/ic.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h3>Inline Caching</h3>
+        </section>
+
+        <section data-background="images/slides/slide-1-026.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-1-027.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-000.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-001.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-002.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-003.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-004.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-005.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>LoadIC_Initialize</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Runtime system.
+function LoadIC_Initialize(obj, prop) {
+  var lookupResult = obj.lookup(prop);
+  patch(lookupResult.compile());
+  return lookupResult.value;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Runtime system.
+function LoadIC_Initialize(obj, prop) {
+  var lookupResult = obj.lookup(prop);
+  <span class="golden">patch(lookupResult.compile());</span>
+  return lookupResult.value;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+<div class="golden">0xabcdef:
+<b>cmp</b> [eax - 1], klass0
+<b>jnz</b> <em>LoadIC_Miss</em>
+<b>mov</b> eax, [eax + 11]</span>
+<b>ret</b></div>
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<span class="golden"><b>call</b> <em><span class="root">0xabcdef</span> ;; patched!</em></span>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+0xabcdef:
+<b>cmp</b> [eax - 1], klass0
+<b>jnz</b> <em>LoadIC_Miss</em>
+<b>mov</b> eax, [eax + 11]
+<b>ret</b>
+
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>0xabcdef ;; patched!</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+0xabcdef:
+<span class="golden"><b>cmp</b> [eax - 1], klass0</span>
+<b>jnz</b> <em>LoadIC_Miss</em>
+<b>mov</b> eax, [eax + 11]
+<b>ret</b>
+
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>0xabcdef ;; patched!</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+0xabcdef:
+<b>cmp</b> [eax - 1], klass0
+<span class="golden"><b>jnz</b> <em>LoadIC_Miss</em></span>
+<b>mov</b> eax, [eax + 11]
+<b>ret</b>
+
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>0xabcdef ;; patched!</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+0xabcdef:
+<b>cmp</b> [eax - 1], klass0
+<b>jnz</b> <em>LoadIC_Miss</em>
+<span class="golden"><b>mov</b> eax, [eax + 11]</span>
+<b>ret</b>
+
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>0xabcdef ;; patched!</em>
+          </code></pre>
+        </section>
+
+        <section data-background="images/slides/slide-2-006.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-007.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-008.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h4>Everything is an IC stub</h4>
+          <ul>
+            <li>property accesses</li>
+            <li>element accesses</li>
+            <li>method calls</li>
+            <li>special method calls</li>
+            <li>global variables lookup</li>
+            <li>arithmetic operations</li>
+          </ul>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+Vector.prototype.length = function () {
+  return Math.sqrt(this.x * this.x +
+                   this.y * this.y);
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+Vector.prototype.length = function () {
+  return Math.sqrt(this<span class="ic-prop">.</span>x <span class="ic-arithm">*</span> this<span class="ic-prop">.</span>x <span class="ic-arithm">+</span>
+                   this<span class="ic-prop">.</span>y <span class="ic-arithm">*</span> this<span class="ic-prop">.</span>y);
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <h3 class="uuu">Redundancy</h3>
+        </section>
+
+        <section data-background="images/slides/slide-2-011.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-012.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-013.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-014.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-015.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-016.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-017.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-018.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+Vector.prototype.length = function () {
+  return Math.sqrt(this.x * this.x +
+                   this.y * this.y);
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+CheckMap v0, klass
+v1 = Load v0, @12
+CheckMap v0, klass
+v2 = Load v0, @12
+d3 = TaggedToDouble v1
+d4 = TaggedToDouble v2
+d5 = Mul d3, d4
+CheckMap v0, klass
+v6 = Load v0, @16
+CheckMap v0, klass
+v7 = Load v0, @16
+d8 = TaggedToDouble v6
+d9 = TaggedToDouble v7
+d10 = Mul d8, d9
+d11 = Add d5, d10
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+CheckMap v0, klass
+v1 = Load v0, @12
+d3 = TaggedToDouble v1
+d5 = Mul d3, d3
+v6 = Load v0, @16
+d8 = TaggedToDouble v6
+d10 = Mul d8, d8
+d11 = Add d5, d10
+          </code></pre>
+        </section>
+
+      <section>
+        <h4>Adaptive compilation</h4>
+      </section>
+
+      <section>
+        <h4>Insert guards to verify speculations</h4>
+      </section>
+
+      <section>
+        <h4>Failed check &rArr;<br/>jump to unoptimized code</h4>
+      </section>
+
+      <section>
+        <h4>Guards can be inserted</h4>
+        <h4>
+        <ul>
+          <li>at use</li>
+          <li>at def</li>
+        </ul>
+        </h4>
+      </section>
+
+      <section>
+        <ul>
+          <li>inlining</li>
+          <li>GVN</li>
+          <li>LICM</li>
+          <li>DCE</li>
+          <li>representation selection</li>
+          <li>load forwarding</li>
+          <li>escape analysis</li>
+          <li>type inference</li>
+          <li>range inference</li>
+          <li>bounds check elimination</li>
+        </ul>
+      </section>
+
+        <section data-background="images/slides/slide-2-036.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-037.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-038.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-039.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-040.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/slides/slide-2-041.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+      <section>
+        <h4>Спасибо за внимание!</h4>
+      </section>
+
+
+			</div>
+
+      <div id="footer" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          font-size: 1.0em; text-align: center;
+          padding: 4px; z-index: 99;
+      "></div>
+
+      <div id="right-column" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          top: 0px;
+          width: 50%;
+          z-index: 99;
+      "></div>
+
+		</div>
+
+		<script src="js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+    <script src="js/d3.v3.min.js"></script>
+
+		<script>
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+        margin: 0.0,
+
+        //width: 1280,
+        //height: 720,
+
+				theme: 'simple',
+				transition:  'none',
+        backgroundTransition: 'none',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'js/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				]
+			});
+
+      function updateFooter(slide) {
+        var footer = document.getElementById("footer");
+        footer.innerHTML = "";
+
+        var text = slide.getAttribute("data-footer") || "";
+
+        if (text !== "") {
+          var anchor = document.createElement("a");
+          anchor.href = anchor.innerText = text;
+          footer.appendChild(anchor);
+        }
+      }
+
+      Reveal.addEventListener('ready', function(event) { updateFooter(event.currentSlide); });
+      Reveal.addEventListener('slidechanged', function(event) { updateFooter(event.currentSlide); });
+
+		</script>
+
+    <script src="klass.js"></script>
+    <!-- <script src="stubs.js"></script> -->
+
+	</body>
+</html>
