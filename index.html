@@ -70,6 +70,9 @@ body {
   </div>
   <br/>
   <div class="box" style="text-align: justify; width: 40em; padding: 5px; background: whitesmoke; border: none;">
+    <article style="font-family: 'Gloria Hallelujah', monospace, cursive;">
+      <time datetime="" style="color: grey;">&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</time> <a href="/v8/resources.html">A list of V8 related resources</a>
+    </article>
     {% for post in site.posts %}
       <article style="font-family: 'Gloria Hallelujah', monospace, cursive;">
         <time datetime="{{ page.date }}" style="color: grey;">{{ post.date | date:'%d %b %Y' | downcase }}</time> <a href="{{ post.url }}">{{ post.title }}</a>

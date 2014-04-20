@@ -7,46 +7,9 @@ date: 2011-12-18
 <p>Samurais had something called <em>bushid&#333;</em>, way of the warrior, code of conduct they had to follow. In similar manner you have to follow certain <em>opt-d&#333;</em> if you want to optimize your application. I have tried to sketch such a path in my nodecamp.eu talk "<a href="http://s3.mrale.ph/nodecamp.eu/#1">Understanding V8</a>" and <a href="https://plus.google.com/111909581069462963574">+Daniel Clifford</a> tried to do the same in "<a href="https://mkw.st/p/gdd11-berlin-v8-performance-tuning-tricks/#1">V8 Performance Tuning Tricks</a>" talk on GDD11 in Berlin. But not everybody has seen those talks and the question keeps coming back again. So I decided to write down a quick check list for developers who want to optimize their apps. tl;dr version of my checklist is: "<em>Understand before you act</em>".&nbsp;</p>
 <p><a id="talks-and-posts" name="talks-and-posts"></a></p>
 <h2>Understanding V8 and&nbsp;beyond&nbsp;[talks and posts]</h2>
-<p><strong>UPDATE Nov 6 2012</strong> More and more talks are being given about optimizing for V8 and understanding it's internals so I decided to maintain a list of them here. If I missed some interesting/useful blog post or talk about <em>any</em> JavaScript VM please <a href="mailto:me@mrale.ph">send me a link</a> and I will add it.</p>
-<ul>
-<li>Practical recommendations and optimization walk-throughs for V8
-<ul>
-<li>Understanding V8 (me, nodecamp.eu 2011) <a href="http://s3.mrale.ph/nodecamp.eu/#1">[slides]</a></li>
-<li>V8 Performance Tuning Tricks (<a href="https://plus.google.com/111909581069462963574">+Daniel Clifford</a>, GDD2011 Berlin) <a href="https://mkw.st/p/gdd11-berlin-v8-performance-tuning-tricks/#1">[slides]</a></li>
-<li>Console to Chrome (<a href="https://plus.google.com/111647958621817995641">+Lilli Thompson</a>, GDC 2012) <a href="http://console-to-chrome.appspot.com/#8">[slides]</a> <a href="http://www.youtube.com/watch?v=XAqIpGU8ZZk#t=9m0s">[video]</a></li>
-<li>Breaking the JavaScript Speed Barrier with V8 (<a href="https://plus.google.com/111909581069462963574">+Daniel Clifford</a>, Google I/O 2012) <a href="http://v8-io12.appspot.com/index.html">[slides]</a> <a href="http://www.youtube.com/watch?v=UJPdhx5zTaw">[video]</a></li>
-<li><a href="http://floitsch.blogspot.dk/2012/03/optimizing-for-v8-introduction.html">Optimizing for V8</a> (series of blog posts from <a href="https://plus.google.com/103716596068416580695">+Florian Loitsch</a>, based on his experience writing dart2js compiler)</li>
-<li><a href="http://www.html5rocks.com/en/tutorials/speed/v8/">Performance tips for JavaScript in V8</a> by <a href="https://plus.sandbox.google.com/106422711035746240826/posts">+Chris Wilson</a></li>
-<li><a href="http://coding.smashingmagazine.com/2012/11/05/writing-fast-memory-efficient-javascript/">Writing Fast, Memory-Efficient JavaScript</a> by <a href="https://twitter.com/addyosmani">Addy Osmani</a></li>
-<li><a href="http://www.youtube.com/watch?v=ZhshEZIV2F4">The Footprint of Performance (video)</a>: <a href="https://twitter.com/starzi">Michael Starzinger</a> describes memory implications of various programming patterns at JSConf EU 2012</li>  
-<li><a href="http://www.youtube.com/watch?v=VhpdsjBUS3g">Accelerating Oz with V8</a> by <a href="https://plus.google.com/+JohnMcCutchan">+John McCutchan</a> (Google I/O 2013) walks through the experience of eliminating junk from <a href="http://www.chromeexperiments.com/detail/find-your-way-to-oz/">Find Your Way To OZ</a> Chrome experiment.</li>
-<li><a href="http://www.youtube.com/watch?v=x9Jlu_h_Lyw">A Trip Down Memory Lane with Gmail and DevTools</a> by <a href="https://plus.google.com/+JohnMcCutchan">+John McCutchan</a> and <a href="https://plus.google.com/+LoreenaLee">+Loreena Lee</a> (Google I/O 2013) a success story of eliminating memory leaks in GMail with Chrome Dev Tools.</li>
-</ul>
-</li>
-<li>V8 talks (old ones might contain outdated information)
-<ul>
-<li>V8: High Performance JavaScript Engine in Google Chrome (<a href="https://plus.google.com/118332431854651588625">+Kevin Millikin</a>, GDD 2008 London) <a href="http://www.youtube.com/watch?v=lZnaaUoHPhs">[video]</a> &nbsp;</li>
-<li>V8 Internals (<a href="https://plus.google.com/105218366515825183046">+Mads Ager</a>, Google I/O 2009)&nbsp;<a href="http://www.youtube.com/watch?v=FrufJFBSoQY">[video]</a></li>
-<li>Erik Meijer and <a href="https://plus.google.com/117369940038227331789">+Lars Bak</a> on&nbsp;Channel 9: <a href="http://channel9.msdn.com/Shows/Going+Deep/Expert-to-Expert-Erik-Meijer-and-Lars-Bak-Inside-V8-A-Javascript-Virtual-Machine">Inside V8 - A Javascript Virtual Machine</a>&nbsp;(2009)</li>
-<li>Crankshaft: Turbocharging the Next Generation of Web (<a href="https://plus.google.com/100258330325630692559">+Kasper Lund</a>, YOW 2011) <a href="http://yow.eventer.com/events/1004/talks/1017">[video]</a> <a href="http://gotocon.com/dl/goto-aarhus-2011/slides/KasperLund_CrankshaftTurbochargingTheNextGenerationOfWebApplications.pdf">[slides]</a></li>
-<li><a href="http://www.youtube.com/watch?v=huawCRlo9H4">Web Languages and VMs: Fast Code is Always in Fashion.</a> by <a href="https://plus.google.com/117369940038227331789">+Lars Bak</a> and <a href="https://plus.google.com/100258330325630692559">+Kasper Lund</a> (Google I/O 2013) gives historic outline for V8 development and describes motivation for creating Dart language.</li>
-</ul>
-</li>
-<li>Fundamentals of V8 and other JS VMs
-<ul>
-<li><a href="http://twitter.com/andywingo">Andy Wingo</a> <a href="http://wingolog.org/tags/v8">blogs about his adventures in V8's</a> and JavaScriptCore's compilation pipelines</li>
-<li><a href="http://twitter.com/dmandelin">David Mandelin</a>'s (SpiderMonkey TL) talk&nbsp;Know Your Engines (Velocity Conf 2011) <a href="http://people.mozilla.com/~dmandelin/KnowYourEngines_Velocity2011.pdf">[slides]</a> <a href="http://www.youtube.com/watch?v=dtSOKLvdAto">[video]</a>.</li>
-<li>I am trying to <a href="http://mrale.ph/blog/2012/06/03/explaining-js-vms-in-js-inline-caches.html">explain <em>inline-caching</em> used by JavaScript VMs by writing IC <em>in</em> JavaScript</a>, also see my talk "V8 Inside Out" from WebRebels 2012 <a href="http://s3.mrale.ph/webrebels2012.pdf">[slides]</a> <a href="http://vimeo.com/43334972">[video]</a></li>
-<li><a href="http://channel9.msdn.com/Events/Build/2012/4-000">Building High-Performing JavaScript for Modern Engines</a>: performance recommendations from Microsoft's JavaScript team (tailored to Chakra).</li>
-</ul>
-</li>
-<li>Miscellaneous
-<ul>
-<li>Can V8 do that?! (me, JSConf 2012) <a href="http://s3.mrale.ph/jsconf2012.pdf">[slides]</a> <a href="http://blip.tv/jsconf/jsconf2012-vyacheslav-egorov-6141593">[vides]</a></li>
-<li><a href="http://channel9.msdn.com/Shows/Going+Deep/Lars-Bak-and-Steve-Lucco-Chakra-V8-JavaScript-Open-Source">Channel 9: Lars Bak and Steve Lucco: Chakra, V8, JavaScript, Open Source</a></li>
-</ul>
-</li>
-</ul>
+
+<p>I am maintaining a list of V8 related resources. <a href="/v8/resources.html">See it here</a></p>
+
 <h2>Do you understand what the application is trying to do and how?</h2>
 <p>The more you understand about your app the better you can optimize it. Sometimes a tricky algorithm or a cache placed in right place will yield more improvements than any local tweaking. Understanding your application in large is a very difficult problem which requires special tooling and discipline. I highly recommend to read <a href="https://twitter.com/#!/coda">@coda</a>'s <a href="http://codahale.com/codeconf-2011-04-09-metrics-metrics-everywhere.pdf">Metrics Metrics Everywhere</a> talk if you want to get a glimpse of that world. Sometimes it is possible to split big application into pieces and optimize them separately but there is no guarantee that overall gain will not be lost when those pieces are connected back together.</p>
 <h2>Did you profile your application with built in statistical profiler?</h2>
