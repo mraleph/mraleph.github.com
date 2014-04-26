@@ -53,6 +53,7 @@ date: 2014-04-20
 * Crankshaft: Turbocharging the Next Generation of Web ([+Kasper Lund](https://plus.google.com/100258330325630692559), YOW 2011) [&rang;video&lang;](http://yow.eventer.com/events/1004/talks/1017) [&rang;slides&lang;](http://gotocon.com/dl/goto-aarhus-2011/slides/KasperLund_CrankshaftTurbochargingTheNextGenerationOfWebApplications.pdf)
 * [Web Languages and VMs: Fast Code is Always in Fashion.](http://www.youtube.com/watch?v=huawCRlo9H4) by [+Lars Bak](https://plus.google.com/117369940038227331789) and [+Kasper Lund](https://plus.google.com/100258330325630692559) (Google I/O 2013) gives historic outline for V8 development and describes motivation for creating Dart language.
 * Speed is awesome, but low latency is sublime by [+Hannes Payer](https://plus.google.com/114443265544293073897) at JSConf EU 2013 overviews V8 efforts to minimize latency (GC, parallel compilation) [&rang;video&lang;](https://www.youtube.com/watch?v=3vPOlGRH6zk)
+* New optimizations in V8 by [Ben L. Titzer](http://research.google.com/pubs/BenTitzer.html) at mloc.js 2014 [&rang;video&lang;](http://www.ustream.tv/recorded/43772632)
 
 
 ### Other
