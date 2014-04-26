@@ -48,7 +48,7 @@ date: 2014-04-20
 
 ### Talks
 
-* V8: High Performance JavaScript Engine in Google Chrome ([+Kevin Millikin](https://plus.google.com/118332431854651588625), GDD 2008 London) [\[video\]](http://www.youtube.com/watch?v=lZnaaUoHPhs) &nbsp;
+* V8: High Performance JavaScript Engine in Google Chrome ([+Kevin Millikin](https://plus.google.com/118332431854651588625), GDD 2008 London) [\[video\]](http://www.youtube.com/watch?v=lZnaaUoHPhs)
 * V8 Internals ([+Mads Ager](https://plus.google.com/105218366515825183046), Google I/O 2009)&nbsp;[\[video\]](http://www.youtube.com/watch?v=FrufJFBSoQY)
 * Crankshaft: Turbocharging the Next Generation of Web ([+Kasper Lund](https://plus.google.com/100258330325630692559), YOW 2011) [\[video\]](http://yow.eventer.com/events/1004/talks/1017) [\[slides\]](http://gotocon.com/dl/goto-aarhus-2011/slides/KasperLund_CrankshaftTurbochargingTheNextGenerationOfWebApplications.pdf)
 * [Web Languages and VMs: Fast Code is Always in Fashion.](http://www.youtube.com/watch?v=huawCRlo9H4) by [+Lars Bak](https://plus.google.com/117369940038227331789) and [+Kasper Lund](https://plus.google.com/100258330325630692559) (Google I/O 2013) gives historic outline for V8 development and describes motivation for creating Dart language.
