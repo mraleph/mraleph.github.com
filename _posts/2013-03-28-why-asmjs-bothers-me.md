@@ -27,7 +27,7 @@ That's exactly what asm.js does. It fixes the language by saying: *fancy feature
 
 Additionally asm.js attaches static typing rules to various permitted syntactical constructs. Only code that is consistently typed is considered to be valid. Typing rules are straightforward but not completely trivial, because they for example capture distinction between real 32-bit integers (`signed`) and things that can be coerced to them (`intish`). This somewhat peculiar distinction follows from JavaScript semantics.
 
-For example `(x|0 + y|0)|0` would be typed as `signed`. This is perfectly aligned with the actual JavaScript semantics that essentially interprets this expression as `ToInt32(ToInt32(x) + ToInt32(y))`. If you ever programmed in an assembly or another not-so-high-level language then you'll notice that it exactly matches semantics of overflowing 32-bit integer addition.  I'll return to this expression later, so keep it mind.
+For example `(x|0 + y|0)|0` would be typed as `signed`. This is perfectly aligned with the actual JavaScript semantics that essentially interprets this expression as `ToInt32(ToInt32(x) + ToInt32(y))`. If you ever programmed in an assembly or another not-so-high-level language then you'll notice that it exactly matches semantics of overflowing 32-bit integer addition.  I'll return to this expression later, so keep it in mind.
 
 The last part of asm.js is the notion of module. All asm.js must be packed into a function that looks like this:
 
