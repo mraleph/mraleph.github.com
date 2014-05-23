@@ -1,0 +1,777 @@
+	<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>WebRebels 2014 - Crooked Mirrors of Performance</title>
+
+		<meta name="description" content="WebRebels 2014 - Crooked Mirrors of Performance">
+		<meta name="author" content="Vyacheslav Egorov">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/simple.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="css/googlecode.css">
+
+    <style type="text/css">
+      span.golden {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      span.golden-block {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.greenish-block {
+        background: rgba(0, 255, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.redish {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      .x-confirmed {
+        font-weight: bold;
+        border: 10px solid green !important;
+        color: green;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+    </style>
+
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<![endif]-->
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-6701581-4']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+        <section data-background="images/slide1.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/slide2.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/slide3.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/slide4.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <style>
+          .y {
+  position: relative;
+}
+
+.x {
+  position: relative;
+  z-index: 100;
+  color: black;
+}
+
+.x::after {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+}
+
+/*
+.x67::after {
+  width: 67%;
+}
+
+.x75::after {
+  width: 75%;
+}*/
+
+.x-red::after {
+  background: rgba(215, 25, 28 , 1.0);
+}
+
+.x-green::after {
+  background: rgba(145, 207, 96, 1.0);
+}
+
+.x-gold::after {
+  background: rgba(253,174,97, 1.0);
+}
+
+/*
+.x19::after {
+  width: 19%;
+  background-opacity: 0.5;
+}*/
+
+.x::before {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+          </style>
+          <pre style="font-size: 0.9em;">
+$ d8 concat.js
+<table>
+  <tr>
+    <td>Inside </td>
+    <td class="y"><span class="x x19 x-red">x 198,893,290 ops/sec &pm;1.08%</span></td>
+  </tr>
+  <tr>
+    <td>Outside</td>
+    <td class="y"><span class="x x67 x-green">x 674,248,118 ops/sec &pm;1.08%</span></td>
+  </tr>  
+</table>Fastest is Outside
+</pre>
+        </section>
+
+        <section>
+          <h3>quick! move all your strings out of functions</h3>
+        </section>
+
+        <section data-background="images/slide5.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h3>&micro;bench 101</h3>
+        </section>
+
+        <section>
+          <h3>want to know the cost of <code>OP</code></h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var start = Date.now();
+  /* OP */
+  return (Date.now() - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>what if <code>OP</code> is faster than resolution of our clock?</h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark(N) {
+  var start = Date.now();
+  for (var i = 0; i < N; i++) {
+    /* OP */
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>\[C\]</h1>
+        </section>
+
+        <section>
+          <h1>\[C \times N\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C \times N}{N}\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C \times \cancel{N}}{\cancel{N}}\]</h1>
+        </section>
+
+        <section>
+          <h3>naive math</h3>
+          <h4>vs</h4>
+          <h3>smart VMs</h3>
+        </section>
+
+        <section>
+          <h1>\[C \times N\]</h1>
+        </section>
+
+        <section>
+          <h1>\[C_u N_u + C_o N_o\]</h1>
+        </section>
+
+        <section>
+          <h1>\[{\sum C_{i} N_i}\]</h1>
+        </section>
+
+        <section>
+          <h4>\[{\sum C_{i} N_i} +\]</h4>
+          <h4>\[\frac{1}{\sqrt{2\pi}}\int C(\xi) e ^ {-\frac{\xi^2}{2}} d\xi \]</h4>          
+        </section>
+
+        <section>
+          <h3>math is hard</h3>
+          <h4>lets look at the code</h4>
+        </section>
+
+        <section>
+          <h3>IRHydra<sup>2</sup></h3>
+        </section>
+
+        <section>
+          <h2>lets be fixing</h2>
+        </section>
+
+        <section>
+<pre style="font-size: 0.5em; line-height: 1.2em;"><code data-trim data-noescape>
+--- src/hydrogen.cc (revision 21348)
++++ src/hydrogen.cc (working copy)
+@@ -9639,6 +9639,14 @@
+       return left;
+     }
+
++    if (FLAG_fold_constants &&
++        left-&gt;IsConstant() && HConstant::cast(left)-&gt;HasStringValue() &&
++        right-&gt;IsConstant() && HConstant::cast(right)-&gt;HasStringValue()) {
++      return AddUncasted&lt;HStringAdd&gt;(
++          left, right, allocation_mode.GetPretenureMode(),
++          STRING_ADD_CHECK_NONE, allocation_mode.feedback_site());
++    }
++
+     // Register the dependent code with the allocation site.
+     if (!allocation_mode.feedback_site().is_null()) {
+       ASSERT(!graph()-&gt;info()-&gt;IsStub());
+</code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.9em;">
+$ d8 concat.js
+<table>
+  <tr>
+    <td>Inside </td>
+    <td class="y"><span class="x x75 x-green">x 758,530,478 ops/sec &pm;1.82%</span></td>
+  </tr>
+  <tr>
+    <td>Outside</td>
+    <td class="y"><span class="x x67 x-gold">x 674,248,118 ops/sec &pm;1.14%</span></td>
+  </tr>  
+</table>Fastest is Inside
+</pre>
+        </section>
+
+        <section>
+          <h3>both loops are doing nothing!</h3>
+        </section>
+
+        <section>
+          <h3>know basic optimizations</h3>
+        </section>
+
+        <section>
+          <h1>inlining</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function inner() {
+  return 'a' + 'b'
+}
+
+for (...) {
+  inner();
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function inner() {
+  return 'a' + 'b'
+}
+
+for (...) {
+<span class="golden-block">  inner();</span>
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function inner() {
+  return 'a' + 'b'
+}
+
+for (...) {
+<span class="golden-block">  'a' + 'b';</span>
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>constant folding</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+for (...) {
+<span class="golden-block">  'a' + 'b';</span>
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+for (...) {
+<span class="golden-block">  'ab';</span>
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>loop invariant code motion</h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var str1, str2;
+for (...) {
+<span class="golden-block">  str1 + str2;</span>
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var str1, str2;
+<span class="golden-block">var invS = str1 + str2;</span>
+for (...) {
+  // use invS here
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>dead code elimination</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var str1, str2;
+<span class="golden-block">var invS = str1 + str2;</span>
+// nobody uses invS?
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var str1, str2;
+<span class="golden-block">// FARVEL!</span>
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>there are more!</h1>
+        </section>
+
+        <section>
+          <h3>presumption of performance</h3>
+        </section>
+
+        <section>
+          <h4>reasonable code</h4>
+          <h4>reasonably fast</h4>
+        </section>
+
+
+        <section>
+          <h3>confirmation bias</h3>
+        </section>
+
+        <section>
+          <h2>&laquo;prototype chains are <span style="color: #C00;">slow</span>&raquo;</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var obj = 
+  Object.create(
+    Object.create(
+      Object.create(
+        Object.create(
+          Object.create({prop: 10})))));
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var obj = 
+  Object.create(
+    Object.create(
+      Object.create(
+        Object.create(
+          Object.create({prop: 10})))));
+                  // LISP tribute ^^^^^ 
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function doManyLookups() {
+  var counter = 0;
+  for(var i = 0; i < 1000; i++)
+    for(var j = 0; j < 1000; j++)
+      for(var k = 0; k < 1000; k++)
+        counter += obj.prop;
+  print('In total: ' + counter);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function lookupAndCache() {
+  var counter = 0;
+  var value = obj.prop;
+  for(var i = 0; i < 1000; i++)
+    for(var j = 0; j < 1000; j++)
+      for(var k = 0; k < 1000; k++)
+        counter += value;
+  print('In total: ' + counter);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// State of art benchmark driver.
+function measure(f) {
+  var start = Date.now();
+  f();
+  var end = Date.now();
+  print(f.name + ' took ' +
+        (end - start) + ' ms.');
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+measure(doManyLookups);
+measure(lookupAndCache);
+          </code></pre>
+        </section>
+
+        <section>
+<pre>$ node prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">8243</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1058</span> ms.</pre>
+        </section>
+
+        <section>
+          <h2><span class="x-confirmed">CONFIRMED</span></h2>
+        </section>
+
+        <section>
+          <h3>lets make it harder</h3>
+        </section>
+
+        <section>
+<pre style="font-size: 0.8em; line-height: 1.2em;"><code data-trim data-noescape class="diff">
+-   Object.create({prop: 10})))));
++   Object.create({ get prop () { return 10 }})))));
+</code></pre>
+        </section>
+
+        <section>
+<pre>$ node prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1082</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1061</span> ms.</pre>
+        </section>
+
+        <section>
+          <h2>&laquo;what kind of voodoo is this?&raquo;</h2>
+        </section>
+
+        <section>
+          <h1>also my node was just old</h1>
+        </section>
+
+        <section>
+<pre>
+$ d8 prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">1294</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
+        </section>
+
+        <section>
+<pre>
+$ d8 prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: green; border: 5px dashed #C00; font-weight: bolder;">1294</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
+        </section>
+
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+measure(doManyLookups);
+measure(doManyLookups);
+measure(lookupAndCache);
+measure(lookupAndCache);
+          </code></pre>
+        </section>
+
+        <section>
+<pre>
+$ d8 prototype.js | grep took
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1301</span> ms.
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">3408</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1204</span> ms.
+<b>lookupAndCache</b> took <span style="color: #C00; font-weight: bolder;">3406</span> ms.
+        </section>
+
+        <section>
+<pre style="font-size: 0.8em; line-height: 1.2em;"><code data-trim data-noescape class="diff">
+-   print('In total: ' + counter);
++   print('In total: ' + counter.toString());
+</code></pre>
+        </section>
+
+        <section>
+<pre>
+$ d8 prototype.js | grep took
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1298</span> ms.
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1119</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1188</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder; text-decoration: underline;">982</span> ms.
+        </section>
+
+        <section>
+          <h2>&laquo;huh?&raquo;</h2>
+        </section>
+
+        <section>
+          <h2>and now for the desert!</h2>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.7em;"><code data-trim data-noescape>
+function mk(word) {
+    var len = word.length;
+    if (len &gt; 255) return undefined;
+    var i = len &gt;&gt; 2;
+    return String.fromCharCode(
+        (word.charCodeAt(    0) & 0x03) &lt;&lt; 14 |
+        (word.charCodeAt(    i) & 0x03) &lt;&lt; 12 |
+        (word.charCodeAt(  i+i) & 0x03) &lt;&lt; 10 |
+        (word.charCodeAt(i+i+i) & 0x03) &lt;&lt;  8 |
+        len
+    );
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.7em;"><code data-trim data-noescape>
+Benchmark.prototype.setup = function() {
+   function mk(word) {
+        /* ... */
+    }
+    
+    var MK = function() { };
+    MK.prototype.mk = mk;
+    var mker = new MK;
+};</code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.7em;"><code data-trim data-noescape>
+suite
+  .add('Function', function() {
+    var key = mk('www.wired.com');
+    key = mk('www.youtube.com');
+    key = mk('scorecardresearch.com');
+    key = mk('www.google-analytics.com');
+  })
+  .add('Method', function() {
+    var key = mker.mk('www.wired.com');
+    key = mker.mk('www.youtube.com');
+    key = mker.mk('scorecardresearch.com');
+    key = mker.mk('www.google-analytics.com');
+  })
+</code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.9em;">
+$ d8 method-vs-function.js
+<table>
+  <tr>
+    <td>Function</td>
+    <td class="y"><div class="x x4 x-red">x   4,149,776 ops/sec &pm;0.62%</div></td>
+  </tr>
+  <tr>
+    <td>Method</td>
+    <td class="y"><div class="x x68 x-green">x 682,273,122 ops/sec &pm;0.72%</div></td>
+  </tr>  
+</table>Fastest is Method
+</pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.7em; line-height: 1.2em;"><code data-trim data-noescape class="diff javascript">
+--- a/method-function.js
++++ b/method-function.js
+@@ -2,6 +2,9 @@
+ load("../benchmark.js");
+
+ Benchmark.prototype.setup = function() {
++   "Speed" + "your" + "JS" + "with" +
++   "this" + "one" + "weird" + "trick";
++
+    function mk(word) {
+         var len = word.length;
+         if (len > 255) return undefined;
+</code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.9em;">
+$ d8 method-vs-function.js
+<table>
+  <tr>
+    <td>Function</td>
+    <td class="y"><div class="x x69 x-green">x 695,708,197 ops/sec &pm;0.38%</div></td>
+  </tr>
+  <tr>
+    <td>Method</td>
+    <td class="y"><div class="x x69 x-green">x 692,496,013 ops/sec &pm;0.29%</div></td>
+  </tr>  
+</table>Fastest is Function,Method
+</pre>
+        </section>
+
+        <section data-background="images/slide5.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h2>file bugs instead of making conslusions</h2>
+        </section>
+
+        <section>
+          <h2>thank you</h2>
+        </section>
+
+			</div>
+
+      <div id="footer" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          font-size: 1.0em; text-align: center;
+          padding: 4px; z-index: 99;
+      "></div>
+
+		</div>
+
+		<script src="js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+        margin: 0.0,
+
+				theme: 'simple',
+				transition:  'none',
+        backgroundTransition: 'none',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'js/highlight.js', async: true, callback: function() { 
+            // delete hljs.LANGUAGES.xml;
+            hljs.initHighlightingOnLoad(); 
+          } },
+          { src: 'js/math.js', async: true }
+				]
+			});
+
+      function updateFooter(slide) {
+        var footer = document.getElementById("footer");
+        footer.innerHTML = "";
+
+        var text = slide.getAttribute("data-footer") || "";
+
+        if (text !== "") {
+          var anchor = document.createElement("a");
+          anchor.href = anchor.innerText = text;
+          footer.appendChild(anchor);
+        }
+      }
+
+      Reveal.addEventListener('ready', function(event) { updateFooter(event.currentSlide); });
+      Reveal.addEventListener('slidechanged', function(event) { updateFooter(event.currentSlide); });
+
+      (function () {
+        var style = document.createElement("style");
+        document.head.appendChild(style);
+
+        var percents = [].slice.call(document.querySelectorAll(".x")).forEach(function (el) {
+          var classes = el.classList.toString();
+          var p = classes.match(/\bx(\d+)\b/)[1];
+
+          style.sheet.addRule(".x" + p + "::after", "width: " + p + "%;")
+        });
+      })();
+
+		</script>
+
+	</body>
+</html>
