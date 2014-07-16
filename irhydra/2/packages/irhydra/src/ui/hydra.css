@@ -1,0 +1,194 @@
+:host {
+  position: fixed;
+  left: 0px;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-flow: column;
+  flex-flow: column; }
+
+.header {
+  height: 40px;
+  padding: 0px;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
+  z-index: 1000; }
+
+button {
+  background: white;
+  color: black;
+  font-size: 16pt;
+  border: 0px;
+  width: 40px;
+  height: 40px; }
+
+button:hover {
+  background: rgba(153, 153, 153, 0.2); }
+
+button:disabled {
+  color: #95A5A6; }
+
+button:disabled:hover {
+  background: white; }
+
+.pane {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-flow: row;
+  flex-flow: row;
+  position: relative;
+  -webkit-flex: 1 1;
+  flex: 1 1; }
+
+.sidebar {
+  min-width: 250px;
+  max-width: 250px;
+  background: white;
+  border-right: 1px solid #e0e0e0;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-flow: column;
+  flex-flow: column; }
+
+.pane > * {
+  -webkit-flex: 1 1;
+  flex: 1 1; }
+
+.sidebar > * {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-flow: column;
+  flex-flow: column;
+  -webkit-flex: 1 1;
+  flex: 1 1; }
+
+.pane-controls {
+  position: absolute;
+  left: 250px;
+  top: 0px;
+  height: 40px;
+  padding-left: 0;
+  margin-bottom: 0;
+  margin-top: 0;
+  list-style: none;
+  background-color: white; }
+
+.pane-controls:before,
+.pane-controls:after {
+  display: table;
+  content: " "; }
+
+.pane-controls:after {
+  clear: both; }
+
+.pane-controls > div {
+  position: relative;
+  display: block;
+  text-align: center;
+  min-width: 4em;
+  float: left;
+  margin-bottom: -1px; }
+
+.pane-controls > :not(.tab-header) {
+  display: none !important; }
+
+.pane-controls > :not(.tab-header).active {
+  display: block !important; }
+
+/* @polyfill .pane-controls > div > a, .pane-controls > div > dropdown-element .ui-dropdown-selected */
+.pane-controls > div > a,
+.pane-controls > div > dropdown-element::shadow .ui-dropdown-selected {
+  cursor: pointer;
+  color: black;
+  font-family: 'RobotoDraft';
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  position: relative;
+  display: block;
+  padding: 10px 8px;
+  margin-right: 2px;
+  line-height: 1.428571429;
+  border: 0px solid transparent;
+  text-decoration: none; }
+
+.pane-controls > div > a:hover {
+  color: black;
+  background: rgba(153, 153, 153, 0.2);
+  text-decoration: none; }
+
+.pane-controls > div.active > a,
+.pane-controls > div.active > a:hover,
+.pane-controls > div.active > a:focus {
+  color: black;
+  background-color: rgba(153, 153, 153, 0.2);
+  border-bottom-color: transparent; }
+
+/* @polyfill .pane-controls .ui-dropdown-options > a */
+.pane-controls dropdown-element > a {
+  cursor: pointer;
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: black;
+  white-space: nowrap;
+  z-index: 9999;
+  text-decoration: none; }
+
+/* @polyfill .pane-controls .ui-dropdown-options > a:hover, .pane-controls .ui-dropdown-options > a:focus */
+.pane-controls dropdown-element > a:hover,
+.pane-controls dropdown-element > a:focus {
+  background-color: rgba(153, 153, 153, 0.2);
+  color: black;
+  text-decoration: none; }
+
+/* @polyfill .pane-controls .ui-dropdown-options */
+.pane-controls > div > dropdown-element::shadow .ui-dropdown-options {
+  background-color: white; }
+
+.panes > div {
+  display: none; }
+
+.panes > div.active {
+  display: block; }
+
+.pane > switching-scope {
+  display: -webkit-flex;
+  display: flex;
+  overflow: auto; }
+
+.panes, .panes > div {
+  -webkit-flex: 1 1;
+  flex: 1 1; }
+
+.ir-placeholder {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-align-items: center;
+  align-items: center;
+  text-align: center;
+  font-size: 3em;
+  font-family: RobotoDraft;
+  font-weight: 200;
+  background: #ECF0F1;
+  color: #BDC3C7; }
+
+.fa {
+  display: inline-block;
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; }
+
+.fa-folder-open:before {
+  content: "\f07c"; }
+
+.fa-repeat:before {
+  content: "\f01e"; }

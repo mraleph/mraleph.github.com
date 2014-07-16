@@ -1,0 +1,20 @@
+.source-path {
+  color: black;
+  background-color: white;
+  font-family: 'RobotoDraft';
+  font-weight: bold;
+  padding: 10px 8px;
+  display: inline-block;
+  vertical-align: middle; }
+
+.source-path a,
+.source-path a:hover,
+.source-path a:focus {
+  text-decoration: none;
+  outline: 0; }
+
+.source-path a {
+  color: black; }
+
+.source-path a:hover {
+  color: #2a6496; }

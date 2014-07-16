@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<link rel="import" href="../../../../../../packages/polymer/polymer.html">
+
+<polymer-element name="ir-descriptions-v8">
+  <template>
+    <style type='text/css' scoped>
+      div[data-hir], div[data-lir] { display: none; };
+    </style>
+    <div data-hir="CheckMaps" data-lir="check-maps">
+      <p>Checks whether value's hidden class matches expected value and deoptimizes if this is not the case.</p>
+      <p>Deoptimization at <code>CheckMaps</code> usually indicates that the code is polymorphic.</p>
+    </div>
+    <div data-hir="Deoptimize" data-lir="deoptimize">
+      <p>When executed this instruction always deoptimizes.</p>
+      <p>V8 generates then on control flow paths that were never executed before and thus contain no actionable type feedback that could be used to optimize the code.</p>
+      <p>For a function with a long running loop it is not uncommon to hit at OSR in the loop and then deoptimize on a <code>Deoptimize</code> emitted after the loop</p>
+    </div>
+    <div data-lir="lazy-bailout">
+      <p>This is a pseudo instruction that follows every call. </p>
+      <p>Some assumptions V8's optimizing compiler makes are not explicitly checked in the optimized code itself. Instead they are guarded globally in the runtime system. When a change happens that violates an assumption all optimized code depending on this assumption has to be discarded.</p>
+      <p>If dependant code is currently active on the call stack it is marked for <em>lazy deoptimization</em>, i.e. deoptimization that will happen as soon as control returns into it. That's why lazy deoptimization always follows a call.</p>
+      <p>Reasons for invalidating currently running optimized code via lazy deoptimization code can be numerous:</p>
+      <ul>
+        <li>activation of the debugger;</li>
+        <li>deoptimization of the same function down the call stack;</li>
+        <li>change in the shape of prototype for an object. V8 tries to omit checks that verify each object in the prototype chain and instead guards then in the runtime system;</li>
+        <li>representation tracking transition tree deprecation.</li>
+      </ul>
+    </div>
+    <div data-hir="Change">
+      <p>This instruction converts value from one internal representation to another.</p>
+      <p>It will deoptimize if the value can't be converted</p>
+    </div>
+    <div data-lir="tagged-to-i">
+      <p>Conversion from a tagged representation to a 32-bit signed integer. Can be either truncating or exact (see if hydrogen counterpart is marked with <code>truncating-int32</code>.</p>
+      <p>Deoptimizes when source is not representable in this format. Truncating conversions deoptimize when value is too big for an int32 type or not a number or <code>undefined</code>. Exact conversions deoptimize if <code>ToInt32(val) != val</code></p>
+    </div>
+    <div data-lir="check-smi">
+      <p>Checks that value is a tagged smi (<b>sm</b>all <b>i</b>nteger): it is a tagged integer representation used by V8.</p>
+      <p>On 32bit platforms smi can contain 31-bit signed integers and on 64bit platforms they are wide enough for 32bit signed integers.</p>
+      <p>If numeric value does not fit into a smi it has to be boxed as a <em>heap number</em>.</p>
+    </div>
+  </template>
+  <script type="application/dart" src='descriptions.dart'></script>
+</polymer-element>

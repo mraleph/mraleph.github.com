@@ -1,0 +1,255 @@
+.irpane {
+  font-family: monospace;
+  font-size: 14pt;
+}
+
+.irpane > tr > td:first-child,
+.irpane > tbody > tr > td:first-child {
+  background-color: #F7F7F7;
+  border-right: 1px solid #EEE;
+  min-width: 4em;
+  color: #AAA;
+  text-align: right;
+  padding-right: 2px;
+}
+
+.irpane > tr > td:last-child,
+.irpane > tbody > tr > td:last-child {
+  padding-left: 2px;
+  background-color: white;
+  color: #333;
+  text-align: left;
+}
+
+.irpane pre {
+  -moz-border-radius: 0;
+  -webkit-border-radius: 0;
+  -o-border-radius: 0;
+  border-radius: 0;
+  border-width: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  word-wrap: normal;
+  color: inherit;
+}
+
+.irpane,
+.irpane > tr,
+.irpane > tr > td,
+.irpane > tbody > tr,
+.irpane > tbody > tr > td {
+  margin: 0px;
+  padding: 0px;
+  outline: 0px;
+  border-spacing: 0px;
+  border-collapse: collapse;
+}
+
+/** Styles for the floating panel used to display references. */
+.irpane-refs {
+  position: fixed;
+  font-size: 11px;
+  background-color: #ffffff;
+  z-index: 1010;
+  padding: 1px;
+  -webkit-background-clip: padding-box;
+  -moz-background-clip: padding;
+  background-clip: padding-box;
+  border: 1px solid #ccc;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+  -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.irpane-refs > div {
+  overflow-x: auto;
+  margin: 1px;
+  padding-left: 3px;
+  padding-bottom: 14px;
+}
+
+.irpane-refs > div::-webkit-scrollbar {
+  height: 4px;
+}
+
+.irpane-refs > div::-webkit-scrollbar-track {
+}
+
+.irpane-refs > div::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+}
+
+.irpane-refs .close {
+  line-height: 15px;
+  color: black;
+  padding-right: 3px;
+  font-size: 11px;
+}
+
+.known-opcode {
+  cursor: help;
+}
+
+a {
+  color: #428bca;
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  color: #2a6496;
+  text-decoration: underline;
+}
+
+a:focus {
+  outline: thin dotted #333;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+
+pre {
+  white-space: pre;
+}
+
+.boldy {
+  font-weight: bold;
+  line-height: 18px !important;
+}
+
+.hir-constant,
+.native-code-constant {
+  color: purple;
+}
+
+.hir-range,
+.hir-type, 
+.hir-changes, 
+.lir-env,
+.lir-map {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.hir-changes-all {
+  color: red;
+}
+
+.lir-env,
+.lir-map {
+  display: none;
+}
+
+.lir-line {
+  background: rgba(125, 167, 217, 0.15) !important;
+}
+
+.native-code > td {
+  background: rgba(125, 167, 217, 0.05) !important;
+  font-size: 0.9em;
+}
+
+.label {
+  display: inline;
+  padding: .2em .6em .3em;
+  font-size: 75%;
+  font-weight: bold;
+  line-height: 1;
+  color: #ffffff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+
+.deopt-marker,
+.deopt-marker:hover {
+  color: white;
+  cursor: pointer;
+}
+
+.deopt-marker-eager {
+  background-color: #C0392B;
+}
+
+.deopt-marker-eager:hover {
+  background-color: #E74C3C;
+}
+
+.deopt-marker-lazy {
+  background-color: #F39C12;
+}
+
+.deopt-marker-lazy:hover {
+  background-color: #F1C40F;
+}
+
+.deopt-marker-soft {
+  background-color: #8E44AD;
+}
+
+.deopt-marker-soft:hover {
+  background-color: #9B59B6;
+}
+
+.block-header td {
+  padding-top: 0.5em !important;
+}
+
+.irpane.view-source tr.not-interesting {
+  display: none;
+}
+
+.irpane:not(.view-source) tr.source-line {
+  display: none;
+}
+
+/*
+.irpane > tr.loop-1 > td:last-child {
+  padding-left: 10px;
+}
+
+.irpane > tr.loop-2 > td:last-child {
+  padding-left: 15px;
+}
+
+.irpane > tr.loop-3 > td:last-child {
+  padding-left: 20px;
+}
+
+.irpane > tr.loop-4 > td:last-child {
+  padding-left: 25px;
+}
+
+.irpane > tr.loop-5 > td:last-child {
+  padding-left: 30px;
+}*/
+
+
+.irpane.view-source > tr.loop-hotness-1 > td:last-child > pre {
+  border-left: 8px #fee5d9 solid;
+}
+
+.irpane.view-source > tr.loop-hotness-2 > td:last-child > pre {
+  border-left: 8px #fcae91 solid;
+}
+
+.irpane.view-source > tr.loop-hotness-3 > td:last-child > pre {
+  border-left: 8px #fb6a4a solid;
+}
+
+.irpane.view-source > tr.loop-hotness-4 > td:last-child > pre {
+  border-left: 8px #de2d26 solid;
+}
+
+.irpane.view-source > tr.loop-hotness-5 > td:last-child > pre {
+  border-left: 8px #a50f15 solid;
+}
+
+

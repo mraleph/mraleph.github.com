@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<link rel="import" href="../../../../packages/polymer/polymer.html">
+<polymer-element name="source-path">
+  <template>
+    <link rel="stylesheet" href="/deps/fa/css/font-awesome.min.css">
+    <link rel="stylesheet" href="source-path.css">
+    <span class="source-path">
+      <template if="{{!path.isEmpty}}">
+        [
+        <template repeat="{{f in path | enumerate}}">
+          <a href="#" on-click="{{switchAction}}" data-target="{{f.index}}">{{f.value.source.name}}</a> <i class="fa fa-angle-double-right"></i>
+        </template>
+      </template>
+    </span>
+  </template>
+  <script type="application/dart" src='source-path.dart'></script>
+</polymer-element>

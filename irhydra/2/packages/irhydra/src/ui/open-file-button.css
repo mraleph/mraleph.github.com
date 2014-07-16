@@ -1,0 +1,23 @@
+input[type=file] {
+  visibility: hidden;
+  width: 0px;
+  height: 0px;
+  margin: 0px;
+  padding: 0px; }
+
+span.hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 0px;
+  height: 0px; }
+
+button {
+  background: white;
+  color: black;
+  font-size: 16pt;
+  width: 40px;
+  height: 40px;
+  border: 0px; }
+
+button:hover {
+  background: rgba(153, 153, 153, 0.2); }

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<link rel="import" href="../../../../packages/polymer/polymer.html">
+<polymer-element name="dropdown-element">
+  <template>
+    <link rel="stylesheet" type="text/css" href="dropdown-element.css">
+
+    <div class="ui-dropdown">
+      <a class="ui-dropdown-selected" data-toggle="dropdown" href="#">{{valueText}}&nbsp;<i class="ui-dropdown-caret"></i></a>
+      <div class="ui-dropdown-options" on-click="{{selectAction}}">
+        <content></content>
+      </div>
+    </div>
+  </template>
+  <script type="application/dart" src='dropdown-element.dart'></script>
+</polymer-element>
