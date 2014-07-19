@@ -9,6 +9,16 @@
   -webkit-flex-flow: column;
   flex-flow: column; }
 
+paper-toast, paper-toast /deep/ div {
+  z-index: 1000 !important; }
+
+paper-toast > paper-progress {
+  position: absolute;
+  left: 5%;
+  right: 24px;
+  bottom: 5px;
+  width: 90%; }
+
 .header {
   height: 40px;
   padding: 0px;
@@ -32,6 +42,9 @@ button:disabled {
 
 button:disabled:hover {
   background: white; }
+
+button.unchecked {
+  color: #95A5A6; }
 
 .pane {
   display: -webkit-flex;
@@ -192,3 +205,6 @@ button:disabled:hover {
 
 .fa-repeat:before {
   content: "\f01e"; }
+
+.fa-eye:before {
+  content: "\f06e"; }
