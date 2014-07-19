@@ -157,7 +157,7 @@ $ d8 concat.js
   <tr>
     <td>Outside</td>
     <td class="y"><span class="x x67 x-green">x 674,248,118 ops/sec &pm;1.08%</span></td>
-  </tr>  
+  </tr>
 </table>Fastest is Outside
 </pre>
         </section>
@@ -239,7 +239,7 @@ function benchmark(N) {
 
         <section>
           <h4>\[{\sum C_{i} N_i} +\]</h4>
-          <h4>\[\frac{1}{\sqrt{2\pi}}\int C(\xi) e ^ {-\frac{\xi^2}{2}} d\xi \]</h4>          
+          <h4>\[\frac{1}{\sqrt{2\pi}}\int C(\xi) e ^ {-\frac{\xi^2}{2}} d\xi \]</h4>
         </section>
 
         <section>
@@ -248,53 +248,59 @@ function benchmark(N) {
         </section>
 
         <section>
-          <h3>IRHydra<sup>2</sup></h3>
+          <h3><a href="http://mrale.ph/irhydra/2" target="_blank">IRHydra<sup>2</sup></a></h3>
+          <h4>all samples from this talk are available as demos within the tool</h4>
+        </section>
+
+        <section data-background="images/slide4.png" data-background-size="contain">
         </section>
 
         <section>
-          <h2>lets be fixing</h2>
+          <h3>why <code>Outside</code> is fast(er)?</h3>
+        </section>
+
+        <section data-background="images/irhydra-1.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/irhydra-2.png" data-background-size="contain">
         </section>
 
         <section>
-<pre style="font-size: 0.5em; line-height: 1.2em;"><code data-trim data-noescape>
---- src/hydrogen.cc (revision 21348)
-+++ src/hydrogen.cc (working copy)
-@@ -9639,6 +9639,14 @@
-       return left;
-     }
-
-+    if (FLAG_fold_constants &&
-+        left-&gt;IsConstant() && HConstant::cast(left)-&gt;HasStringValue() &&
-+        right-&gt;IsConstant() && HConstant::cast(right)-&gt;HasStringValue()) {
-+      return AddUncasted&lt;HStringAdd&gt;(
-+          left, right, allocation_mode.GetPretenureMode(),
-+          STRING_ADD_CHECK_NONE, allocation_mode.feedback_site());
-+    }
-+
-     // Register the dependent code with the allocation site.
-     if (!allocation_mode.feedback_site().is_null()) {
-       ASSERT(!graph()-&gt;info()-&gt;IsStub());
-</code></pre>
+          <h3>hmm, hard to see the forest behind the trees</h3>
         </section>
 
         <section>
-          <pre style="font-size: 0.9em;">
-$ d8 concat.js
-<table>
-  <tr>
-    <td>Inside </td>
-    <td class="y"><span class="x x75 x-green">x 758,530,478 ops/sec &pm;1.82%</span></td>
-  </tr>
-  <tr>
-    <td>Outside</td>
-    <td class="y"><span class="x x67 x-gold">x 674,248,118 ops/sec &pm;1.14%</span></td>
-  </tr>  
-</table>Fastest is Inside
-</pre>
+          <h3>lets activate an "interesting IR" mode</h3>
+        </section>
+
+        <section data-background="images/irhydra-3.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/irhydra-4.png" data-background-size="contain">
         </section>
 
         <section>
-          <h3>both loops are doing nothing!</h3>
+          <ul>
+            <li>"uninteresting" IR instructions are hidden</li>
+            <li>source is spliced into IR</li>
+            <li>loops are marked with red stripes on the left</li>
+          </ul>
+        </section>
+
+        <section data-background="images/irhydra-5.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h4>By the way: that was core loop of our benchmark and it was <em>EMPTY</em></h4>
+          <p>only iteration variable increment and loop itself remained</p>
+        </section>
+
+        <section>
+          <h3>so <code>Outside</code> is fast because it is <em>measuring empty loop</em></h3>
+        </section>
+
+        <section>
+          <h2>how did this happen?</h2>
         </section>
 
         <section>
@@ -408,6 +414,64 @@ var str1, str2;
         </section>
 
         <section>
+          <h3>but what happened to <code>Inside</code>?</h3>
+        </section>
+
+        <section data-background="images/irhydra-5.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h3>V8 failed to constant fold</h3>
+          <h4>actually a bug</h4>
+        </section>
+
+        <section>
+          <h2>lets be fixing <em>a bug</em></h2>
+        </section>
+
+        <section>
+<pre style="font-size: 0.5em; line-height: 1.2em;"><code data-trim data-noescape>
+--- src/hydrogen.cc (revision 21348)
++++ src/hydrogen.cc (working copy)
+@@ -9639,6 +9639,14 @@
+       return left;
+     }
+
++    if (FLAG_fold_constants &&
++        left-&gt;IsConstant() && HConstant::cast(left)-&gt;HasStringValue() &&
++        right-&gt;IsConstant() && HConstant::cast(right)-&gt;HasStringValue()) {
++      return AddUncasted&lt;HStringAdd&gt;(
++          left, right, allocation_mode.GetPretenureMode(),
++          STRING_ADD_CHECK_NONE, allocation_mode.feedback_site());
++    }
++
+     // Register the dependent code with the allocation site.
+     if (!allocation_mode.feedback_site().is_null()) {
+       ASSERT(!graph()-&gt;info()-&gt;IsStub());
+</code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.9em;">
+$ d8 concat.js
+<table>
+  <tr>
+    <td>Inside </td>
+    <td class="y"><span class="x x75 x-green">x 758,530,478 ops/sec &pm;1.82%</span></td>
+  </tr>
+  <tr>
+    <td>Outside</td>
+    <td class="y"><span class="x x67 x-gold">x 674,248,118 ops/sec &pm;1.14%</span></td>
+  </tr>
+</table>Fastest is Inside
+</pre>
+        </section>
+
+        <section>
+          <h3>reminder: both loops are doing nothing now!</h3>
+        </section>
+
+        <section>
           <h3>presumption of performance</h3>
         </section>
 
@@ -427,7 +491,7 @@ var str1, str2;
 
         <section>
           <pre><code data-trim data-noescape class="javascript">
-var obj = 
+var obj =
   Object.create(
     Object.create(
       Object.create(
@@ -438,13 +502,13 @@ var obj =
 
         <section>
           <pre><code data-trim data-noescape class="javascript">
-var obj = 
+var obj =
   Object.create(
     Object.create(
       Object.create(
         Object.create(
           Object.create({prop: 10})))));
-                  // LISP tribute ^^^^^ 
+                  // LISP tribute ^^^^^
           </code></pre>
         </section>
 
@@ -530,8 +594,32 @@ In total: 10000000000
           <h2>&laquo;what kind of voodoo is this?&raquo;</h2>
         </section>
 
+        <section data-background="images/irhydra-7.png" data-background-size="contain">
+        </section>
+
         <section>
-          <h1>also my node was just old</h1>
+          <h2>getter was completely inlined</h2>
+          <p>all prototype traversal checks were hoisted</p>
+        </section>
+
+        <section data-background="images/irhydra-8.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h3>data property is handled in a generic way</h3>
+          <h4>through an <em>inline cache</em></h4>
+        </section>
+
+        <section>
+          <h1>why?</h1>
+        </section>
+
+        <section>
+          <h4>older V8 did not inline loads of data properties defined on prototypes</h4>
+        </section>
+
+        <section>
+          <h1>trying newer V8</h1>
         </section>
 
         <section>
@@ -552,6 +640,17 @@ In total: 10000000000
 <b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
         </section>
 
+        <section>
+          <h3>prototype chain traversal got LICMed</h3>
+        </section>
+
+        <section>
+          <h3>now something different</h3>
+        </section>
+
+        <section>
+          <h3>what if we run benchmark twice?</h3>
+        </section>
 
         <section>
           <pre><code data-trim data-noescape class="javascript">
@@ -569,6 +668,21 @@ $ d8 prototype.js | grep took
 <b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">3408</span> ms.
 <b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1204</span> ms.
 <b>lookupAndCache</b> took <span style="color: #C00; font-weight: bolder;">3406</span> ms.
+        </section>
+
+        <section>
+          <h3>what happened here?</h3>
+        </section>
+
+        <section>
+          <p>turns out: <code>'In total: ' + counter</code> type-feedback leaks upwards into the loop and causes excessive boxing of the <code>counter</code> variable</p>
+        </section>
+
+        <section data-background="images/irhydra-9.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h3>solution: hide <code>+</code> from representation inference</h3>
         </section>
 
         <section>
@@ -596,6 +710,10 @@ $ d8 prototype.js | grep took
         </section>
 
         <section>
+          <h3>is method call faster than function call?</h3>
+        </section>
+
+        <section>
           <pre style="font-size: 0.7em;"><code data-trim data-noescape>
 function mk(word) {
     var len = word.length;
@@ -618,7 +736,7 @@ Benchmark.prototype.setup = function() {
    function mk(word) {
         /* ... */
     }
-    
+
     var MK = function() { };
     MK.prototype.mk = mk;
     var mker = new MK;
@@ -654,9 +772,13 @@ $ d8 method-vs-function.js
   <tr>
     <td>Method</td>
     <td class="y"><div class="x x68 x-green">x 682,273,122 ops/sec &pm;0.72%</div></td>
-  </tr>  
+  </tr>
 </table>Fastest is Method
 </pre>
+        </section>
+
+        <section>
+          <h3>so method call <em>IS</em> faster than function call?</h3>
         </section>
 
         <section>
@@ -687,7 +809,7 @@ $ d8 method-vs-function.js
   <tr>
     <td>Method</td>
     <td class="y"><div class="x x69 x-green">x 692,496,013 ops/sec &pm;0.29%</div></td>
-  </tr>  
+  </tr>
 </table>Fastest is Function,Method
 </pre>
         </section>
@@ -696,7 +818,49 @@ $ d8 method-vs-function.js
         </section>
 
         <section>
-          <h2>file bugs instead of making conslusions</h2>
+          <h2><code>Function</code> was never optimized!</h2>
+        </section>
+
+        <section data-background="images/irhydra-10.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <p>heuristics that decide when to optimize are based (among other things) on the amount of initialized inline caches</p>
+          <p>function call does not go through an IC, but method call does</p>
+          <p><code>Method</code> had enough initialized ICs to trigger optimizations, but <code>Function</code> didn't!</p>
+          <p>Until fake <code>+</code> ICs were added in the <code>setup</code> section</p>
+        </section>
+
+        <section data-background="images/irhydra-11.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h2>now <code>Function</code> is optimized!</h2>
+        </section>
+
+        <section data-background="images/irhydra-12.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h3>... and it's body is almost completely LICMed</h3>
+        </section>
+
+        <section>
+          <h3>SOURCE view is easier</h3>
+        </section>
+
+        <section data-background="images/irhydra-13.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/irhydra-14.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h3>measuring <em>almost</em> empty loop again!</h3>
+        </section>
+
+        <section>
+          <h2>file bugs instead of making conclusions</h2>
         </section>
 
         <section>
@@ -735,9 +899,9 @@ $ d8 method-vs-function.js
 				// Optional libraries used to extend on reveal.js
 				dependencies: [
 					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
-					{ src: 'js/highlight.js', async: true, callback: function() { 
+					{ src: 'js/highlight.js', async: true, callback: function() {
             // delete hljs.LANGUAGES.xml;
-            hljs.initHighlightingOnLoad(); 
+            hljs.initHighlightingOnLoad();
           } },
           { src: 'js/math.js', async: true }
 				]
