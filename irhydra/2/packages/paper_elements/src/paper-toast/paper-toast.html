@@ -8,24 +8,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <!--
-`paper-toast` provides lightweight feedback about an operation in a small popup 
-at the base of the screen on mobile and at the lower left on desktop. Toasts are 
+`paper-toast` provides lightweight feedback about an operation in a small popup
+at the base of the screen on mobile and at the lower left on desktop. Toasts are
 above all other elements on screen, including the FAB.
 
-Toasts automatically disappear after a timeout or after user interaction 
-elsewhere on the screen, whichever comes first. Toasts can be swiped off 
+Toasts automatically disappear after a timeout or after user interaction
+elsewhere on the screen, whichever comes first. Toasts can be swiped off
 screen.  There can be only one on the screen at a time.
 
 Example:
 
     <paper-toast text="Your draft has been discarded." onclick="discardDraft(el)"></paper-toast>
-    
+
     <script>
       function discardDraft(el) {
         el.show();
       }
     </script>
-    
+
 An action button can be presented in the toast.
 
 Example (using Polymer's data-binding features):
@@ -33,7 +33,7 @@ Example (using Polymer's data-binding features):
     <paper-toast id="toast2" text="Connection timed out. Showing limited messages.">
       <div style="color: blue;" on-tap="{{retry}}">Retry</div>
     </paper-toast>
-    
+
 Positioning toast:
 
 A standard toast appears near the lower left of the screen.  You can change the
@@ -43,7 +43,7 @@ position by overriding bottom and left positions.
       bottom: 40px;
       left: 10px;
     }
-  
+
 To make it fit at the bottom of the screen:
 
     paper-toast {
@@ -51,7 +51,7 @@ To make it fit at the bottom of the screen:
       left: 0;
       width: 100%;
     }
-  
+
 When the screen size is smaller than the `responsiveWidth` (default to 480px),
 the toast will automatically fits at the bottom of the screen.
 
@@ -75,24 +75,24 @@ the toast will automatically fits at the bottom of the screen.
   <div class="toast-container" horizontal layout>
 
     <div class="toast-text" flex>{{text}}</div>
-    
+
     <div class="toast-text toast-action" on-tap="{{dismiss}}">
       <content></content>
     </div>
 
   </div>
-  
+
   <core-media-query query="max-width: {{responsiveWidth}}" queryMatches="{{narrowMode}}"></core-media-query>
 
 </template>
 <script>
 
   (function() {
-  
+
     var currentToast;
-  
+
     Polymer('paper-toast', {
-  
+
       /**
        * The text shows in a toast.
        *
@@ -101,7 +101,7 @@ the toast will automatically fits at the bottom of the screen.
        * @default ''
        */
       text: '',
-      
+
       /**
        * The duration in milliseconds to show the toast.
        *
@@ -110,7 +110,7 @@ the toast will automatically fits at the bottom of the screen.
        * @default 3000
        */
       duration: 3000,
-      
+
       /**
        * Set opened to true to show the toast and to false to hide it.
        *
@@ -119,7 +119,7 @@ the toast will automatically fits at the bottom of the screen.
        * @default false
        */
       opened: false,
-      
+
       /**
        * Min-width when the toast changes to narrow layout.  In narrow layout,
        * the toast fits at the bottom of the screen when opened.
@@ -129,7 +129,7 @@ the toast will automatically fits at the bottom of the screen.
        * @default '480px'
        */
       responsiveWidth: '480px',
-      
+
       /**
        * If true, the toast can't be swiped.
        *
@@ -138,18 +138,18 @@ the toast will automatically fits at the bottom of the screen.
        * @default false
        */
       swipeDisabled: false,
-      
+
       eventDelegates: {
         trackstart: 'trackStart',
         track: 'track',
         trackend: 'trackEnd',
         transitionend: 'transitionEnd'
       },
-      
+
       narrowModeChanged: function() {
         this.classList.toggle('fit-bottom', this.narrowMode);
       },
-      
+
       openedChanged: function() {
         if (this.opened) {
           this.dismissJob = this.job(this.dismissJob, this.dismiss, this.duration);
@@ -158,16 +158,16 @@ the toast will automatically fits at the bottom of the screen.
           this.dismiss();
         }
       },
-      
-      /** 
+
+      /**
        * Toggle the opened state of the toast.
        * @method toggle
        */
       toggle: function() {
         this.opened = !this.opened;
       },
-      
-      /** 
+
+      /**
        * Show the toast for the specified duration
        * @method show
        */
@@ -178,8 +178,8 @@ the toast will automatically fits at the bottom of the screen.
         currentToast = this;
         this.opened = true;
       },
-      
-      /** 
+
+      /**
        * Dismiss the toast and hide it.
        * @method dismiss
        */
@@ -193,7 +193,7 @@ the toast will automatically fits at the bottom of the screen.
           }
         }
       },
-      
+
       trackStart: function(e) {
         if (!this.swipeDisabled) {
           e.preventTap();
@@ -204,7 +204,7 @@ the toast will automatically fits at the bottom of the screen.
           this.classList.add('dragging');
         }
       },
-      
+
       track: function(e) {
         if (this.dragging) {
           var s = this.style;
@@ -219,7 +219,7 @@ the toast will automatically fits at the bottom of the screen.
           }
         }
       },
-      
+
       trackEnd: function(e) {
         if (this.dragging) {
           this.classList.remove('dragging');
@@ -236,22 +236,22 @@ the toast will automatically fits at the bottom of the screen.
           this.dragging = false;
         }
       },
-      
+
       transitionEnd: function() {
         var cl = this.classList;
-        if (cl.contains('fade-out-right') || cl.contains('fade-out-left') || 
+        if (cl.contains('fade-out-right') || cl.contains('fade-out-left') ||
             cl.contains('fade-out-down') || cl.contains('fade-out-up')) {
           this.dismiss();
-          cl.remove('fade-out-right', 'fade-out-left', 
+          cl.remove('fade-out-right', 'fade-out-left',
               'fade-out-down', 'fade-out-up');
         } else if (this.shouldDismiss) {
           this.dismiss();
         }
         this.shouldDismiss = false;
       }
-  
+
     });
-    
+
   })();
 
 </script>

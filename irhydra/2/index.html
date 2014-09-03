@@ -1515,24 +1515,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div class="toast-container" horizontal="" layout="">
 
     <div class="toast-text" flex="">{{text}}</div>
-    
+
     <div class="toast-text toast-action" on-tap="{{dismiss}}">
       <content></content>
     </div>
 
   </div>
-  
+
   <core-media-query query="max-width: {{responsiveWidth}}" querymatches="{{narrowMode}}"></core-media-query>
 
 </template>
 <script>
 
   (function() {
-  
+
     var currentToast;
-  
+
     Polymer('paper-toast', {
-  
+
       /**
        * The text shows in a toast.
        *
@@ -1541,7 +1541,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default ''
        */
       text: '',
-      
+
       /**
        * The duration in milliseconds to show the toast.
        *
@@ -1550,7 +1550,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default 3000
        */
       duration: 3000,
-      
+
       /**
        * Set opened to true to show the toast and to false to hide it.
        *
@@ -1559,7 +1559,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default false
        */
       opened: false,
-      
+
       /**
        * Min-width when the toast changes to narrow layout.  In narrow layout,
        * the toast fits at the bottom of the screen when opened.
@@ -1569,7 +1569,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default '480px'
        */
       responsiveWidth: '480px',
-      
+
       /**
        * If true, the toast can't be swiped.
        *
@@ -1578,18 +1578,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default false
        */
       swipeDisabled: false,
-      
+
       eventDelegates: {
         trackstart: 'trackStart',
         track: 'track',
         trackend: 'trackEnd',
         transitionend: 'transitionEnd'
       },
-      
+
       narrowModeChanged: function() {
         this.classList.toggle('fit-bottom', this.narrowMode);
       },
-      
+
       openedChanged: function() {
         if (this.opened) {
           this.dismissJob = this.job(this.dismissJob, this.dismiss, this.duration);
@@ -1598,16 +1598,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.dismiss();
         }
       },
-      
-      /** 
+
+      /**
        * Toggle the opened state of the toast.
        * @method toggle
        */
       toggle: function() {
         this.opened = !this.opened;
       },
-      
-      /** 
+
+      /**
        * Show the toast for the specified duration
        * @method show
        */
@@ -1618,8 +1618,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         currentToast = this;
         this.opened = true;
       },
-      
-      /** 
+
+      /**
        * Dismiss the toast and hide it.
        * @method dismiss
        */
@@ -1633,7 +1633,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         }
       },
-      
+
       trackStart: function(e) {
         if (!this.swipeDisabled) {
           e.preventTap();
@@ -1644,7 +1644,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.classList.add('dragging');
         }
       },
-      
+
       track: function(e) {
         if (this.dragging) {
           var s = this.style;
@@ -1659,7 +1659,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         }
       },
-      
+
       trackEnd: function(e) {
         if (this.dragging) {
           this.classList.remove('dragging');
@@ -1676,22 +1676,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.dragging = false;
         }
       },
-      
+
       transitionEnd: function() {
         var cl = this.classList;
-        if (cl.contains('fade-out-right') || cl.contains('fade-out-left') || 
+        if (cl.contains('fade-out-right') || cl.contains('fade-out-left') ||
             cl.contains('fade-out-down') || cl.contains('fade-out-up')) {
           this.dismiss();
-          cl.remove('fade-out-right', 'fade-out-left', 
+          cl.remove('fade-out-right', 'fade-out-left',
               'fade-out-down', 'fade-out-up');
         } else if (this.shouldDismiss) {
           this.dismiss();
         }
         this.shouldDismiss = false;
       }
-  
+
     });
-    
+
   })();
 
 </script>
@@ -1710,7 +1710,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script>
 
   Polymer('core-range', {
-    
+
     /**
      * The number that represents the current value.
      *
@@ -1719,7 +1719,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 0
      */
     value: 0,
-    
+
     /**
      * The number that indicates the minimum value of the range.
      *
@@ -1728,7 +1728,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 0
      */
     min: 0,
-    
+
     /**
      * The number that indicates the maximum value of the range.
      *
@@ -1737,7 +1737,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 100
      */
     max: 100,
-    
+
     /**
      * Specifies the value granularity of the range's value.
      *
@@ -1746,7 +1746,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 1
      */
     step: 1,
-    
+
     /**
      * Returns the ratio of the value.
      *
@@ -1755,36 +1755,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 0
      */
     ratio: 0,
-    
+
     observe: {
       'value min max step': 'update'
     },
-    
+
     calcRatio: function(value) {
       return (this.clampValue(value) - this.min) / (this.max - this.min);
     },
-    
+
     clampValue: function(value) {
       return Math.min(this.max, Math.max(this.min, this.calcStep(value)));
     },
-    
+
     calcStep: function(value) {
       return this.step ? (Math.round(value / this.step) / (1 / this.step)) : value;
     },
-    
+
     validateValue: function() {
       var v = this.clampValue(this.value);
       this.value = this.oldValue = isNaN(v) ? this.oldValue : v;
       return this.value !== v;
     },
-    
+
     update: function() {
       this.validateValue();
       this.ratio = this.calcRatio(this.value) * 100;
     }
-    
+
   });
-  
+
 </script>
 </polymer-element>
 <script>
