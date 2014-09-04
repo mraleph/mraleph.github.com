@@ -189,7 +189,9 @@ button.unchecked {
   font-family: RobotoDraft;
   font-weight: 200;
   background: #ECF0F1;
-  color: #BDC3C7; }
+  color: #BDC3C7;
+  overflow-x: auto;
+  flex-flow: column; }
 
 .fa {
   display: inline-block;
@@ -208,3 +210,6 @@ button.unchecked {
 
 .fa-eye:before {
   content: "\f06e"; }
+
+.fa-dollar:before {
+  content: "\f155"; }

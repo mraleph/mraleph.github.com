@@ -190,7 +190,7 @@ html /deep/ [layout][start] {
   align-items: flex-start;
 }
 
-html /deep/ [layout][center] {
+html /deep/ [layout][center], html /deep/ [layout][center-center] {
   -ms-flex-align: center;
   -webkit-align-items: center;
   align-items: center;
@@ -210,7 +210,7 @@ html /deep/ [layout][start-justified] {
   justify-content: flex-start;
 }
 
-html /deep/ [layout][center-justified] {
+html /deep/ [layout][center-justified], html /deep/ [layout][center-center] {
   -ms-flex-pack: center;
   -webkit-justify-content: center;
   justify-content: center;
@@ -312,6 +312,7 @@ html /deep/ [segment], html /deep/ segment {
 // TODO(sigmund): remove this script tag (dartbug.com/19650). This empty
 // script tag is necessary to work around a bug in Chrome 36.
 </script>
+
 
 
 
@@ -909,7 +910,7 @@ Fired when the `core-overlay`'s `opened` property changes.
         // TODO(sorvell): force SD Polyfill to render
         forcePolyfillRender(this.target);
         if (!this._shouldPosition) {
-          this.target.style.position = 'static';
+          this.target.style.position = 'absolute';
           var computed = getComputedStyle(this.target);
           var t = (computed.top === 'auto' && computed.bottom === 'auto');
           var l = (computed.left === 'auto' && computed.right === 'auto');
@@ -1424,7 +1425,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script>
 // This empty script is here to workaround issue
 // https://github.com/dart-lang/core-elements/issues/11
-</script><polymer-element name="paper-toast" attributes="text duration opened responsiveWidth swipeDisabled">
+</script><polymer-element name="paper-toast" attributes="text duration opened responsiveWidth swipeDisabled" role="status">
 
 <template>
 
@@ -1515,24 +1516,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <div class="toast-container" horizontal="" layout="">
 
     <div class="toast-text" flex="">{{text}}</div>
-
+    
     <div class="toast-text toast-action" on-tap="{{dismiss}}">
       <content></content>
     </div>
 
   </div>
-
+  
   <core-media-query query="max-width: {{responsiveWidth}}" querymatches="{{narrowMode}}"></core-media-query>
 
 </template>
 <script>
 
   (function() {
-
+  
     var currentToast;
-
+  
     Polymer('paper-toast', {
-
+  
       /**
        * The text shows in a toast.
        *
@@ -1541,7 +1542,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default ''
        */
       text: '',
-
+      
       /**
        * The duration in milliseconds to show the toast.
        *
@@ -1550,7 +1551,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default 3000
        */
       duration: 3000,
-
+      
       /**
        * Set opened to true to show the toast and to false to hide it.
        *
@@ -1559,7 +1560,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default false
        */
       opened: false,
-
+      
       /**
        * Min-width when the toast changes to narrow layout.  In narrow layout,
        * the toast fits at the bottom of the screen when opened.
@@ -1569,7 +1570,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default '480px'
        */
       responsiveWidth: '480px',
-
+      
       /**
        * If true, the toast can't be swiped.
        *
@@ -1578,18 +1579,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
        * @default false
        */
       swipeDisabled: false,
-
+      
       eventDelegates: {
         trackstart: 'trackStart',
         track: 'track',
         trackend: 'trackEnd',
         transitionend: 'transitionEnd'
       },
-
+      
       narrowModeChanged: function() {
         this.classList.toggle('fit-bottom', this.narrowMode);
       },
-
+      
       openedChanged: function() {
         if (this.opened) {
           this.dismissJob = this.job(this.dismissJob, this.dismiss, this.duration);
@@ -1598,16 +1599,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.dismiss();
         }
       },
-
-      /**
+      
+      /** 
        * Toggle the opened state of the toast.
        * @method toggle
        */
       toggle: function() {
         this.opened = !this.opened;
       },
-
-      /**
+      
+      /** 
        * Show the toast for the specified duration
        * @method show
        */
@@ -1618,8 +1619,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         currentToast = this;
         this.opened = true;
       },
-
-      /**
+      
+      /** 
        * Dismiss the toast and hide it.
        * @method dismiss
        */
@@ -1633,7 +1634,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         }
       },
-
+      
       trackStart: function(e) {
         if (!this.swipeDisabled) {
           e.preventTap();
@@ -1644,7 +1645,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.classList.add('dragging');
         }
       },
-
+      
       track: function(e) {
         if (this.dragging) {
           var s = this.style;
@@ -1659,7 +1660,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         }
       },
-
+      
       trackEnd: function(e) {
         if (this.dragging) {
           this.classList.remove('dragging');
@@ -1676,22 +1677,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.dragging = false;
         }
       },
-
+      
       transitionEnd: function() {
         var cl = this.classList;
-        if (cl.contains('fade-out-right') || cl.contains('fade-out-left') ||
+        if (cl.contains('fade-out-right') || cl.contains('fade-out-left') || 
             cl.contains('fade-out-down') || cl.contains('fade-out-up')) {
           this.dismiss();
-          cl.remove('fade-out-right', 'fade-out-left',
+          cl.remove('fade-out-right', 'fade-out-left', 
               'fade-out-down', 'fade-out-up');
         } else if (this.shouldDismiss) {
           this.dismiss();
         }
         this.shouldDismiss = false;
       }
-
+  
     });
-
+    
   })();
 
 </script>
@@ -1710,7 +1711,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <script>
 
   Polymer('core-range', {
-
+    
     /**
      * The number that represents the current value.
      *
@@ -1719,7 +1720,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 0
      */
     value: 0,
-
+    
     /**
      * The number that indicates the minimum value of the range.
      *
@@ -1728,7 +1729,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 0
      */
     min: 0,
-
+    
     /**
      * The number that indicates the maximum value of the range.
      *
@@ -1737,7 +1738,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 100
      */
     max: 100,
-
+    
     /**
      * Specifies the value granularity of the range's value.
      *
@@ -1746,7 +1747,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 1
      */
     step: 1,
-
+    
     /**
      * Returns the ratio of the value.
      *
@@ -1755,36 +1756,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * @default 0
      */
     ratio: 0,
-
+    
     observe: {
       'value min max step': 'update'
     },
-
+    
     calcRatio: function(value) {
       return (this.clampValue(value) - this.min) / (this.max - this.min);
     },
-
+    
     clampValue: function(value) {
       return Math.min(this.max, Math.max(this.min, this.calcStep(value)));
     },
-
+    
     calcStep: function(value) {
       return this.step ? (Math.round(value / this.step) / (1 / this.step)) : value;
     },
-
+    
     validateValue: function() {
       var v = this.clampValue(this.value);
       this.value = this.oldValue = isNaN(v) ? this.oldValue : v;
       return this.value !== v;
     },
-
+    
     update: function() {
       this.validateValue();
       this.ratio = this.calcRatio(this.value) * 100;
     }
-
+    
   });
-
+  
 </script>
 </polymer-element>
 <script>
@@ -1913,6 +1914,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </template>
   
 </polymer-element>
+<polymer-element name="compilation-timeline">
+  <template>
+  </template>
+  
+</polymer-element>
+
+
 <polymer-element name="dropdown-element">
   <template>
     <style type="text/css">.ui-dropdown {
@@ -2024,7 +2032,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
     <template repeat="{{deopt in deoptInfo | enumerate}}">
       <div class="x-deopt-link x-deopt-link-{{deopt.value.type}}">
-        <a href="#deopt-ir-{{deopt.value.id}}" on-click="{{jumpToDeoptAction}}" on-mouseenter="{{enterDeoptAction}}" on-mouseleave="{{leaveDeoptAction}}" data-target="{{deopt.index}}">deopt @{{deopt.value.id}}</a>
+        <template if="{{deopt.value.id != null}}">
+          <a href="#deopt-ir-{{deopt.value.id}}" on-click="{{jumpToDeoptAction}}" on-mouseenter="{{enterDeoptAction}}" on-mouseleave="{{leaveDeoptAction}}" data-target="{{deopt.index}}">deopt @{{deopt.value.id}}</a>
+        </template>
+        <template if="{{deopt.value.id == null}}">
+          <a href="#" on-mouseenter="{{enterDeoptAction}}" on-mouseleave="{{leaveDeoptAction}}" data-target="{{deopt.index}}">deopt</a>
+        </template>
       </div>
     </template>
   </template>
@@ -2325,6 +2338,62 @@ pre {
   
   <script src="packages/irhydra/src/ui/prettify.js"></script>
 </polymer-element>
+
+
+<polymer-element name="method-name">
+  <template>
+    <style type="text/css">h3 {
+  padding-left: 5px;
+  font-weight: 200;
+  font-size: 1.2em; }
+
+a {
+  display: block;
+  text-decoration: none;
+  color: inherit; }
+
+:host(.selected) a,
+a:hover,
+a:focus {
+  text-decoration: none;
+  background-color: rgba(153, 153, 153, 0.2); }
+
+.deopt-eager {
+  color: #C0392B;
+  font-weight: 500 !important; }
+
+.deopt-lazy {
+  color: #F39C12;
+  font-weight: 500 !important; }
+
+.deopt-soft {
+  color: #8E44AD;
+  font-weight: 500 !important; }
+
+.source {
+  font-size: 0.6em;
+  font-weight: bold;
+  /* background-color: #1ABC9C; */
+  padding: 2px;
+  border-radius: 4px;
+  border: 1px dashed #95A5A6; }
+</style>
+    <h3 class="deopt-{{method.worstDeopt}}">
+      <template if="{{source != null}}">
+        <div><span class="source">{{source}}</span></div>
+      </template>
+      <template if="{{targetHref != null}}">
+        <a href="{{targetHref}}">
+          {{name}}
+        </a>
+      </template>
+      <template if="{{targetHref == null}}">
+        {{name}}
+      </template>
+    </h3>
+  </template>
+  
+</polymer-element>
 <polymer-element name="method-list">
   <template>
     <style type="text/css">.method-list {
@@ -2377,22 +2446,6 @@ pre {
   list-style: none;
   padding-left: 0; }
 
-.nav > li > h3 {
-  padding-left: 5px;
-  font-weight: 200;
-  font-size: 1.2em; }
-
-.nav > li > h3 > a {
-  display: block;
-  text-decoration: none;
-  color: inherit; }
-
-.nav > li > h3.selected > a,
-.nav > li > h3 > a:hover,
-.nav > li > h3 > a:focus {
-  text-decoration: none;
-  background-color: rgba(153, 153, 153, 0.2); }
-
 .phases > li > a {
   text-decoration: none;
   color: inherit;
@@ -2404,18 +2457,6 @@ pre {
 .phases > li > a:focus {
   text-decoration: none;
   background-color: rgba(153, 153, 153, 0.2); }
-
-h3.deopt-eager {
-  color: #C0392B;
-  font-weight: 500 !important; }
-
-h3.deopt-lazy {
-  color: #F39C12;
-  font-weight: 500 !important; }
-
-h3.deopt-soft {
-  color: #8E44AD;
-  font-weight: 500 !important; }
 
 .toggle {
   text-align: center;
@@ -2443,14 +2484,6 @@ h3.deopt-soft {
 
 .toggle:checked:after {
   color: red; }
-
-.method-name-source {
-  font-size: 0.6em;
-  font-weight: bold;
-  /* background-color: #1ABC9C; */
-  padding: 2px;
-  border-radius: 4px;
-  border: 1px dashed #95A5A6; }
 </style>
     <div class="method-list">
       <div class="method-list-methods">
@@ -2458,25 +2491,21 @@ h3.deopt-soft {
           <template repeat="{{method in filteredMethods | enumerate }}">
             <li>
               <template if="{{method.value.phases.length != 1}}">
-                <h3 class="deopt-{{method.value.worstDeopt}}">
-                  <template if="{{method.value.name.source != null}}">
-                    <div><span class="method-name-source">{{method.value.name.source}}</span></div>
-                  </template>
-                  {{method.value.name.display}}
-                </h3>
+                <method-name method="{{method.value}}" demangle="{{demangleNames}}">
+                </method-name>
                 <ul class="phases">
                   <template repeat="{{phase in method.value.phases | enumerate}}">
-                    <li class="{{ { 'selected': phase.value == selected } }}"><a href="#phase-{{method.index}}-{{phase.index}}" on-click="{{selectPhase}}" data-phase="{{method.index}},{{phase.index}}">{{phase.value.name}}</a></li>
+                    <li class="{{ { 'selected': phase.value == selected } }}">
+                      <a href="#phase-{{method.index}}-{{phase.index}}" on-click="{{selectPhase}}" data-phase="{{method.index}},{{phase.index}}">
+                        {{phase.value.name}}
+                      </a>
+                    </li>
                   </template>
                 </ul>
               </template>
               <template if="{{method.value.phases.length == 1}}">
-                <h3 class="deopt-{{method.value.worstDeopt}} {{ { 'selected': method.value.phases.last == selected } }}">
-                  <template if="{{method.value.name.source != null}}">
-                    <div><span class="method-name-source">{{method.value.name.source}}</span></div>
-                  </template>
-                  <a href="#phase-{{method.index}}-0" on-click="{{selectPhase}}" data-phase="{{method.index}},0">{{method.value.name.display}}</a>
-                </h3>
+                <method-name method="{{method.value}}" demangle="{{demangleNames}}" targethref="#phase-{{method.index}}-0" data-phase="{{method.index}},0" class="{{ { 'selected': method.value.phases.last == selected } }}" on-click="{{selectPhase}}">
+                </method-name>
               </template>
             </li>
           </template>
@@ -3138,7 +3167,9 @@ button.unchecked {
   font-family: RobotoDraft;
   font-weight: 200;
   background: #ECF0F1;
-  color: #BDC3C7; }
+  color: #BDC3C7;
+  overflow-x: auto;
+  flex-flow: column; }
 
 .fa {
   display: inline-block;
@@ -3157,6 +3188,9 @@ button.unchecked {
 
 .fa-eye:before {
   content: "\f06e"; }
+
+.fa-dollar:before {
+  content: "\f155"; }
 </style>
 
     <paper-toast text="{{progressAction}} {{progressUrl}}" duration="3600000">
@@ -3169,6 +3203,9 @@ button.unchecked {
       <open-file-button on-opened="{{openCompilation}}" data-title="Load Compilation Artifacts"><i class="fa fa-folder-open"></i></open-file-button>
       <template if="{{files != null}}">
         <button href="#" on-click="{{reloadCurrentFiles}}" title="Reload Current Files"><i class="fa fa-repeat"></i></button>
+      </template>
+      <template if="{{methods != null &amp;&amp; !methods.isEmpty}}">
+        <button on-click="{{toggleNameDemangling}}" title="Demangle method names" class="{{ {'unchecked': !demangleNames} }}"><i class="fa fa-dollar"></i></button>
       </template>
       <spinner-element id="spinner"></spinner-element>
       <template if="{{ir != null}}">
@@ -3201,11 +3238,17 @@ button.unchecked {
     <div class="pane">
       <template if="{{methods != null &amp;&amp; !methods.isEmpty}}">
         <div class="sidebar">
-          <method-list methods="{{methods}}" selected="{{phase}}"></method-list>
+          <method-list methods="{{methods}}" selected="{{phase}}" demanglenames="{{demangleNames}}"></method-list>
         </div>
         <template if="{{ir == null}}">
           <div class="ir-placeholder">
-            <span>select a method</span>
+            <div>select method</div>
+            <template if="{{timeline != null}}">
+              <compilation-timeline events="{{timeline}}">
+              </compilation-timeline>
+            </template>
+            <template if="{{timeline == null}}">
+            </template>
           </div>
         </template>
         <template if="{{ir != null}}">

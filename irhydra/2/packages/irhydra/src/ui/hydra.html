@@ -3,6 +3,7 @@
 <link rel="import" href="../../../../packages/paper_elements/paper_toast.html">
 <link rel="import" href="../../../../packages/paper_elements/paper_progress.html">
 <link rel="import" href="../modes/v8/ui/descriptions.html">
+<link rel="import" href="compilation-timeline.html">
 <link rel="import" href="dropdown-element.html">
 <link rel="import" href="deopt-links.html">
 <link rel="import" href="graph-pane.html">
@@ -28,6 +29,9 @@
       <open-file-button on-opened="{{openCompilation}}" data-title="Load Compilation Artifacts"><i class="fa fa-folder-open"></i></open-file-button>
       <template if="{{files != null}}">
         <button href="#" on-click="{{reloadCurrentFiles}}" title="Reload Current Files"><i class="fa fa-repeat"></i></button>
+      </template>
+      <template if="{{methods != null && !methods.isEmpty}}">
+        <button on-click="{{toggleNameDemangling}}" title="Demangle method names" class="{{ {'unchecked': !demangleNames} }}"><i class="fa fa-dollar"></i></button>
       </template>
       <spinner-element id="spinner"></spinner-element>
       <template if="{{ir != null}}">
@@ -60,11 +64,17 @@
     <div class="pane">
       <template if="{{methods != null && !methods.isEmpty}}">
         <div class="sidebar">
-          <method-list methods="{{methods}}" selected="{{phase}}"></method-list>
+          <method-list methods="{{methods}}" selected="{{phase}}" demangleNames="{{demangleNames}}"></method-list>
         </div>
         <template if="{{ir == null}}">
           <div class="ir-placeholder">
-            <span>select a method</span>
+            <div>select method</div>
+            <template if="{{timeline != null}}">
+              <compilation-timeline events="{{timeline}}">
+              </compilation-timeline>
+            </template>
+            <template if="{{timeline == null}}">
+            </template>
           </div>
         </template>
         <template if="{{ir != null}}">
