@@ -377,19 +377,6 @@ new SendSite(1, '+')
 </code></pre>
         </section>
 
-<!--
-        <section>
-          <pre class="bigger2"><code data-trim data-noescape class="javascript">
-function SendSite(id, message) {
-  this.name = "ΣSend$" +
-      _.padLeft(id, 2, '0');
-  this.message = message;
-  this.argc    = isBinaryOp(message) ?
-      2 : (message.split(':').length - 1);
-}</code></pre>
-        </section>
--->
-
         <section>
           <pre class="bigger15"><code data-trim data-noescape class="javascript">
 SendSite.prototype.bootstrap = function () {
