@@ -180,6 +180,27 @@ Vector.prototype.dot = function (other) {
 </code></pre>
         </section>
 
+        <section>
+          <div style="max-width: 50%; margin-left: auto; margin-right: auto; text-align: justify;">
+          <h3 class="dr">Before we go any further</h3>
+          <p>This talk was never intended to really be about compiling Smalltalk to JavaScript. It's about primitives that could make such translation easier. It focuses on certain aspects of the language (dispatch) but does not address some other complicated aspects, e.g. translation of the <em>non-local return</em> or control-flow in general. Though many things can be achieved with the right combination of <code>switch</code>-statements, exceptions and trampolining, these emulations usually come with a hefty overhead. Absence of the first-class access to the call stack and program counter makes efficient translation of foreign control-flow constructs like <em>non-local return</em> or <em>coroutines</em> a hard if not impossible task.</p>
+          <p>Overall language to language compilation faces more challenges than I could cover in this 20 minutes talk</p>
+          <p style="text-align: right;">(Vyacheslav Egorov, 16.09.2014)</p>
+          </div>
+        </section>
+
+        <section>
+          <pre class="bigger2"><code data-trim data-noescape class="javascript">
+// Dot-product of two vectors
+Vector.prototype.dot = function (other) {
+  return Send(Send(Send(this, 'x'), '*',
+                   Send(other, 'x')), '+'
+              Send(Send(this, 'y'), '*'
+                   Send(other, 'y')))
+}
+</code></pre>
+        </section>
+
 				<section class="B">
 					<h1><b>looks slow</b></h1>
 				</section>
@@ -871,7 +892,7 @@ lensum x <span class="green">28,055</span> ops/sec
 			// Full list of configuration options available here:
 			// https://github.com/hakimel/reveal.js#configuration
 			Reveal.initialize({
-				controls: false,
+				controls: true,
 				progress: true,
 				history: true,
 				center: true,
