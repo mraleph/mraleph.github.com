@@ -2110,8 +2110,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   font-size: 14pt;
 }
 
-.irpane > tr > td:first-child,
-.irpane > tbody > tr > td:first-child {
+.irpane > tr > td:not(:last-child),
+.irpane > tbody > tr > td:not(:last-child) {
   background-color: #F7F7F7;
   border-right: 1px solid #EEE;
   min-width: 4em;
@@ -3237,6 +3237,9 @@ button.unchecked {
 
 .fa-dollar:before {
   content: "\f155"; }
+
+.fa-clock-o:before {
+  content: "\f017"; }
 </style>
 
     <paper-toast text="{{progressAction}} {{progressUrl}}" duration="3600000">
@@ -3250,6 +3253,7 @@ button.unchecked {
       <template if="{{files != null}}">
         <button href="#" on-click="{{reloadCurrentFiles}}" title="Reload Current Files"><i class="fa fa-repeat"></i></button>
       </template>
+      <open-file-button on-opened="{{loadProfile}}" data-title="Load perf annotate output"><i class="fa fa-clock-o"></i></open-file-button>
       <template if="{{methods != null &amp;&amp; !methods.isEmpty}}">
         <button on-click="{{toggleNameDemangling}}" title="Demangle method names" class="{{ {'unchecked': !demangleNames} }}"><i class="fa fa-dollar"></i></button>
       </template>
@@ -3322,8 +3326,8 @@ button.unchecked {
   font-size: 14pt;
 }
 
-.irpane > tr > td:first-child,
-.irpane > tbody > tr > td:first-child {
+.irpane > tr > td:not(:last-child),
+.irpane > tbody > tr > td:not(:last-child) {
   background-color: #F7F7F7;
   border-right: 1px solid #EEE;
   min-width: 4em;

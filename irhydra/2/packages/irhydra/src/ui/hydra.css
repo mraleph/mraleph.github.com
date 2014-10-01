@@ -213,3 +213,6 @@ button.unchecked {
 
 .fa-dollar:before {
   content: "\f155"; }
+
+.fa-clock-o:before {
+  content: "\f017"; }
