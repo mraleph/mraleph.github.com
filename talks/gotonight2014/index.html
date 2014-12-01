@@ -33,11 +33,12 @@
 			<div class="slides">
         <section class="B">
           <h1>this slide <br/>was intentionally<br/> left blank</h1>
+          <h4 class="pinkish">[but you can always reach me at <a href="https://twitter.com/mraleph">@mraleph</a> and <a href="mailto:me@mrale.ph">me@mrale.ph</a> for questions]</h4>
         </section>
 
         <section class="B">
           <section>
-            <h1>Any Java programmers?</h1>
+            <h1>Any <span class="pinkish">Java</span> programmers?</h1>
           </section>
 
           <section>
@@ -230,7 +231,7 @@ measure("j5", () -> p.j5(c));  // &rArr; <b class="borderish">4738 ms</b>
 
         <section class="B">
           <section>
-            <h1>Any C<span style="transform: rotate(-30deg) translate(10px,-50px); display: inline-block;">++</span> programmers?</h1>
+            <h1>Any <span class="pinkish">C<span style="transform: rotate(-30deg) translate(10px,-50px); display: inline-block;">++</span></span> programmers?</h1>
           </section>
 
           <section>
@@ -454,7 +455,7 @@ function benchmark() {
         </section>
 
         <section>
-          <h1>\[C \times 1 + 0 \times (N - 1)\]</h1>
+          <h2>\[C \times 1 + 0 \times (N - 1)\]</h2>
         </section>
 
         <section>
@@ -485,6 +486,25 @@ function benchmark() {
         <section>
           <h1>JITs are clever</h1>
           <h3>they optimize your program <em>as it runs</em></h3>
+        </section>
+
+        <section>
+          <h1>\[C \times N\]</h1>
+        </section>
+
+        <section>
+          <h1>\[C_u N_u + C_o N_o\]</h1>
+          <h3>[unoptimized + optimized version]</h3>
+        </section>
+
+        <section>
+          <h1>\[{\sum C_{i} N_i}\]</h1>
+          <h3>[multiple unoptimized and optimized versions]</h3>
+        </section>
+
+        <section>
+          <h3>\[{\sum C_{i} N_i} + \color{#c1357a}{\frac{1}{\sqrt{2\pi}}\int C(\xi) e ^ {-\frac{\xi^2}{2}} d\xi}\]</h3>
+          <h3>[math gets too complicated to approach analytically]</h3>
         </section>
 
         <section>
@@ -984,7 +1004,7 @@ $ v8/3.19.18.23/out/ia32.release/d8    \
         </section>
 
         <section>
-          <h1>+ IRHydra</h1>
+          <h1>+ <a href="http://mrale.ph/irhydra/2/" target="_blank">IRHydra</a></h1>
         </section>
 
         <section data-background="../lxjs2013/images/loop-block.png" data-background-size="contain" data-background-color="white">
@@ -1396,7 +1416,7 @@ $ d8 prototype.js | grep took
             <p>turns out: <code>'In total: ' + counter</code> type-feedback leaks upwards into the loop and causes excessive boxing of the <code>counter</code> variable</p>
           </section>
 
-          <section data-background="images/irhydra-9.png" data-background-size="contain">
+          <section data-background="../webrebels2014/images/irhydra-9.png" data-background-size="contain">
           </section>
         </section>
 
@@ -1803,7 +1823,7 @@ trie  x <b><span style="color: green;">61.46</span></b> ops/sec ±0.48%
 			// Full list of configuration options available here:
 			// https://github.com/hakimel/reveal.js#configuration
 			Reveal.initialize({
-				controls: false,
+				controls: true,
 				progress: true,
 				history: true,
 				center: true,
