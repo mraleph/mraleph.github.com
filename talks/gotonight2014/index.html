@@ -1,0 +1,2069 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Do not Measure the Weather</title>
+
+		<meta name="description" content="Don't measure the weather">
+		<meta name="author" content="Vyacheslav Egorov">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/simple.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="css/googlecode.css">
+
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+        <section class="B">
+          <h1>this slide <br/>was intentionally<br/> left blank</h1>
+        </section>
+
+        <section class="B">
+          <section>
+            <h1>Any Java programmers?</h1>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+class Producer {
+  byte[] src;
+
+  public void j4(Consumer dst) {
+    for (int i = 0; i < src.length; i++) {
+      dst.consume(src[i]);
+    }
+  }
+
+  public void j5(Consumer dst) {
+    for (byte b : src) {
+      dst.consume(b);
+    }
+  }
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <h1>Which is faster?</h1>
+          </section>
+
+          <section>
+            <ul>
+              <li class="fragment"><code>java4</code> is faster</li>
+              <li class="fragment"><code>java5</code> is faster</li>
+              <li class="fragment">the same</li>
+              <li class="fragment">depends on <code>consume</code></li>
+              <li class="fragment">depends on definition of <em>"faster"</em></li>
+            </ul>
+          </section>
+
+          <section>
+            <ul>
+              <li><code>java4</code> is faster</li>
+              <li><code>java5</code> is faster</li>
+              <li>the same</li>
+              <li class="pinkish">depends on <code>consume</code></li>
+              <li class="pinkish">depends on definition of <em>"faster"</em></li>
+            </ul>
+          </section>
+
+          <section>
+            <pre class="bigger2"><code data-trim data-noescape class="java">
+static void measure(String name,
+                    Runnable r) {
+  long start = System.currentTimeMillis();
+  for (int i = 0; i < 1000; i++) r.run();
+  long end = System.currentTimeMillis();
+  System.out.println(
+      name + " took " +
+      (end - start) + " ms.");
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <h1>Don't do this!</h1>
+            <h2>use <a href="http://openjdk.java.net/projects/code-tools/jmh/">JMH</a> instead</h2>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+class Consumer {
+  void consume(byte b) { }
+}
+
+public static void main(String[] args) {
+  final Producer p =
+      new Producer(new byte[1024 * 1024 * 10]);
+  final Consumer c = new Consumer();
+
+  measure("j4", () -> p.j4(c));
+  measure("j5", () -> p.j5(c));
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+class Consumer {
+  void consume(byte b) { }
+}
+
+public static void main(String[] args) {
+  final Producer p =
+      new Producer(new byte[1024 * 1024 * 10]);
+  final Consumer c = new Consumer();
+
+  measure("j4", () -> p.j4(c));  // &rArr; 7 ms
+  measure("j5", () -> p.j5(c));  // &rArr; 6 ms
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+measure("j4", () -> p.j4(c));  // &rArr; 7 ms
+measure("j5", () -> p.j5(c));  // &rArr; 6 ms
+measure("j4", () -> p.j4(c));  // &rArr; 0 ms (!)
+measure("j5", () -> p.j5(c));  // &rArr; 0 ms (!)
+            </code></pre>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+class Consumer {
+  void consume(byte b) {
+    /* doing nothing */
+  }
+}
+
+measure("j4", () -> p.j4(c));  // &rArr; 7 ms
+measure("j5", () -> p.j5(c));  // &rArr; 6 ms
+measure("j4", () -> p.j4(c));  // &rArr; 0 ms (!)
+measure("j5", () -> p.j5(c));  // &rArr; 0 ms (!)
+            </code></pre>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+class Consumer {
+  byte trap = 1;
+  void consume(byte b) {
+    if (b == trap) /* do something */
+       throw new RuntimeException("impossible!");
+  }
+}
+
+measure("j4", () -> p.j4(c));
+measure("j5", () -> p.j5(c));
+            </code></pre>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+class Consumer {
+  byte trap = 1;
+  void consume(byte b) {
+    if (b == trap) /* do something */
+       throw new RuntimeException("impossible!");
+  }
+}
+
+measure("j4", () -> p.j4(c));  // &rArr; 4248 ms
+measure("j5", () -> p.j5(c));  // &rArr; 4233 ms
+            </code></pre>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+class Consumer {
+  <b>volatile</b> byte trap = 1;
+  void consume(byte b) {
+    if (b == trap) /* do something heavier! */
+       throw new RuntimeException("impossible!");
+  }
+}
+
+measure("j4", () -> p.j4(c));
+measure("j5", () -> p.j5(c));
+            </code></pre>
+          </section>
+
+          <section>
+            <pre><code data-trim data-noescape class="java">
+class Consumer {
+  <b>volatile</b> byte trap = 1;
+  void consume(byte b) {
+    if (b == trap) /* do something heavier! */
+       throw new RuntimeException("impossible!");
+  }
+}
+
+measure("j4", () -> p.j4(c));  // &rArr; 13130 ms
+measure("j5", () -> p.j5(c));  // &rArr; <b class="borderish">4738 ms</b>
+            </code></pre>
+          </section>
+
+          <section>
+            <h1>try to figure it out</h1>
+            <h2>this talk is about JavaScript</h2>
+            <p>or read <a href="http://psy-lob-saw.blogspot.dk/2014/08/the-volatile-read-suprise.html">http://psy-lob-saw.blogspot.dk/2014/08/the-volatile-read-suprise.html</a></p>
+          </section>
+        </section>
+
+        <section class="B">
+          <section>
+            <h1>Any C<span style="transform: rotate(-30deg) translate(10px,-50px); display: inline-block;">++</span> programmers?</h1>
+          </section>
+
+          <section>
+            <pre class="bigger"><code data-trim data-noescape class="cpp">
+float dot(uint8_t* va, float* vb, size_t n) {
+    float sum = 0.0;
+    for (size_t i = 0; i < n; i++) {
+      sum += va[i] * vb[i];
+    }
+    return sum;
+}
+
+int main(int argc, char* argv[]) {
+  /*
+   * call dot() on 2^11 long vectors 2^21 times
+   */
+}
+            </code></pre>
+          </section>
+
+          <section>
+            <pre class="bigger">
+$ gcc <span class="green">-m32</span> -O2 ./test.cc -o ./t32 && time ./t32
+./t32 <span class="green">4.23s</span> user 0.00s system 100% cpu 4.231 total
+$ gcc <span class="red">-m64</span> -O2 ./test.cc -o ./t64 && time ./t64
+./t64 <span class="red">12.16s</span> user 0.00s system 100% cpu 12.155 total
+            </pre>
+          </section>
+
+          <section>
+            <h1>bug in GCC &lt;4.9</h1>
+            <h3>generated code hits <em>partial register dependency stall</em></h3>
+          </section>
+
+          <section>
+            <pre class="bigger"><code data-trim data-noescape class="cpp">
+float dot(uint8_t* va, float* vb, size_t n) {
+    // ...
+      sum += <b>I2F(va[i])</b> * vb[i];
+    // ...
+}
+
+float __attribute__((always_inline)) I2F(int i) {
+    float f;
+    __asm__(<b>"xorps %0, %0;"</b>
+            "cvtsi2ss %1, %0"
+            : "=X"(f)
+            : "r"(i));
+    return f;
+}
+            </code></pre>
+          </section>
+        </section>
+
+        <section>
+          <h1>now JavaScript</h1>
+        </section>
+
+        <section>
+          <h2><span class="leftish">we say <span class="pinkish">performance</span> <br/> we mean <span class="pinkish">jsperf.com</span></span></h2>
+        </section>
+
+        <section data-background="images/slide-1-1.png" data-background-size="contain"  data-background-color="#c4c4c4">
+        </section>
+
+        <section data-background="images/slide-1-2.png" data-background-size="contain"  data-background-color="#c4c4c4">
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+// split
+testString.split("e").length - 1;
+
+// while
+var count = 0;
+while (testString.length) {
+  if (testString.charAt(0) === "e") {
+      count += 1;
+   }
+   testString = testString.slice(1);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+// split <b>(IT'S OVER 9000K OP/S ON FF!)</b>
+testString.split("e").length - 1;
+
+// while
+var count = 0;
+while (testString.length) {
+  if (testString.charAt(0) === "e") {
+      count += 1;
+   }
+   testString = testString.slice(1);  // <b>WAT?</b>
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1 class="pinkish">DOUBT</h1>
+          <h1>EVERYTHING</h1>
+        </section>
+
+        <section>
+          <h1>&micro;bench 101</h1>
+        </section>
+
+        <section>
+          <h1>the cost of <code>OP</code>?</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function benchmark() {
+  var start = Date.now();
+  /* OP */
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>what if <code>OP</code> faster than clock?</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function benchmark(N) {
+  var start = Date.now();
+  for (var i = 0; i < N; i++) {
+    /* OP */
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>\[C\]</h1>
+        </section>
+
+        <section>
+          <h1>\[C \times N\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C \times N}{N}\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C \times \cancel{N}}{\cancel{N}}\]</h1>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+
+
+
+
+
+    while (testString.length) {
+      if (testString.charAt(0) === "e") {
+          count += 1;
+       }
+       testString = testString.slice(1);
+    }
+
+
+
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+function benchmark() {
+  var testString = "...";
+
+  var start = Date.now();
+  for (var i = 0; i < N; i++) {
+    var count = 0;
+    while (testString.length) {
+      if (testString.charAt(0) === "e") {
+          count += 1;
+       }
+       testString = testString.slice(1);
+    }
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+function benchmark() {
+  var testString = "...";
+
+  var start = Date.now();
+  <b>for (var i = 0; i < N; i++) {</b>
+    var count = 0;
+    while (testString.length) {
+      if (testString.charAt(0) === "e") {
+          count += 1;
+       }
+       <b>testString = testString.slice(1);</b>
+    }
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>repetitions start with <code>testString === ""</code></h2>
+        </section>
+
+        <section>
+          <h1>\[C \times N\]</h1>
+        </section>
+
+        <section>
+          <h1>\[C \times 1 + 0 \times (N - 1)\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C}{N}\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C}{N} \approx 0\]</h1>
+        </section>
+
+        <section>
+          <h1>jsperf misuse</h1>
+          <h3><code>OP</code> should take the same time</h3>
+          <h3>when repeatedly executed</h3>
+        </section>
+
+        <section data-background="../lxjs2013/images/jsperf.png" data-background-size="contain" data-background-color="#c4c4c4">
+        </section>
+
+        <section data-background="../lxjs2013/images/jsperf-magic.png" data-background-size="contain">
+          <h1 class="fragment">&laquo;<code>~~</code> for the win!&raquo;</h1>
+        </section>
+
+        <section>
+          <h1 class="pinkish">NOPE</h1>
+        </section>
+
+        <section>
+          <h1>JITs are clever</h1>
+          <h3>they optimize your program <em>as it runs</em></h3>
+        </section>
+
+        <section>
+          <h1>JITs are clever</h1>
+          <h3>to measure you need to <em>outsmart</em></h3>
+        </section>
+
+        <section>
+          <h3><span class="leftish50"><span class="pinkish">Disclaimer</span>: On slides I will show optimizations as source-to-source transformations. In reality compilers operate on more sophisticated representations.</span></h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = '1561565', j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = ~~i;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = <span style="background: rgba(255, 215, 0, 0.4); border-radius: 10px;">~~'1561565'</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = <span style="background: rgba(255, 215, 0, 0.4); border-radius: 10px;">~-1561566</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = <span style="background: rgba(255, 215, 0, 0.4); border-radius: 10px;">1561565</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>constant propagation</h1>
+        </section>
+
+        <section>
+          <h1>&laquo;hey, I can trick the compiler!&raquo;</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), j;
+  //  ^ not a constant any more
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = ~~i;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>&laquo;Wrong answer, McFly!&raquo;</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = ~~i;
+    //  ^^^ loop invariant
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), j;
+  var start = Date.now();
+  var j0 = ~~i;
+  //  ^^^^^^^^ hoisted from the loop
+  for (var n = 0; n &lt; N; n++) {
+    j = j0;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>loop invariant code motion</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), j;
+  var start = Date.now();
+  var j0 = ~~i;
+  for (var n = 0; n &lt; N; n++) {
+    j = j0;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j</span>;
+  var start = Date.now();
+  var j0 = ~~i;
+  for (var n = 0; n &lt; N; n++) {
+    <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j = j0</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j</span>;
+  var start = Date.now();
+  <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">var j0 = ~~i;</span>
+  for (var n = 0; n &lt; N; n++) {
+    <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j = j0</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">i = Date.now().toString()</span>, <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j</span>;
+  var start = Date.now();
+  <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">var j0 = ~~i;</span>
+  for (var n = 0; n &lt; N; n++) {
+    <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j = j0</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    /* sound of silence */
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var start = Date.now();
+  /*
+   * sound of silence
+   */
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>dead code elimination</h1>
+          <h3 class="fragment">[most engines won't go as far as shown with it,<br/>but it is possible]</h3>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+// Remember this one?
+// split <b>(IT'S OVER 9000K OP/S ON FF!)</b>
+testString.split("e").length - 1;
+<span class="fragment">// it's full of dead code.</span>
+</code></pre>
+        </section>
+
+        <section>
+          <h1>optimizer eats &micro;benchmarks for breakfast</h1>
+        </section>
+
+        <section>
+          <h1>chew proof &micro;benchmarks?</h1>
+        </section>
+
+        <section>
+          <h1>do <b class="pinkish">not</b> try <br/> to write them</h1>
+        </section>
+
+        <section>
+          <h2>
+            <ol>
+              <li>avoid constants</li>
+              <li>avoid loop invariants</li>
+              <li>avoid dead code</li>
+              <li class="fragment"><b class="pinkish">verify results</b></li>
+            </ol>
+          </h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+<span class="greenish-block fragment">  var i = Date.now().toString(),
+      i1 = Date.now().toString(), t;</span>
+  var j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    <span class="greenish-block fragment">t = i; i = i1; i1 = t;</span>
+    j = ~~i;
+  }
+  <span class="greenish-block fragment">if (i != j || i1 != j) throw "whoa?";</span>
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>this is as good<br/>as it gets</h1>
+        </section>
+
+        <section>
+          <h1>still not enough</h1>
+          <h2>(potentially)</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+for (var n = 0; n &lt; N; n++) {
+  t = i; i = i1; i1 = t;
+  j = ~~i;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+for (var n = 0; n &lt; <span class="golden">(N / 2)</span>; n++) {
+  t = i; i = i1; i1 = t;
+  j = ~~i;
+<span class="golden-block">  t = i; i = i1; i1 = t;
+  j = ~~i;              </span>
+}
+<span class="golden-block">if ((N % 2) === 1) {
+  t = i; i = i1; i1 = t;
+  j = ~~i;
+} </span>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+for (var n = 0; n &lt; (N / 2); n++) {
+  j = ~~i1;
+  t = i1;
+  j = ~~i;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+for (var n = 0; n &lt; (N / 2); n++) {
+  j = ~~i1; /* dead */
+  t = i1;   /* dead */
+  j = ~~i;  /* invariant */
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>loop unrolling</h1>
+        </section>
+
+        <section>
+          <h1>V8 doesn't do it</h1>
+          <h3 class="fragment">but I want to induce paranoia &#9786; </h3>
+        </section>
+
+        <section data-background="../lxjs2013/images/jsperf-fn.png" data-background-size="contain" data-background-color="#c4c4c4">
+        </section>
+
+        <section data-background="../lxjs2013/images/jsperf-fn-2.png" data-background-size="contain" data-background-color="#c4c4c4">
+          <h1 class="fragment"><b>&laquo;good speedup in Chrome 32!&raquo;</b></h1>
+        </section>
+
+        <section data-background="../lxjs2013/images/jsperf-fn-2.png" data-background-size="contain" data-background-color="#c4c4c4">
+          <h1><b>&laquo;IT'S A KIND OF MAGIC!&raquo;</b></h1>
+        </section>
+
+        <section>
+          <h1 class="pinkish">WRONG</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+function benchmark() {
+  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }
+
+  var start = new Date;
+  for (var n = 0; n &lt; N; n++) {
+    fn('a', 'b', 'c', 'd');
+  }
+  return (new Date - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+function benchmark() {
+  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }
+
+  var start = new Date;
+  for (var n = 0; n &lt; N; n++) {
+    <span class="golden-block">fn('a', 'b', 'c', 'd');</span>
+  }
+  return (new Date - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+function benchmark() {
+  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }
+
+  var start = new Date;
+  for (var n = 0; n &lt; N; n++) {
+    <span class="golden-block">fn('a', 'b', 'c', 'd');</span>
+//  ^^ why, yes, sir, I know callee.
+  }
+  return (new Date - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+function benchmark() {
+<span class="golden-block">  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }</span>
+
+  var start = new Date;
+  for (var n = 0; n &lt; N; n++) {
+    fn('a', 'b', 'c', 'd');
+//  ^^ it's right there
+  }
+  return (new Date - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+function benchmark() {
+<span class="golden-block">  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }</span>
+
+  var start = new Date;
+  for (var n = 0; n &lt; N; n++) {
+    <span class="golden-block">fn('a', 'b', 'c', 'd');</span>
+//  ^^ I take it there and put it here.
+  }
+  return (new Date - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+function benchmark() {
+  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }
+
+  var start = new Date;
+  for (var n = 0; n &lt; N; n++) {
+    <span class="golden-block">'a' + 'b' + 'c' + 'd';</span>
+//  ^^ DONE
+  }
+  return (new Date - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function benchmark() {
+  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }
+
+  var start = new Date;
+  for (var n = 0; n &lt; N; n++) {
+
+    /* aaaaand it is eliminated as DEAD code */
+  }
+  return (new Date - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>inlining</h1>
+        </section>
+
+        <section>
+          <h1>Looks simple!</h1>
+          <h2>Why the difference?</h2>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.6em; line-height: 1em;"><code data-trim data-noescape class="javascript">
+load("lodash.js");
+load("benchmark.js");
+
+Benchmark.prototype.setup = function() {
+  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }
+};
+
+var suite = new Benchmark.Suite;
+suite
+  .add('invoke', function () { fn('a', 'b', 'c', 'd'); })
+  .on('cycle', function (event) { print(event.target); })
+  .run();
+          </code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.9em;">
+$ v8/<u>3.19.18.23</u>/out/ia32.release/d8 test.js
+invoke x <span style="color: red; font-weight: bold;">24,417,452</span> ops/sec &pm;1.13%
+
+$ v8/<u>3.22.4</u>/out/ia32.release/d8 test.js
+invoke x <span style="color: green; font-weight: bold;">774,162,347</span> ops/sec &pm;0.27%
+          </pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.9em;">
+$ v8/3.19.18.23/out/ia32.release/d8    \
+      --print-opt-code --code-comments \
+      --trace-hydrogen --trace-phase=Z \
+      --trace-deopt                    \
+      test.js > code.asm
+          </pre>
+        </section>
+
+        <section>
+          <h1>+ IRHydra</h1>
+        </section>
+
+        <section data-background="../lxjs2013/images/loop-block.png" data-background-size="contain" data-background-color="white">
+        </section>
+
+        <section>
+          <h1>It was optimized<br/>correctly</h1>
+        </section>
+
+        <section>
+          <h1>It was optimized <em><span class="pinkish">almost</span></em> correctly</h1>
+        </section>
+
+        <section data-background="../lxjs2013/images/deopts.png" data-background-size="contain" data-background-color="white">
+        </section>
+
+        <section data-background="../lxjs2013/images/osr-entry.png" data-background-size="contain" data-background-color="white">
+        </section>
+
+        <section>
+          <h2>OSR entry tries to convert non-number to integer</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var <span class="golden">start</span> = new Date;
+//  ^^^^^ compiler wrongly speculates
+//        that it is an integer
+for (var n = 0; n &lt; N; n++) {
+  /* nothing */
+}
+return <span class="golden">(new Date - start)</span>;
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>It <b class="pinkish">was</b> V8's bug.</h1>
+        </section>
+
+        <section>
+          <h2>but it looked on benchmark<br/>like function calls were slow</h2>
+        </section>
+
+        <section>
+          <h1>More traps here.</h1>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.8em;"><code data-trim data-noescape class="javascript">
+function benchmark() {
+  function fn(a, b, c, d) {
+    return a + b + c + d;
+  }
+
+  var start = new Date;
+  for (var n = 0; n &lt; N; n++) {
+    fn('a', 'b', 'c', 'd');
+  }
+  return (new Date - start);
+}
+<span class="fragment">
+benchmark(); // => <span style="font-size: 1.3em; font-weight: bold;">2 ms</span>
+benchmark(); // => <span style="font-size: 1.3em; font-weight: bold;">37 ms</span>
+</span>
+          </code></pre>
+        </section>
+
+        <section data-footer="http://mrale.ph/blog/2012/09/23/grokking-v8-closures-for-fun.html">
+          <h2>Related to how V8 collects type feedback and guards inlined functions</h2>
+        </section>
+
+        <section>
+          <h1>&micro;bench vs. VM</h1>
+        </section>
+
+        <section data-background="../webrebels2014/images/slide4.png" data-background-size="contain"  data-background-color="#c4c4c4">
+        </section>
+
+        <section>
+                  <pre class="bigger2">
+$ d8 concat.js
+<table>
+  <tr>
+    <td>Inside </td>
+    <td class="y"><span class="x x19 x-red">x 198,893,290 ops/sec &pm;1.08%</span></td>
+  </tr>
+  <tr>
+    <td>Outside</td>
+    <td class="y"><span class="x x67 x-green">x 674,248,118 ops/sec &pm;1.08%</span></td>
+  </tr>
+</table>Fastest is Outside
+</pre>
+        </section>
+
+        <section>
+          <h1>&laquo;quick! move all your strings out of functions&raquo;</h1>
+        </section>
+
+        <section data-background="../webrebels2014/images/slide5.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <section>
+            <h1>time to look<br/>at the code</h1>
+            <h3>we expect both variants to be DCEd</h3>
+          </section>
+
+          <section>
+            <h1><a href="http://mrale.ph/irhydra/2" target="_blank">IRHydra<sup>2</sup></a></h1>
+            <h3>all samples from this talk<br/>are demos within the tool</h3>
+          </section>
+
+          <section>
+            <h1>why <code>Outside</code> is fast(er)?</h1>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-1.png" data-background-size="contain">
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-2.png" data-background-size="contain">
+          </section>
+
+          <section>
+            <h1>hmm, hard to see the forest behind the trees</h1>
+          </section>
+
+          <section>
+            <h1>lets activate an "interesting IR" mode</h1>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-3.png" data-background-size="contain">
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-4.png" data-background-size="contain">
+          </section>
+
+          <section>
+            <ul>
+              <li>"uninteresting" IR instructions are hidden</li>
+              <li>source is spliced into IR</li>
+              <li>loops are marked with red stripes on the left</li>
+            </ul>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-5.png" data-background-size="contain">
+          </section>
+
+          <section>
+            <h2>By the way: that was core loop of our benchmark and it was <em>EMPTY</em></h2>
+            <p>only iteration variable increment and loop itself remained</p>
+          </section>
+        </section>
+
+        <section>
+          <h1><code>Outside</code> is fast<br/>at <em class="pinkish">doing nothing</em></h1>
+        </section>
+
+        <section>
+          <h1>V8 failed to constant fold</h1>
+          <h2 class="pinkish">[actually a bug]</h2>
+        </section>
+
+        <section>
+          <h1>lets fix it!</h1>
+        </section>
+
+        <section>
+<pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape>
+--- src/hydrogen.cc (revision 21348)
++++ src/hydrogen.cc (working copy)
+@@ -9639,6 +9639,14 @@
+       return left;
+     }
+
++    if (FLAG_fold_constants &&
++        left-&gt;IsConstant() && HConstant::cast(left)-&gt;HasStringValue() &&
++        right-&gt;IsConstant() && HConstant::cast(right)-&gt;HasStringValue()) {
++      return AddUncasted&lt;HStringAdd&gt;(
++          left, right, allocation_mode.GetPretenureMode(),
++          STRING_ADD_CHECK_NONE, allocation_mode.feedback_site());
++    }
++
+     // Register the dependent code with the allocation site.
+     if (!allocation_mode.feedback_site().is_null()) {
+       ASSERT(!graph()-&gt;info()-&gt;IsStub());
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger2">
+$ d8 concat.js
+<table>
+  <tr>
+    <td>Inside </td>
+    <td class="y"><span class="x x75 x-green">x 758,530,478 ops/sec &pm;1.82%</span></td>
+  </tr>
+  <tr>
+    <td>Outside</td>
+    <td class="y"><span class="x x67 x-gold">x 674,248,118 ops/sec &pm;1.14%</span></td>
+  </tr>
+</table>Fastest is Inside
+</pre>
+        </section>
+
+        <section>
+          <h1>both are doing <span class="pinkish">nothing</span>!</h1>
+        </section>
+
+        <section>
+          <h1>presumption of performance</h1>
+        </section>
+
+        <section>
+          <h1><span class="leftish">reasonable code<br/>
+          reasonably fast</span></h1>
+        </section>
+
+
+        <section>
+          <h1>confirmation bias</h1>
+        </section>
+
+        <section>
+          <h2>&laquo;prototype chains are <span class="pinkish">slow</span>&raquo;</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var obj =
+  Object.create(
+    Object.create(
+      Object.create(
+        Object.create(
+          Object.create({prop: 10})))));
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var obj =
+  Object.create(
+    Object.create(
+      Object.create(
+        Object.create(
+          Object.create({prop: 10})))));
+                  // LISP tribute ^^^^^
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function doManyLookups() {
+  var counter = 0;
+  for(var i = 0; i < 1000; i++)
+    for(var j = 0; j < 1000; j++)
+      for(var k = 0; k < 1000; k++)
+        counter += obj.prop;
+  print('In total: ' + counter);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function lookupAndCache() {
+  var counter = 0;
+  var value = obj.prop;
+  for(var i = 0; i < 1000; i++)
+    for(var j = 0; j < 1000; j++)
+      for(var k = 0; k < 1000; k++)
+        counter += value;
+  print('In total: ' + counter);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// State of art benchmark driver.
+function measure(f) {
+  var start = Date.now();
+  f();
+  var end = Date.now();
+  print(f.name + ' took ' +
+        (end - start) + ' ms.');
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+measure(doManyLookups);
+measure(lookupAndCache);
+          </code></pre>
+        </section>
+
+        <section>
+<pre class="bigger2">$ node prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">8243</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1058</span> ms.</pre>
+          <h1 class="fragment x-confirmed-2"><span class="x-confirmed">CONFIRMED</span></h1>
+        </section>
+
+        <section>
+          <h1>lets make it harder</h1>
+        </section>
+
+        <section>
+<pre style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="diff">
+-   Object.create({prop: 10})))));
++   Object.create({ get prop () { return 10 }})))));
+</code></pre>
+        </section>
+
+        <section>
+<pre class="bigger2">$ node prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1082</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1061</span> ms.</pre>
+        </section>
+
+        <section>
+          <section>
+            <h1>&laquo;what kind of <span class="pinkish">voodoo</span> is this?&raquo;</h1>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-7.png" data-background-size="contain">
+          </section>
+
+          <section>
+            <h2>getter was completely inlined</h2>
+            <p>all prototype traversal checks were hoisted</p>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-8.png" data-background-size="contain">
+          </section>
+
+          <section>
+            <h3>data property is handled in a generic way</h3>
+            <h4>through an <em>inline cache</em></h4>
+          </section>
+        </section>
+
+        <section>
+          <h2>old V8 did not inline loads from data properties<br/> defined on prototypes</h2>
+        </section>
+
+        <section>
+          <h1>trying newer V8</h1>
+        </section>
+
+        <section>
+<pre class="bigger2">
+$ d8 prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">1294</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
+        </section>
+
+        <section>
+<pre class="bigger2">
+$ d8 prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: green; border: 5px dashed #C00; font-weight: bolder;">1294</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
+        </section>
+
+        <section>
+          <h1>prototype chain traversal got <span class="pinkish">LICMed</span></h1>
+        </section>
+
+        <section>
+          <h1>... and now for something <span class="pinkish">completely different</span></h1>
+        </section>
+
+        <section>
+          <h1>what if we run benchmark twice?</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+measure(doManyLookups);
+measure(doManyLookups);
+measure(lookupAndCache);
+measure(lookupAndCache);
+          </code></pre>
+        </section>
+
+        <section>
+<pre class="bigger2">
+$ d8 prototype.js | grep took
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1301</span> ms.
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">3408</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1204</span> ms.
+<b>lookupAndCache</b> took <span style="color: #C00; font-weight: bolder;">3406</span> ms.
+        </section>
+
+        <section>
+          <section>
+            <h1>what just<br/>happened here?</h1>
+          </section>
+
+          <section>
+            <p>turns out: <code>'In total: ' + counter</code> type-feedback leaks upwards into the loop and causes excessive boxing of the <code>counter</code> variable</p>
+          </section>
+
+          <section data-background="images/irhydra-9.png" data-background-size="contain">
+          </section>
+        </section>
+
+        <section>
+          <h2>solution: hide <code>+</code> from representation inference</h2>
+        </section>
+
+        <section>
+<pre style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="diff">
+-   print('In total: ' + counter);
++   print('In total: ' + counter.toString());
+</code></pre>
+        </section>
+
+        <section>
+<pre class="bigger2">
+$ d8 prototype.js | grep took
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1298</span> ms.
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1119</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1188</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder; text-decoration: underline;">982</span> ms.
+        </section>
+
+        <section>
+          <h1>&laquo;huh?&raquo;</h1>
+        </section>
+
+        <section>
+          <h1>now desert!</h1>
+        </section>
+
+        <section>
+          <h1>method call<br/>vs.<br/>function call</h1>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.7em;"><code data-trim data-noescape>
+function mk(word) {
+    var len = word.length;
+    if (len &gt; 255) return undefined;
+    var i = len &gt;&gt; 2;
+    return String.fromCharCode(
+        (word.charCodeAt(    0) & 0x03) &lt;&lt; 14 |
+        (word.charCodeAt(    i) & 0x03) &lt;&lt; 12 |
+        (word.charCodeAt(  i+i) & 0x03) &lt;&lt; 10 |
+        (word.charCodeAt(i+i+i) & 0x03) &lt;&lt;  8 |
+        len
+    );
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.7em;"><code data-trim data-noescape>
+Benchmark.prototype.setup = function() {
+   function mk(word) {
+        /* ... */
+    }
+
+    var MK = function() { };
+    MK.prototype.mk = mk;
+    var mker = new MK;
+};</code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 0.7em;"><code data-trim data-noescape>
+suite
+  .add('Function', function() {
+    var key = mk('www.wired.com');
+    key = mk('www.youtube.com');
+    key = mk('scorecardresearch.com');
+    key = mk('www.google-analytics.com');
+  })
+  .add('Method', function() {
+    var key = mker.mk('www.wired.com');
+    key = mker.mk('www.youtube.com');
+    key = mker.mk('scorecardresearch.com');
+    key = mker.mk('www.google-analytics.com');
+  })
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger2">
+$ d8 method-vs-function.js
+<table>
+  <tr>
+    <td>Function</td>
+    <td class="y"><div class="x x4 x-red">x   4,149,776 ops/sec &pm;0.62%</div></td>
+  </tr>
+  <tr>
+    <td>Method</td>
+    <td class="y"><div class="x x68 x-green">x 682,273,122 ops/sec &pm;0.72%</div></td>
+  </tr>
+</table>Fastest is Method
+</pre>
+        </section>
+
+        <section>
+          <h2>so method call <em class="pinkish">IS</em> faster?</h2>
+        </section>
+
+        <section>
+          <h2>keep secret what I am going to show you now</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="diff javascript">
+--- a/method-function.js
++++ b/method-function.js
+@@ -2,6 +2,9 @@
+ load("../benchmark.js");
+
+ Benchmark.prototype.setup = function() {
++   "Speed" + "your" + "JS" + "with" +
++   "this" + "one" + "weird" + "trick";
++
+    function mk(word) {
+         var len = word.length;
+         if (len > 255) return undefined;
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger2">
+$ d8 method-vs-function.js
+<table>
+  <tr>
+    <td>Function</td>
+    <td class="y"><div class="x x69 x-green">x 695,708,197 ops/sec &pm;0.38%</div></td>
+  </tr>
+  <tr>
+    <td>Method</td>
+    <td class="y"><div class="x x69 x-green">x 692,496,013 ops/sec &pm;0.29%</div></td>
+  </tr>
+</table>Fastest is Function,Method
+</pre>
+        </section>
+
+        <section data-background="../webrebels2014/images/slide5.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <section>
+            <h2><code>Function</code> was never optimized!</h2>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-10.png" data-background-size="contain">
+          </section>
+
+          <section>
+            <span class="leftish50" style="font-size: 2em;">
+            <p>&mdash; heuristics that decide when to optimize are based (among other things) on the amount of initialized inline caches</p>
+            <p>&mdash; function call does not go through an IC, but method call does</p>
+            <p>&mdash; <code>Method</code> had enough initialized ICs to trigger optimizations, but <code>Function</code> didn't!</p>
+            <p>&mdash; Until fake <code>+</code> ICs were added in the <code>setup</code> section</p>
+            </span>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-11.png" data-background-size="contain">
+          </section>
+
+          <section>
+            <h2>now <code>Function</code> is optimized!</h2>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-12.png" data-background-size="contain">
+          </section>
+
+          <section>
+            <h3>... and it's body is almost completely LICMed</h3>
+          </section>
+
+          <section>
+            <h3>SOURCE view is easier</h3>
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-13.png" data-background-size="contain">
+          </section>
+
+          <section data-background="../webrebels2014/images/irhydra-14.png" data-background-size="contain">
+          </section>
+        </section>
+
+        <section>
+          <h1>measuring <em class="pinkish">almost</em> empty loop again!</h1>
+        </section>
+
+        <section>
+          <h1>&micro;bench <span class="pinkish">NEJ TAK</span></h1>
+        </section>
+
+        <section>
+
+        <section>
+          <h1>"Given a string of space separated words <code style="white-space: nowrap;" class="pinkish">[a-z]*</code> find most common one."</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function count(str) {
+  var words = str.split(' ');
+  var counts = {};
+  var maxWord, maxCount = 0;
+  var word, count;
+
+  for (var i = 0; i < words.length; i++) {
+    word = words[i];
+    /* count word here */
+  }
+
+  return maxWord;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+count = counts[word];
+if (typeof count === "undefined") {
+  counts[word] = count = 1;
+} else {
+  counts[word] = count + 1;
+}
+
+if (count > maxCount) {
+  maxCount = count;
+  maxWord = word;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger2">
+# on 1.5Mb / 255k words string
+$ d8 count.js
+naive x <b><span style="color: #c00;">13.51</span></b> ops/sec &pm;2.87%
+</pre>
+        </section>
+
+        <section data-background="../lxjs2013/images/generic-load.png" data-background-size="contain" data-background-color="white">
+        </section>
+
+        <section data-background="../lxjs2013/images/generic-store.png" data-background-size="contain" data-background-color="white">
+        </section>
+
+        <section>
+          <h1>In <code>C++</code> we would just update the cell.</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var cell = counts[word];
+if (typeof cell === "undefined") {
+  count = 1;
+  counts[word] = <span class="golden">{ value: count }</span>;
+} else {
+  <span class="golden">cell.value</span> = count = cell.value + 1;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger2">
+# on 1.5Mb / 255k words string
+$ d8 count.js
+naive x <b><span style="color: #c00;">13.51</span></b> ops/sec &pm;2.87%
+cells x <b><span style="color: gold;">20.42</span></b> ops/sec &pm;2.51%
+</pre>
+        </section>
+
+        <section>
+          <h1><span class="pinkish">Rethink</span> the foundations!</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function count(str) {
+  <span class="redish">var words = str.split(' ');</span>
+  var counts = {};
+  var maxWord, maxCount = 0;
+  var word, count;
+
+  for (var i = 0; i < words.length; i++) {
+    word = words[i];
+    /* count word here */
+  }
+
+  return maxWord;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>stream it char by char into a trie</h1>
+        </section>
+
+        <section>
+          <h1>stream it char by char into a <b class="pinkish">trie</b></h1>
+        </section>
+
+        <section data-footer="http://en.wikipedia.org/wiki/Trie">
+          <img src="../lxjs2013/images/trie.svg" style="width: 1950px; height: 1000px;">
+        </section>
+
+
+        <section>
+          <pre style="font-size: 0.6em; overflow: visible;"><code data-trim data-noescape class="  javascript">
+function count() {
+  // Idea 1: compute substring at the very end.
+  var maxCount = 0, <span class="golden">maxWordStart, maxWordEnd</span>,
+      lastSpace = 0;
+
+  // Idea 2: instead of hash-table use simplistic trie.
+  var root = <span class="golden">{ val: 0 }</span>;
+  var curr = root;
+
+  for (var i = 0; i < str.length; i++) {
+    var ch = str.charCodeAt(i);
+    if (ch === 32) { // if space increase the count;
+    } else { // if not space advance in the trie;
+    }
+  }
+
+  return str.substring(maxWordStart + 1, maxWordEnd);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="  javascript">
+// handling non-space: find or create target node.
+var next = curr[ch];
+if (typeof next === 'undefined') {
+  next = curr[ch] = { val: 0 };
+}
+curr = next;
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="  javascript">
+// handling space: increase node's counter.
+var count = curr.val = curr.val + 1;
+if (count > maxCount) {
+  maxCount     = count;
+  maxWordStart = lastSpace;
+  maxWordEnd   = i;
+}
+curr = root; // restart from the root
+lastSpace = i;
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger2">
+# on 1.5Mb / 255k words string
+$ d8 count.js
+naive x <b><span style="color: #c00;">13.51</span></b> ops/sec &pm;2.87%
+cells x <b><span style="color: gold;">20.42</span></b> ops/sec &pm;2.51%
+trie  x <b><span style="color: green;">61.46</span></b> ops/sec ±0.48%
+</pre>
+        </section>
+        </section>
+
+        <section>
+          <h1>algorithms first</h1>
+          <h1>&micro;benchmarks last</h1>
+        </section>
+
+        <section>
+          <h1 class="pinkish">THANK YOU</h1>
+        </section>
+
+        <section>
+          <h1>... one last thing</h1>
+        </section>
+
+        <section>
+          <h2>never assume that<br/>some language feature<br/>has to be slow</h2>
+        </section>
+
+        <section>
+          <h2>talk to JS VM teams<br/> and report bugs</h2>
+        </section>
+      </div>
+
+      <div id="footer" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          font-size: 1.0em; text-align: center;
+          padding: 4px; z-index: 99;
+      "></div>
+		</div>
+
+		<script src="js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: 'simple', // available themes are in /css/theme
+				transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+				backgroundTransition: 'none',
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+        margin: 0.0,
+        width: 1950,
+        height: 1080,
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'js/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'js/math.js', async: true },
+				]
+			});
+
+      function updateFooter(slide) {
+        var footer = document.getElementById("footer");
+        footer.innerHTML = "";
+
+        var text = slide.getAttribute("data-footer") || "";
+
+        if (text !== "") {
+          var anchor = document.createElement("a");
+          anchor.href = anchor.innerText = text;
+          footer.appendChild(anchor);
+        }
+      }
+
+      Reveal.addEventListener('ready', function(event) { updateFooter(event.currentSlide); });
+      Reveal.addEventListener('slidechanged', function(event) { updateFooter(event.currentSlide); });
+
+      (function () {
+        var style = document.createElement("style");
+        document.head.appendChild(style);
+
+        var percents = [].slice.call(document.querySelectorAll(".x")).forEach(function (el) {
+          var classes = el.classList.toString();
+          var p = classes.match(/\bx(\d+)\b/)[1];
+
+          style.sheet.addRule(".x" + p + "::after", "width: " + p + "%;")
+        });
+      })();
+		</script>
+
+    <style>
+      .x-confirmed-2 {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+
+      }
+
+      .x-confirmed {
+        font-weight: bold;
+        border: 10px solid green !important;
+        color: green;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+      pre.bigger {
+        font-size: 1.5em !important;
+      }
+
+      pre:not(.smaller) {
+        font-size: 1.5em !important;
+      }
+
+      pre.bigger15 {
+        font-size: 1.75em !important;
+      }
+
+
+      pre.bigger2 {
+        font-size: 2em !important;
+      }
+
+      pre.bigger3 {
+        font-size: 3em !important;
+      }
+
+      pre.mediumer {
+        font-size: 1.2em !important;
+      }
+
+      .B h1 {
+        font-size: 6em;
+      }
+
+      .B h2 {
+        font-size: 4em;
+      }
+
+      .B h3 {
+        font-size: 2em;
+      }
+
+      .B ul {
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      section:not(.S) h1 {
+        font-size: 6em;
+      }
+
+      section:not(.S) h2 {
+        font-size: 4em;
+      }
+
+      section:not(.S) h3 {
+        font-size: 2em;
+      }
+
+      section:not(.S) ul {
+        font-size: 3em;
+        line-height: 1em;
+      }
+
+      /*
+      .B p {
+        font-size: 1.5em;
+      }
+      */
+
+      span.green {
+        font-weight: bold !important;
+        color: green;
+      }
+
+      span.red {
+        font-weight: bold !important;
+        color: red !important;
+      }
+
+      span.greenish-block {
+        background: rgba(0, 255, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.fade-away {
+        opacity: 0.1;
+      }
+
+      span.anti-fade {
+        font-weight: bold;
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      .yellow {
+        color: #f57f17;
+        font-weight: bold !important;
+      }
+
+      .dr, .dr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+      }
+
+      .udr, .udr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+        text-decoration: underline;
+      }
+
+      .pinkish {
+        color: #c1357a !important;
+      }
+
+      .ccc {
+        display: inline-block !important;
+        width: auto !important;
+      }
+
+      .borderish {
+        border: 1px dashed;
+      }
+
+      span.leftish {
+        text-align: left;
+        display: inline-block;
+      }
+
+      span.leftish50 {
+        text-align: left;
+        display: inline-block;
+        max-width: 70%;
+
+      }
+
+      span.golden-block {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.golden {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      span.redish {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+      }
+
+          .y {
+  position: relative;
+}
+
+.x {
+  position: relative;
+  z-index: 100;
+  color: black;
+}
+
+.x::after {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+}
+
+.x-red::after {
+  background: rgba(215, 25, 28 , 1.0);
+}
+
+.x-green::after {
+  background: rgba(145, 207, 96, 1.0);
+}
+
+.x-gold::after {
+  background: rgba(253,174,97, 1.0);
+}
+
+.x::before {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+    </style>
+
+	</body>
+</html>
