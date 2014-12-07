@@ -1,0 +1,40 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="heap.css">
+
+  <script src="../cwp2013/js/jquery.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+</head>
+
+<body>
+  <div id="right-column" style="height: 50%; width: 50%;">
+  </div>
+
+  <button id="dec">dec</button>
+  <span id="cur"></span>
+  <button id="inc">inc</button>
+  <script src="heap.js"></script>
+  <script src="klass.js"></script>
+
+  <script>
+    $(function () {
+      var stage = 23;
+
+      $("#cur").text(String(stage))
+      Klass.toStage(stage);
+
+      $("#inc").click(function () {
+        $("#cur").text(String(++stage))
+        Klass.toStage(stage);
+      });
+
+      $("#dec").click(function () {
+        $("#cur").text(String(--stage))
+        Klass.toStage(stage);
+      });
+    })
+  </script>
+</body>
+
+</html>

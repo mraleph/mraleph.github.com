@@ -1,0 +1,1468 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>V8 - AWP 2014</title>
+
+		<meta name="description" content="V8">
+		<meta name="author" content="Vyacheslav Egorov">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/simple.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="css/googlecode.css">
+
+    <script src="../cwp2013/js/jquery.js"></script>
+
+    <link rel="stylesheet" href="klass.css">
+
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+        <section>
+          <h1><span style="font-size: 2em;">V8</span></h1>
+          <h3><span style="font-style: italic; font-family: Baskerville;">Vyacheslav Egorov</span></h3>
+          <h4><a href="mailto:me@mrale.ph">me@mrale.ph</a></h4>
+        </section>
+
+        <section>
+          <h1>V8 is a JS VM<br/>
+          <h2>used by Chrome &amp; node.js</h2>
+        </section>
+
+        <section>
+          <h2>being <em>a JavaScript VM</em><br/>is not an achievement</h2>
+        </section>
+
+        <section>
+          <h1>being a <em><b><span style="color: #C0392B;">fast</span></b></em> VM is</h1>
+        </section>
+
+        <section>
+          <h1>the challenge</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Adding integers.
+function add(a, b) {
+  return a + b;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Adding doubles.
+function add(a, b) {
+  return a + b;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Concatenating strings.
+function add(a, b) {
+  return a + b;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Arrays are just objects with
+// properties "0", "1", "2", ...
+Array.prototype[1] = "ha!";
+var arr = [0, /* hole */ , 2];
+arr[1] // => "ha!"
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Making a "class".
+function Dog(name, breed) {
+  this.name  = name;
+  this.breed = breed;
+}
+
+Dog.prototype.woof = function () {
+  /* ... */
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Inheriting from a class.
+function Dog(name, breed) {
+  Animal.call(this, name);
+  this.breed = breed;
+}
+
+Dog.prototype =
+   Object.create(Animal.prototype);
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Another way to create a dog.
+var dog = {
+  name: name,
+  breed: breed,
+  woof: function () { /* ... */ }
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Yet another way.
+function makeADog(name, breed) {
+  // name and breed are now "private"
+  return {
+    woof: function () { /* ... */ }
+  }
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Yet another way.
+var Dog = {
+  woof: function () { /* ... */ }
+};
+
+function makeADog() {
+  var dog = Object.create(Dog);
+  dog.name = name;
+  dog.breed = name;
+  return dog;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// ES6 sugar
+class Dog extends Animal {
+  constructor(name, breed) {
+    super(name)
+    this.breed = breed;
+  }
+
+  woof() {
+    /* ... */
+  }
+}</code></pre>
+        </section>
+
+        <section>
+          <h3>
+            <ul style="list-style: none;">
+              <li>representation</li>
+              <li>resolution</li>
+              <li>redundancy</li>
+            </ul>
+          </h3>
+        </section>
+
+        <section>
+          <h1 class="pinkish"><span style="font-size: .7em">&#9312;</span> representation</h1>
+        </section>
+
+        <section data-background="../cwp2013/images/boxing.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="images/boxing-2.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h1><em class="pinkish">tagging</em> to avoid boxing everything</h1>
+        </section>
+
+        <section>
+          <h2>pointer has "unused" bits<br/> due to alignment</h2>
+          <p>(e.g. if all objects are 8 byte aligned - <code>b<sub style="font-size: .7em;">31</sub>...b<sub style="font-size: .7em;">3</sub><span class="pinkish">000</span></code>)</p>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+/* pointer: x...xx<b>1</b> */
+function tag(ptr) { // ptr & 1 === 0
+  return ptr | 1;
+}
+
+function untag(taggedVal) {
+  return taggedVal & ~1;
+}
+
+function isPtr(taggedVal) {
+  return (taggedVal & 1) === 1;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+/* <em>small</em> integer: xx...x<b>0</b> */
+function tag(smiVal) {
+  return smiVal << 1;
+}
+
+function untag(taggedVal) {
+  return taggedVal >> 1;
+}
+
+function isSmi(taggedVal) {
+  return (taggedVal & 1) === 0
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>Double <br/> <span class="pinkish">&rArr;</span> still boxing</h1>
+        </section>
+
+        <section>
+          <ul>
+            <li><span class="pinkish">NaN</span>-tagging<br><span style="font-size: 0.7em">(SM, JSC, LuaJIT2)</span></li>
+            <li><span class="pinkish">ARMv8</span> tagged pointers<br><span style="font-size: 0.7em">(upper byte)</span></li>
+          </ul>
+        </section>
+
+        <section>
+          <h1>objects?</h1>
+        </section>
+
+        <section data-background="../cwp2013/images/cloud.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h1>hidden classes</h1>
+          <h2>&approx; <em class="pinkish">maps</em> from Self VM</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="1">
+          <pre><code data-trim data-noescape class="javascript">
+function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+<span class="golden">var p1 = new Point(1, 2);</span>
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="2">
+          <pre><code data-trim data-noescape class="javascript">
+<span class="golden">function Point(x, y) {</span>
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="3">
+          <pre><code data-trim data-noescape class="javascript">
+function Point(x, y) {
+  <span class="golden">this.x = x;</span>
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="4">
+          <pre><code data-trim data-noescape class="javascript">
+function Point(x, y) {
+  this.x = x;
+  <span class="golden">this.y = y;</span>
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="5">
+          <pre><code data-trim data-noescape class="javascript">
+function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+<span class="golden">var p2 = new Point(3, 4);</span>
+          </code></pre>
+        </section>
+
+        <section data-stage="6">
+          <pre><code data-trim data-noescape class="javascript">
+<span class="golden">function Point(x, y) {</span>
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="7">
+          <pre><code data-trim data-noescape class="javascript">
+function Point(x, y) {
+  <span class="golden">this.x = x;</span>
+  this.y = y;
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section data-stage="8">
+          <pre><code data-trim data-noescape class="javascript">
+function Point(x, y) {
+  this.x = x;
+  <span class="golden">this.y = y;</span>
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+          </code></pre>
+        </section>
+
+        <section  data-stage="9">
+          <pre><code data-trim data-noescape class="javascript">
+function Point(x, y) {
+  this.x = x;
+  this.y = y;</span>
+}
+
+var p1 = new Point(1, 2);
+var p2 = new Point(3, 4);
+<span class="golden">p2.z = 5;</span>
+          </code></pre>
+        </section>
+
+        <section>
+          <h1><em class="pinkish">static</em> structure approximated <em class="pinkish">dynamic</em>ally.</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+for (var i = 0; i < 101; i++)
+  arr[i] = Math.sqrt(i);
+          </code></pre>
+        </section>
+
+<!--
+        <section data-background="../cwp2013/images/array-boxed.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../cwp2013/images/array-unboxed.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+-->
+
+        <section  data-stage="10">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+arr[2] = Math.sqrt(2);
+          </code></pre>
+        </section>
+
+        <section  data-stage="11">
+          <pre><code data-trim data-noescape class="javascript">
+<span class="golden">var arr = [];</span>
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+arr[2] = Math.sqrt(2);
+          </code></pre>
+        </section>
+
+        <section  data-stage="12">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+<span class="golden">arr[0] = Math.sqrt(0);</span>
+arr[1] = Math.sqrt(1);
+arr[2] = Math.sqrt(2);
+          </code></pre>
+        </section>
+
+        <section  data-stage="13">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+<span class="golden">arr[1] = Math.sqrt(1);</span>
+arr[2] = Math.sqrt(2);
+          </code></pre>
+        </section>
+
+        <section  data-stage="14">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+<span class="golden">arr[2] = Math.sqrt(2);</span>
+          </code></pre>
+        </section>
+
+        <section  data-stage="15">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+<span class="golden">arr[1] = Math.sqrt(1);</span>
+arr[2] = Math.sqrt(2);
+          </code></pre>
+        </section>
+
+        <section  data-stage="16">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+<span class="golden">arr[2] = Math.sqrt(2);</span>
+          </code></pre>
+        </section>
+
+        <section  data-stage="17">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+<span class="golden">arr[2] = Math.sqrt(2);</span>
+          </code></pre>
+        </section>
+
+        <section  data-stage="18">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+<span class="golden">arr[2] = Math.sqrt(2);</span>
+          </code></pre>
+        </section>
+
+        <section  data-stage="19">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+arr[2] = Math.sqrt(2);
+<span class="golden">arr[3] = "xyz";</span>
+          </code></pre>
+        </section>
+
+        <section  data-stage="20">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+arr[2] = Math.sqrt(2);
+<span class="golden">arr[3] = "xyz";</span>
+          </code></pre>
+        </section>
+
+        <section  data-stage="21">
+          <pre><code data-trim data-noescape class="javascript">
+var arr = [];
+arr[0] = Math.sqrt(0);
+arr[1] = Math.sqrt(1);
+arr[2] = Math.sqrt(2);
+<span class="golden">arr[3] = "xyz";</span>
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>tracking denseness and unboxing</h1>
+        </section>
+
+        <section data-background="../cwp2013/images/array-transitions.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-stage="22">
+          <pre><code data-trim data-noescape class="javascript">
+function Vec2(x, y) {
+  this.x = x;
+  this.y = y;
+}
+var v = new Vec2(0.1, 0.2);
+v.x += 1;
+v.y += 1;
+          </code></pre>
+        </section>
+
+        <section data-stage="23">
+          <pre><code data-trim data-noescape class="javascript">
+function Vec2(x, y) {
+  this.x = x;
+  this.y = y;
+}
+<span class="golden">var v = new Vec2(0.1, 0.2);</span>
+v.x += 1;
+v.y += 1;
+          </code></pre>
+        </section>
+
+        <section data-stage="24">
+          <pre><code data-trim data-noescape class="javascript">
+function Vec2(x, y) {
+  this.x = x;
+  this.y = y;
+}
+var v = new Vec2(0.1, 0.2);
+<span class="golden-block">v.x += 1;
+v.y += 1;</span>
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>mutable boxes</h1>
+          <h2>what happens on <span class="pinkish">read</span>?</h2>
+        </section>
+
+        <section data-stage="24">
+          <pre><code data-trim data-noescape class="javascript">
+function Vec2(x, y) {
+  this.x = x;
+  this.y = y;
+}
+var v = new Vec2(0.1, 0.2);
+v.x += 1; v.y += 1;
+<span class="golden-block">while (true) v.x;</span>
+          </code></pre>
+        </section>
+
+        <section data-stage="25">
+          <pre><code data-trim data-noescape class="javascript">
+function Vec2(x, y) {
+  this.x = x;
+  this.y = y;
+}
+var v = new Vec2(0.1, 0.2);
+v.x += 1; v.y += 1;
+<span class="golden-block">while (true) v.x;</span>
+          </code></pre>
+        </section>
+
+        <section data-stage="26">
+          <pre><code data-trim data-noescape class="javascript">
+function Vec2(x, y) {
+  this.x = x;
+  this.y = y;
+}
+var v = new Vec2(0.1, 0.2);
+v.x += 1; v.y += 1;
+<span class="golden-block">while (true) v.x;</span>
+          </code></pre>
+        </section>
+
+        <section data-stage="27">
+          <pre><code data-trim data-noescape class="javascript">
+function Vec2(x, y) {
+  this.x = x;
+  this.y = y;
+}
+var v = new Vec2(0.1, 0.2);
+v.x += 1; v.y += 1;
+<span class="golden-block">while (true) v.x;</span>
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>only beneficial<br/> if we can read <span class="pinkish">unboxed</span></h2>
+        </section>
+
+        <section data-stage="28">
+          <pre><code data-trim data-noescape class="javascript">
+function K() { }
+K.prototype.f = function foo() { };
+K.prototype.g = function bar() { };
+
+          </code></pre>
+        </section>
+
+        <section data-stage="28">
+          <pre><code data-trim data-noescape class="javascript">
+function K() { }
+K.prototype.f = function foo() { };
+K.prototype.g = function bar() { };
+// How hidden class of K.prototype looks like?
+          </code></pre>
+        </section>
+
+        <section data-stage="29">
+          <pre><code data-trim data-noescape class="javascript">
+function K() { }
+K.prototype.f = function foo() { };
+K.prototype.g = function bar() { };
+// How hidden class of K.prototype looks like?
+          </code></pre>
+        </section>
+
+        <section data-stage="29">
+          <pre><code data-trim data-noescape class="javascript">
+function K() { }
+K.prototype.f = function foo() { };
+K.prototype.g = function bar() { };
+// Want it to be more 'class'-like
+          </code></pre>
+        </section>
+
+        <section data-stage="29">
+          <pre><code data-trim data-noescape class="javascript">
+// Want *fast* method calls.
+// Don't want (pseudo-code)
+m = LoadProperty(obj, "f")
+CheckIfFunction(m)
+Invoke(m, obj)
+          </code></pre>
+        </section>
+
+        <section data-stage="29">
+          <pre><code data-trim data-noescape class="javascript">
+// Want *fast* method calls.
+// Better:
+CheckClass(obj, klass0);
+Invoke(foo, obj);
+          </code></pre>
+        </section>
+
+        <section>
+          <h1><span class="pinkish">promote</span> functions<br/> to hidden class</h1>
+        </section>
+
+        <section data-stage="29">
+          <pre><code data-trim data-noescape class="javascript">
+function K() { }
+K.prototype.f = function foo() { };
+K.prototype.g = function bar() { };
+          </code></pre>
+        </section>
+
+        <section data-stage="30">
+          <pre><code data-trim data-noescape class="javascript">
+function K() { }
+K.prototype.f = function foo() { };
+K.prototype.g = function bar() { };
+// Now it's more like vtbl!
+          </code></pre>
+        </section>
+
+        <section>
+          <h2><span class="pinkish">whole</span> closure<br/> is promoted!</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// What is "perf-unfriendly" here?
+function buyDog() {
+  return {
+    woof: function () {
+      /* ... */
+    }
+  }
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>different <code>woof</code><br/><span class="pinkish">&rArr;</span>different classes</h2>
+        </section>
+
+        <section data-background="../cwp2013/images/obj-structure.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h2>not all objects<br/> are <span class="pinkish">structures</span></h2>
+        </section>
+
+        <section data-background="../cwp2013/images/obj-dictionary.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h1 class="pinkish"><span style="font-size: .7em">&#9313;</span> resolution</h1>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: .9em;"><code data-trim data-noescape class="javascript">
+function Load(receiver, property) {
+ var O = ToObject(receiver);
+ var P = ToString(property);
+ var desc = O.[[GetProperty]](P);
+ if (desc === $undefined) return $undefined;
+ if (IsDataDescriptor(desc)) return desc.Value;
+ assert(IsAccessorDescriptor(desc));
+ var getter = desc.Get;
+ if (getter === $undefined) return $undefined;
+ return getter.[[Call]](receiver);
+}
+
+JSObject.prototype.[[GetProperty]] = function (P) {
+ var prop = this.[[GetOwnProperty]](P);
+ if (prop !== $undefined) return prop;
+ var proto = this.[[Proto]];
+ if (proto === $null) return $undefined;
+ return proto.[[GetPropery]](P);
+};
+
+JSObject.prototype.[[GetOwnProperty]] = function (P) {
+ return this.properties.get(P);
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: .9em;"><code data-trim data-noescape class="javascript">
+function Load(receiver, property) {
+ var O = ToObject(receiver);
+ var P = ToString(property);
+ var desc = O.[[GetProperty]](P);
+ if (desc === $undefined) return $undefined;
+ if (IsDataDescriptor(desc)) return desc.Value;
+ assert(IsAccessorDescriptor(desc));
+ var getter = desc.Get;
+ if (getter === $undefined) return $undefined;
+ return getter.[[Call]](receiver);
+}
+
+JSObject.prototype.[[GetProperty]] = function (P) {
+ var prop = this.[[GetOwnProperty]](P);
+ if (prop !== $undefined) return prop;
+ var proto = this.[[Proto]];
+ if (proto === $null) return $undefined;
+ return proto.[[GetPropery]](P);
+};
+
+JSObject.prototype.[[GetOwnProperty]] = function (P) {
+ return this.<span class="redish"> properties.get(P);</span>
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: .9em;"><code data-trim data-noescape class="javascript">
+function Load(receiver, property) {
+ var O = ToObject(receiver);
+ var P = ToString(property);
+ var desc = O.[[GetProperty]](P);
+ if (desc === $undefined) return $undefined;
+ if (IsDataDescriptor(desc)) return desc.Value;
+ assert(IsAccessorDescriptor(desc));
+ var getter = desc.Get;
+ if (getter === $undefined) return $undefined;
+ return getter.[[Call]](receiver);
+}
+
+JSObject.prototype.[[GetProperty]] = function (P) {
+ var prop = this.[[GetOwnProperty]](P);
+ if (prop !== $undefined) return prop;
+ var proto = this.[[Proto]];
+ if (proto === $null) return $undefined;
+ return proto.[[GetPropery]](P);
+};
+
+JSObject.prototype.[[GetOwnProperty]] = function (P) {
+return this.<span class="redish" style="font-size: 3em;"> properties.get(P);</span>
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>tons of code<br>&oplus;<br><span class="pinkish">dictionary</span> lookup</h1>
+        </section>
+
+        <section>
+          <h1>can we do better?</h1>
+        </section>
+
+        <section>
+          <h2><span class="pinkish">must</span> do the first lookup</h2>
+          <h2>what about the <span class="pinkish">second</span>?</h2>
+        </section>
+
+        <section>
+          <h2>same hidden class <br/><span class="pinkish">&rArr;</span> same structure</h2>
+        </section>
+
+        <section data-background="../cwp2013/images/ic.svg" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h1 class="pinkish">inline caching</h1>
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-000.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-001.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-002.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-003.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-004.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-005.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>LoadIC_Initialize</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Runtime system.
+function LoadIC_Initialize(obj, prop) {
+  var lookupResult = obj.lookup(prop);
+  patch(lookupResult.compile());
+  return lookupResult.value;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Runtime system.
+function LoadIC_Initialize(obj, prop) {
+  var lookupResult = obj.lookup(prop);
+  <span class="golden">patch(lookupResult.compile());</span>
+  return lookupResult.value;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+<div class="golden">0xabcdef:
+<b>cmp</b> [eax - 1], klass0
+<b>jnz</b> <em>LoadIC_Miss</em>
+<b>mov</b> eax, [eax + 11]</span>
+<b>ret</b></div>
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<span class="golden"><b>call</b> <em>0xabcdef ;; patched!</em></span>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+0xabcdef:
+<b>cmp</b> [eax - 1], klass0
+<b>jnz</b> <em>LoadIC_Miss</em>
+<b>mov</b> eax, [eax + 11]
+<b>ret</b>
+
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>0xabcdef ;; patched!</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+0xabcdef:
+<span class="golden"><b>cmp</b> [eax - 1], klass0</span>
+<b>jnz</b> <em>LoadIC_Miss</em>
+<b>mov</b> eax, [eax + 11]
+<b>ret</b>
+
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>0xabcdef ;; patched!</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+0xabcdef:
+<b>cmp</b> [eax - 1], klass0
+<span class="golden"><b>jnz</b> <em>LoadIC_Miss</em></span>
+<b>mov</b> eax, [eax + 11]
+<b>ret</b>
+
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>0xabcdef ;; patched!</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+<em>;; Compiled LoadIC Stub</em>
+0xabcdef:
+<b>cmp</b> [eax - 1], klass0
+<b>jnz</b> <em>LoadIC_Miss</em>
+<span class="golden"><b>mov</b> eax, [eax + 11]</span>
+<b>ret</b>
+
+<em>;; Compiled code</em>
+<b>mov</b> eax, obj
+<b>mov</b> ecx, "foo"
+<b>call</b> <em>0xabcdef ;; patched!</em>
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Everything is an IC stub</h2>
+          <ul>
+            <li>property accesses</li>
+            <li>element accesses</li>
+            <li>method calls</li>
+            <li>special method calls</li>
+            <li>global variables lookup</li>
+            <li>arithmetic operations</li>
+          </ul>
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-007.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+Vector.prototype.length = function () {
+  return Math.sqrt(this.x * this.x +
+                   this.y * this.y);
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+Vector.prototype.length = function () {
+  return Math.sqrt(this<span class="ic-prop">.</span>x <span class="ic-arithm">*</span> this<span class="ic-prop">.</span>x <span class="ic-arithm">+</span>
+                   this<span class="ic-prop">.</span>y <span class="ic-arithm">*</span> this<span class="ic-prop">.</span>y);
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <h1 class="pinkish"><span style="font-size: .7em">&#9314;</span> redundancy</h1>
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-011.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-012.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-013.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-014.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-015.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section data-background="../techtalksnsu2014/images/slides/slide-2-016.png" data-background-size="contain" data-background-color="#fff">
+        </section>
+
+        <section>
+          <h2>Crankshaft (2010)</h2>
+          <ol>
+            <li>compile unoptimized code</li>
+            <li>feed hot functions into optimizer</li>
+            <li>speculate types based on IC states</li>
+            <li>apply classic optimizations</li>
+            <li>emit optimized code</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2>Crankshaft (2010)</h2>
+          <ol>
+            <li>compile unoptimized code</li>
+            <li>feed hot functions into optimizer</li>
+            <li><b class="pinkish">speculate</b> types based on IC states</li>
+            <li>apply classic optimizations</li>
+            <li>emit optimized code</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2><span class="pinkish">checks</span> in the code<br/> verify speculations</h2>
+        </section>
+
+        <section>
+          <h2>failed check <br/><span class="pinkish">&rArr;</span> jump to unoptimized code</h2>
+        </section>
+
+        <section>
+          <h2>code can <span class="pinkish">depend</span> on assumptions</h2>
+          <h3>[e.g. that some prototype chain<br/> does not change]</h3>
+        </section>
+
+        <section>
+          <h2>violated assumption <br/><span class="pinkish">&rArr;</span> deopt dependant code</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+Vector.prototype.length = function () {
+  return Math.sqrt(this.x * this.x +
+                   this.y * this.y);
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+CheckMap v0, klass
+v1 = Load v0, @12
+CheckMap v0, klass
+v2 = Load v0, @12
+d3 = TaggedToDouble v1
+d4 = TaggedToDouble v2
+d5 = Mul d3, d4
+CheckMap v0, klass
+v6 = Load v0, @16
+CheckMap v0, klass
+v7 = Load v0, @16
+d8 = TaggedToDouble v6
+d9 = TaggedToDouble v7
+d10 = Mul d8, d9
+d11 = Add d5, d10
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+CheckMap v0, klass     <span class="pinkish" style="font-size: .8em">&#9312;</span>
+v1 = Load v0, @12      <span class="pinkish" style="font-size: .8em">&#9313;</span>
+CheckMap v0, klass     <span class="pinkish" style="font-size: .8em">&#9312;</span>
+v2 = Load v0, @12      <span class="pinkish" style="font-size: .8em">&#9313;</span>
+d3 = TaggedToDouble v1 <span class="pinkish" style="font-size: .8em">&#9314;</span>
+d4 = TaggedToDouble v2 <span class="pinkish" style="font-size: .8em">&#9314;</span>
+d5 = Mul d3, d4
+CheckMap v0, klass     <span class="pinkish" style="font-size: .8em">&#9312;</span>
+v6 = Load v0, @16      <span class="pinkish" style="font-size: .8em">&#9315;</span>
+CheckMap v0, klass     <span class="pinkish" style="font-size: .8em">&#9312;</span>
+v7 = Load v0, @16      <span class="pinkish" style="font-size: .8em">&#9315;</span>
+d8 = TaggedToDouble v6 <span class="pinkish" style="font-size: .8em">&#9316;</span>
+d9 = TaggedToDouble v7 <span class="pinkish" style="font-size: .8em">&#9316;</span>
+d10 = Mul d8, d9
+d11 = Add d5, d10
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+CheckMap v0, klass
+v1 = Load v0, @12
+d3 = TaggedToDouble v1
+d5 = Mul d3, d3
+v6 = Load v0, @16
+d8 = TaggedToDouble v6
+d10 = Mul d8, d8
+d11 = Add d5, d10
+          </code></pre>
+        </section>
+
+        <section>
+          <ul>
+            <li>inlining</li>
+            <li>GVN</li>
+            <li>LICM</li>
+            <li>DCE</li>
+            <li>representation selection</li>
+            <li>uint32 optimization</li>
+            <li>escape analysis</li>
+            <li>type inference</li>
+            <li>range inference</li>
+            <li>bounds check elimination</li>
+          </ul>
+        </section>
+
+        <section>
+          <h1>TurboFan</h1>
+          <h3>new optimizing pipeline</h3>
+        </section>
+
+        <section>
+          <h1>TurboFan</h1>
+          <h3>[Sea-of-Nodes IR, real lowering]</h3>
+          <h3 class="pinkish">[work in progress]</h3>
+        </section>
+
+      </div>
+
+      <div id="footer" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          font-size: 1.0em; text-align: center;
+          padding: 4px; z-index: 99;
+      "></div>
+
+      <div id="right-column" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          top: 0px;
+          width: 100%;
+          z-index: 99;
+      "></div>
+		</div>
+
+		<script src="js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: 'simple', // available themes are in /css/theme
+				transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+				backgroundTransition: 'none',
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+        margin: 0.0,
+        width: 1950,
+        height: 1080,
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'js/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          // { src: 'js/math.js', async: true },
+				]
+			});
+
+      function updateFooter(slide) {
+        var footer = document.getElementById("footer");
+        footer.innerHTML = "";
+
+        var text = slide.getAttribute("data-footer") || "";
+
+        if (text !== "") {
+          var anchor = document.createElement("a");
+          anchor.href = anchor.innerText = text;
+          footer.appendChild(anchor);
+        }
+      }
+
+      Reveal.addEventListener('ready', function(event) { updateFooter(event.currentSlide); });
+      Reveal.addEventListener('slidechanged', function(event) { updateFooter(event.currentSlide); });
+
+      Reveal.addEventListener('ready', function(event) {
+        var stage = ~~event.currentSlide.getAttribute("data-stage");
+        Klass.toStage(stage);
+      });
+
+      Reveal.addEventListener('slidechanged', function(event) {
+        var stage = ~~event.currentSlide.getAttribute("data-stage");
+        Klass.toStage(stage);
+      });
+
+
+      (function () {
+        var style = document.createElement("style");
+        document.head.appendChild(style);
+
+        var percents = [].slice.call(document.querySelectorAll(".x")).forEach(function (el) {
+          var classes = el.classList.toString();
+          var p = classes.match(/\bx(\d+)\b/)[1];
+
+          style.sheet.addRule(".x" + p + "::after", "width: " + p + "%;")
+        });
+      })();
+		</script>
+
+
+    <script src="js/d3.v3.min.js"></script>
+    <script src="heap.js"></script>
+    <script src="klass.js"></script>
+
+    <style>
+      .x-confirmed-2 {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+
+      }
+
+      .x-confirmed {
+        font-weight: bold;
+        border: 10px solid green !important;
+        color: green;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+      pre.bigger {
+        font-size: 1.5em !important;
+      }
+
+      pre:not(.smaller) {
+        font-size: 1.5em !important;
+      }
+
+      pre.bigger15 {
+        font-size: 1.75em !important;
+      }
+
+
+      pre.bigger2 {
+        font-size: 2em !important;
+      }
+
+      pre.bigger3 {
+        font-size: 3em !important;
+      }
+
+      pre.mediumer {
+        font-size: 1.2em !important;
+      }
+
+      .B h1 {
+        font-size: 6em;
+      }
+
+      .B h2 {
+        font-size: 4em;
+      }
+
+      .B h3 {
+        font-size: 2em;
+      }
+
+      .B ul {
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      section:not(.S) h1 {
+        font-size: 6em;
+      }
+
+      section:not(.S) h2 {
+        font-size: 4em;
+      }
+
+      section:not(.S) h3 {
+        font-size: 2em;
+      }
+
+      section:not(.S) ul, section:not(.S) ol {
+        font-size: 3em;
+        line-height: 1em;
+      }
+
+      /*
+      .B p {
+        font-size: 1.5em;
+      }
+      */
+
+      span.green {
+        font-weight: bold !important;
+        color: green;
+      }
+
+      span.red {
+        font-weight: bold !important;
+        color: red !important;
+      }
+
+      span.greenish-block {
+        background: rgba(0, 255, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.fade-away {
+        opacity: 0.1;
+      }
+
+      span.anti-fade {
+        font-weight: bold;
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      .yellow {
+        color: #f57f17;
+        font-weight: bold !important;
+      }
+
+      .dr, .dr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+      }
+
+      .udr, .udr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+        text-decoration: underline;
+      }
+
+      .pinkish {
+        color: /* #c1357a */ #C00 !important;
+      }
+
+      .ccc {
+        display: inline-block !important;
+        width: auto !important;
+      }
+
+      .borderish {
+        border: 1px dashed;
+      }
+
+      span.leftish {
+        text-align: left;
+        display: inline-block;
+      }
+
+      span.leftish50 {
+        text-align: left;
+        display: inline-block;
+        max-width: 70%;
+
+      }
+
+      span.golden-block {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.golden {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      span.redish {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+      }
+
+          .y {
+  position: relative;
+}
+
+.x {
+  position: relative;
+  z-index: 100;
+  color: black;
+}
+
+.x::after {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+}
+
+.x-red::after {
+  background: rgba(215, 25, 28 , 1.0);
+}
+
+.x-green::after {
+  background: rgba(145, 207, 96, 1.0);
+}
+
+.x-gold::after {
+  background: rgba(253,174,97, 1.0);
+}
+
+.x::before {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+      .ic-arithm {
+        background: rgba(22, 160, 133, 0.6) !important;
+        border-radius: 10px;
+        padding: 0px 10px !important;
+      }
+
+      .ic-prop {
+        background: rgba(142, 68, 173, 0.6) !important;
+        border-radius: 10px;
+        padding: 0px 10px !important;
+      }
+
+    </style>
+
+	</body>
+</html>
