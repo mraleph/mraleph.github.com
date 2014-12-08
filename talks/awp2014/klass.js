@@ -15,8 +15,8 @@ var Klass = function () {
   var objects = {
     point1: { type: 'object', fixed: true, x: 0, y: 0, slots: [new String(''), new String(''), new String(''), new String(''), new String('')]},
     point2: { type: 'object', fixed: true, x: 50, y: 0, slots: [new String(''), new String(''), new String(''), new String(''), new String('')]},
-    array: { type: 'object', fixed: true, x: -70, y: 30, slots: ['', '', '0']},
-    smiBacking: { type: 'object', fixed: true, x: -20, y: 40, orient: 'h', slots: [new String('')] },
+    array: { type: 'object', fixed: true, x: 0, y: 30, slots: ['', '', '0']},
+    smiBacking: { type: 'object', fixed: true, x: 50, y: 40, orient: 'h', slots: [new String('')] },
     proto: {type: 'object', slots: ['', '', '', '']},
     f: {type: 'func', name: 'foo'},
     g: {type: 'func', name: 'bar'},
