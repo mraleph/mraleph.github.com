@@ -2044,7 +2044,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
 
       .x-deopt-link > a {
-        font-family: 'Roboto';
+        font-family: 'RobotoDraft';
         font-weight: bold;
         letter-spacing: 0.05em;
         position: relative;
@@ -2435,9 +2435,14 @@ a:focus {
   border: 1px dashed #95A5A6; }
 </style>
     <h3 class="deopt-{{method.worstDeopt}}">
-      <template if="{{source != null}}">
-        <div><span class="source">{{source}}</span></div>
-      </template>
+      <div>
+        <template if="{{source != null}}">
+          <span class="source">{{source}}</span>
+        </template>
+        <template if="{{method.perfProfile != null}}">
+          <span class="source">{{method.perfProfile.totalTicks}}</span>
+        </template>
+      </div>
       <template if="{{targetHref != null}}">
         <a href="{{targetHref}}">
           {{name}}
@@ -2462,7 +2467,7 @@ a:focus {
   min-height: 0px;
   flex: 1 1;
   color: black;
-  font-family: Roboto; }
+  font-family: RobotoDraft; }
 
 .method-list-methods {
   flex: 1 1;
@@ -2570,7 +2575,7 @@ a:focus {
 
       <div class="method-list-footer">
         <input type="text" placeholder="Filter methods" on-key-up="{{filterUpdated}}" on-changed="{{filterChanged}}" value="{{filter}}">
-        <input type="checkbox" class="toggle" checked="{{sortByDeopts}}" data-title="Sort by deopts">
+        <!-- <input type="checkbox" class="toggle" checked="{{sortByDeopts}}" data-title="Sort by deopts"> -->
       </div>
     </div>
   </template>
@@ -2969,7 +2974,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 .source-path {
   color: black;
   background-color: white;
-  font-family: 'Roboto';
+  font-family: 'RobotoDraft';
   font-weight: bold;
   padding: 10px 8px;
   display: inline-block;
@@ -3150,7 +3155,7 @@ button.unchecked {
 .pane-controls > div > dropdown-element::shadow .ui-dropdown-selected {
   cursor: pointer;
   color: black;
-  font-family: 'Roboto';
+  font-family: 'RobotoDraft';
   font-weight: bold;
   letter-spacing: 0.05em;
   position: relative;
@@ -3221,7 +3226,7 @@ button.unchecked {
   align-items: center;
   text-align: center;
   font-size: 3em;
-  font-family: Roboto;
+  font-family: RobotoDraft;
   font-weight: 200;
   background: #ECF0F1;
   color: #BDC3C7;
@@ -3299,7 +3304,7 @@ button.unchecked {
     <div class="pane">
       <template if="{{methods != null &amp;&amp; !methods.isEmpty}}">
         <div class="sidebar">
-          <method-list methods="{{methods}}" selected="{{phase}}" demanglenames="{{demangleNames}}"></method-list>
+          <method-list methods="{{methods}}" selected="{{phase}}" demanglenames="{{demangleNames}}" sortby="{{sortMethodsBy}}"></method-list>
         </div>
         <template if="{{ir == null}}">
           <div class="ir-placeholder">
@@ -3332,7 +3337,7 @@ button.unchecked {
   </template>
   
 </polymer-element>
-<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Oswald:400,700" type="text/css"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lato:400,700,900" type="text/css"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium" type="text/css"><style>.irpane {
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Oswald:400,700" type="text/css"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lato:400,700,900" type="text/css"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:regular,bold,italic,thin,light,bolditalic,black,medium" type="text/css"><style>.irpane {
   font-family: monospace;
   font-size: 14pt;
 }
@@ -3657,7 +3662,7 @@ h4.deopt-header-soft > .first-word {
 }
 
 .welcome-message {
-  font-family: 'Roboto';
+  font-family: 'RobotoDraft';
   margin: 0 auto;
   width: 600px;
   font-size: 16px;
