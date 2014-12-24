@@ -1,4 +1,4 @@
-(function () {
+window.addEventListener("load", function () {
   function row(a, b, k) {
     if (typeof k === 'undefined') k = "";
     if (loop > 0) k += (" loop-" + loop);
@@ -72,7 +72,7 @@
   var nodes = document.querySelectorAll("pre.hydrogen");
   for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i];
-    var data = node.innerText.split("\n");
+    var data = (node.innerText || node.textContent).split("\n");
     var lines = [];
     var loop = 0;
     for (var idx = 0; idx < data.length; idx++) {
@@ -119,4 +119,4 @@
     node.classList.add('highlight');
     node.style['border-top'] = node.style['border-bottom'] = '1px solid #ccc';
   }
-})();
+});
