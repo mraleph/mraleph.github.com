@@ -1,6 +1,6 @@
 ---
 layout: blogpost
-title: Grinch about the array.length caching
+title: How the Grinch stole array.length access
 date: 2014-12-24
 stylesheets: ['https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.css']
 ---
