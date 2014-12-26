@@ -101,3 +101,13 @@ img.centered {
 .hydrogen td.loop-1 {
   border-left: 3px solid #C00;
 }
+
+.sidenote-host { position: relative; }
+.sidenote {
+  margin-right: -260px;
+  position: absolute;
+  right: 0;
+  top: auto; /* default */
+  width: 240px;
+  color: gray;
+}

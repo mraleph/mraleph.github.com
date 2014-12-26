@@ -54,7 +54,7 @@ Here the reasoning usually goes as following:
 
 The Grinch obviously did not ask his question for no reason. Last Christmas he stole himself some <a href="http://mrale.ph/irhydra/2/">IRHydra<sup>2</sup></a>, so he can check what kind of code V8 would generate from these loops.
 
-Nothing is surprising in the `cached` version. Everything we expect to be there *is* there.
+<p class="sidenote-host"><small class="sidenote">This is high-level intermediate representation (IR) used by V8's optimizing compilation pipeline - Crankshaft. Internally it is known as <em>hydrogen</em>. There is no detailed documentation for individual instructions but most of them have self-explanatory mnemonics. It is <a href="http://en.wikipedia.org/wiki/Static_single_assignment_form">SSA</a> based.</small>Nothing is surprising in the `cached` version. Everything we expect to be there *is* there.</p>
 
 <pre class="hydrogen">
 t3  Parameter 1  // var arr
@@ -257,7 +257,7 @@ s78 Add s24 s77
     Goto B2
 </pre>
 
-Except not. Now we have **two** length accesses inside the function:
+Except not. Now we have **two** places where we access `length` inside the function:
 
 * one _outside_ of the loop marked <code>&#9314;</code> is to initialize `len` and use in the loop condition;
 * one _inside_ the loop marked <code>&#9315;</code> is needed for the bounds check before the indexed load.
@@ -285,7 +285,7 @@ mov ecx, [ebp - 0x14] ;; restore len
 jmp ->B2
 {% endhighlight %}
 
-As you can see in the cached version we end up reloading `len` again and again on every backedge. Essentially our **failed** attempt to eliminate a `LoadNamedField t3.%length`, which itself compiles down to a single `mov ebx, [eax + 0xb]`, ended up adding one more memory move instead of removing one.
+<p class="sidenote-host"><small class="sidenote">Even though there are enough free registers to keep all values alive in the loop - register allocator still spills them because there is a call to <code>BLACKHOLE</code> in the loop.</small>As you can see in the cached version we end up reloading <code>len</code> again and again on every backedge. Essentially our <b>failed</b> attempt to eliminate a <code>LoadNamedField t3.%length</code>, which itself compiles down to a single <code>mov ebx, [eax + 0xb]</code>, ended up adding one more memory move instead of removing one.</p>
 
 Does this additional move on the back-edge have any performance implications? With our microbenchmark written the way it is this move is probably completely hidden in the shadow of other memory operations on modern desktop CPUs. The story might be different on older CPUs or mobile devices, but I am not sure this a research area we should be digging into here.
 
