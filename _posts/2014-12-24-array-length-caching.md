@@ -9,7 +9,7 @@ My favorite way to bootstrap a Christmas dinner conversation is asking people wh
 
 Anybody preferring functional `Array.prototype` iteration methods to rusty old-school `for(;;)`-loops gets an additional piece of cake.
 
-Anybody choosing `for(let x of y)` will find a neatly wrapped ES6-to-ES5-compiler under their Christmas tree.
+Anybody choosing <code>for(let x of y)</code> will find a neatly wrapped ES6-to-ES5-compiler under their Christmas tree.
 
 But the people who cache... But the people who cache tentatively end up on the naughty list. Ho ho ho.
 
@@ -54,7 +54,7 @@ Here the reasoning usually goes as following:
 
 The Grinch obviously did not ask his question for no reason. Last Christmas he stole himself some <a href="http://mrale.ph/irhydra/2/">IRHydra<sup>2</sup></a>, so he can check what kind of code V8 would generate from these loops.
 
-<p class="sidenote-host"><small class="sidenote">This is high-level intermediate representation (IR) used by V8's optimizing compilation pipeline - Crankshaft. Internally it is known as <em>hydrogen</em>. There is no detailed documentation for individual instructions but most of them have self-explanatory mnemonics. It is <a href="http://en.wikipedia.org/wiki/Static_single_assignment_form">SSA</a> based.</small>Nothing is surprising in the `cached` version. Everything we expect to be there *is* there.</p>
+<p class="sidenote-host"><small class="sidenote">This is high-level intermediate representation (IR) used by V8's optimizing compilation pipeline - Crankshaft. Internally it is known as <em>hydrogen</em>. There is no detailed documentation for individual instructions but most of them have self-explanatory mnemonics. It is <a href="http://en.wikipedia.org/wiki/Static_single_assignment_form">SSA</a> based.</small>Nothing is surprising in the <code>cached</code> version. Everything we expect to be there <b>is</b> there.</p>
 
 <pre class="hydrogen">
 t3  Parameter 1  // var arr
@@ -287,7 +287,7 @@ jmp ->B2
 
 <p class="sidenote-host"><small class="sidenote">Even though there are enough free registers to keep all values alive in the loop - register allocator still spills them because there is a call to <code>BLACKHOLE</code> in the loop.</small>As you can see in the cached version we end up reloading <code>len</code> again and again on every backedge. Essentially our <b>failed</b> attempt to eliminate a <code>LoadNamedField t3.%length</code>, which itself compiles down to a single <code>mov ebx, [eax + 0xb]</code>, ended up adding one more memory move instead of removing one.</p>
 
-Does this additional move on the back-edge have any performance implications? With our microbenchmark written the way it is this move is probably completely hidden in the shadow of other memory operations on modern desktop CPUs. The story might be different on older CPUs or mobile devices, but I am not sure this a research area we should be digging into here.
+Does this additional move on the back-edge have any performance implications? With our microbenchmark written the way it is this move is probably completely hidden in the shadow of other memory operations on modern desktop CPUs. The story might be different on older CPUs or mobile devices, but I am not sure this a research area we should be digging into here: ultimately the more real work you do in the loop the less our microbenchmark results will matter.
 
 Just for fun I tweaked microbenchmark a bit to increase the pressure:
 
@@ -339,9 +339,35 @@ Cached x 17,922 ops/sec &pm;1.26% (66 runs sampled)
 Fastest is Uncached
 </pre>
 
-Whoa. Uncache all the things! Except I could not repeat this on any other machines available to me.
+Whoa. Uncache all the things! Except I could not repeat this on any other machines available to me. Does it make sense to base your coding style on a flaky microbenchmark?
 
 Yes, we really are treading on a really thin ice of CPU performance effects with these microbenchmarks. I think the Grinch is going to leave you on your own now.
+
+<span style="color: white; border: 1px #7A0026 solid; padding: 0px 2px; background: #7a0026;">Update 26 December 2014</span>
+
+Every tale has a morale and my story about the Grinch should have one too.
+
+**Understand before acting**
+
+Yes, surprisingly it has nothing to do with caching or not caching `array.length` access. Don't derive your code style from microbenchmarks. Don't base it on advices from esteemed elders (or mine for that matter). Instead invest into understanding where, how and why your application is spending CPU cycles.
+
+There is another morale here: *don't blindly trust microbenchmarks, they are often not measuring what you think they are measuring*.
+
+In my attempt to illustrate this I focused on a single microbenchmark and ignored a lot of other interesting issues:
+
+1. in the beginning of the post I passingly noted that I favor `Array.prototype.*` iteration methods to old-school `for(;;)`-loop. How do I reconcile this with the fact that these methods are still more expensive than a good old `for(;;)`-loop?
+2. this post deals only with `Array` objects. What about native DOM objects like `HTMLCollection`? It's a fact that accessing `HTMLCollection.length` is more expensive than `array.length`.
+3. this posts talks only about V8. What if I have to target other JavaScript VMs? What if I have to target old browsers?
+
+These are all valid questions and unfortunately I simply can't touch them all in a single post. In some sense mantra _"measure, understand, act, measure"_ is still the best answer to all three even though it might sound disappointingly generic.
+
+Does it matter if you use `.map()` instead of `for(;;)`?
+
+Does it matter if you cache `HTMLCollection.length`?
+
+It depends. Does your application spend considerable time in those methods? Which VMs are you targeting? What's your coding style?
+
+I don't think there is a universal answer to these questions.
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js">
 </script>
