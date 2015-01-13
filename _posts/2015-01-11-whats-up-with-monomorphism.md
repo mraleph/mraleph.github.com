@@ -276,7 +276,74 @@ Lets summarize what we learned:
 * moderately polymorphic operations result in decision trees, which obstruct type-flow and make it harder for optimizer to propagate types and eliminate redundancies. Memory dependent conditional jumps that constitute those decision trees might be bad news if polymorphic operation is right in the middle of the tight number crunching loop;
 * highly polymorphic/megamorphic operations are not specialized entirely and result in a generic operation being emitted as part of the optimized IR. This generic operation is a call - with all associated bad consequences for both optimizations and raw CPU performance.
 
-Additionally it might be good to keep in mind that some caches have lower _capacity_ than others. For example cache associated with a function invocation is either uninitialized, monomorphic or megamorphic with no intermediate polymorphic state.
+# Undiscussed 
+
+I have intentionally ignored some implementation details when writing this post to avoid making it too broad in scope.
+
+### Shapes
+
+We did not discuss at all how shapes (aka hidden classes) are represented, computed and attached to objects. Check out my [post on inline caches](http://mrale.ph/blog/2012/06/03/explaining-js-vms-in-js-inline-caches.html), some of my talks e.g. [AWP2014](http://mrale.ph/talks/awp2014/#/26) one to get the basic idea.
+
+One important thing to realize here that the notion of _shape_ in JavaScript VMs is a heuristical approximation. It's an attempt to dynamically approximate static structure hidden in the program. Things that are shaped the same for a human might not necessary have the same shape for the VM:
+
+{% highlight javascript %}
+function A() { this.x = 1 }
+function B() { this.x = 1 }
+
+var a = new A,
+    b = new B,
+    c = { x: 1 },
+    d = { x: 1, y: 1 }
+
+delete d.y
+// a, b, c, d all have DIFFERENT SHAPES for V8
+{% endhighlight %}
+
+Fluffy dictionary nature of JavaScript objects also makes it easy to create _accidental_ polymorphism:
+
+{% highlight javascript %}
+function A() {
+  this.x = 1;
+}
+
+var a = new A(), b = new A(); // same shape
+
+if (something) {
+  a.y = 2;  // shape of a no longer matches b.
+}
+{% endhighlight %}
+
+### Intentional polymorphism
+
+Even if you are programming a language that only allows you to instantiate fixed shape objects (Java, C#, Dart, C++, etc) from rigid classes you can still write polymorphic code:
+
+{% highlight java %}
+interface Base {
+  void doX();
+}
+
+class A implements Base {
+  void doX() { }
+}
+
+class B implements Base {
+  void doX() { }
+}
+
+void handle(Base obj) {
+  obj.foo();
+}
+
+handle(new A());
+handle(new B());
+// obj.foo() callsite is polymorphic
+{% endhighlight %}
+
+<p class="sidenote-host"><small class="sidenote">Unsurprisingly JVMs use inline caches to optimize <code>invokeinterface</code> and <code>invokevirtual</code> calls</small> Being able to write code against the <em>interface</em> and have this code process objects of different <em>implementation</em> is an important abstraction mechanism. Polymorphism in statically typed programming languages has similar performance implications to the ones discussed above.</p>  
+
+### Not all caches are the same
+
+It might be good to keep in mind that some caches are not shape based and/or have lower _capacity_ than others. For example cache associated with a function invocation is either uninitialized, monomorphic or megamorphic with no intermediate polymorphic state. Instead of caching function's shape which is irrelevant for an invocation it caches _invocation target_ - that is function itself.
 
 {% highlight javascript %}
 function inv(cb) {
@@ -294,7 +361,7 @@ inv(G)
 
 If `inv` is optimized when inline cache for `cb(...)` invocation is monomorphic then optimizing compiler can potentially inline this call (which is very important for small functions on hot paths). When this cache is megamorphic optimizer will not be able to inline anything (it does not know _what_ - as there is no single target) and will just leave a generic invocation operation in the IR.
 
-# Performance advice
+# Final performance advice
 
 The best performance advice is hidden in the title of Dale Carnegie's book "How to Stop Worrying and Start Living".
 
