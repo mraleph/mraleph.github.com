@@ -7,7 +7,7 @@ stylesheets: ['/css/table.css']
 
 Talks and blog posts about JavaScript performance often emphasize importance of *monomorphic* code. However they usually don't provide any digestible explanation of what monomorphism/polymorhism is and why it matters. Even my own talks often boil down to Hulk-style &laquo;**ONE TYPE GOOD. TWO TYPE BAD!!!**&raquo; dichotomy. Unsurprisingly one of the most common requests I get when people reach out to me for a performance advice is a request to explain _what monomorphism actually means_, how polymorphism arises and why it is bad. I have answered this question in so many different ways that I finally decided to write a blog post about it - so that next time I can just link to it and not improvise.
 
-<small>[I also decided to try a new approach to explaining things - trying to capture interactions between various parts of the virtual machine in short comics. This is an new area for me, so please don't hesitate and send any feedback my way. Does it make it easier to understand? Does it make it harder to understand?]</small>
+<small>[I also decided to try a new approach to explaining things - trying to capture interactions between various parts of the virtual machine in short comics. This is an new area for me, so please don't hesitate and send any feedback my way. Does it make it easier to understand? Does it make it harder to understand? This post also omits various details that I considered not important, redundant or only tangentially related - feel free to send questions my way if you feel I omitted something you really wanted to know]</small>
 
 Dynamic lookup 101
 ------------------
@@ -301,6 +301,10 @@ The best performance advice is hidden in the title of Dale Carnegie's book "How 
 Indeed worrying about polymorphism is usually futile. Instead benchmark your code on a realistic dataset, profile it for hotspots and if any of them are JS related - check out IR that optimizing compiler produces.
 
 If in the middle of your tight number crunching loop you see IR instruction called `XYZGeneric` or anything marked with red `changes[*]` (aka "changes everything") marker - then (only then!) it might be the right time to start worrying.
+
+<h1 style="text-align: center;">THE END</h1>
+
+<div style="text-align: center;"><img src="/images/2015-01-11/characters.png"></div>
 
 <script type="text/javascript" src="/js/ir.js">
 </script>
