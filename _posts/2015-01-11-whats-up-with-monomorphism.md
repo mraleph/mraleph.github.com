@@ -79,7 +79,7 @@ f({ x: 2 })
 
 What's the expected number of cached entries for IC at `o.x`?
 
-<p class="sidenote-host"><small class="sidenote">mono- ("one") + -morphic ("of a form")</small>Given that <code>{x: 1}</code> and <code>{x: 2}</code> have the same shape (aka _hidden class_ or _map_) the answer is 1. This is precisely the state of cache that we call <em>monomorphic</em> because it saw only objects of a single shape.</p>
+<p class="sidenote-host"><small class="sidenote">[mono- ("one") + -morphic ("of a form")]</small>Given that <code>{x: 1}</code> and <code>{x: 2}</code> have the same shape (aka _hidden class_ or _map_) the answer is 1. This is precisely the state of cache that we call <em>monomorphic</em> because it saw only objects of a single shape.</p>
 
 <img src="/images/2015-01-11/ic-poly.png" style="float: right;">
 
@@ -201,7 +201,7 @@ v5 Load v0, @16        ;; load o.y
 i6 Mul v4, v5          ;; o.y * o.y
 i7 Add i3, i6          ;; o.x * o.x + o.y * o.y</pre>
 
-This IR checks `v0` against the same shape 4 times even though there is nothing between checks that could affect the `v0`'s shape. Attentive reader will also spot that loads `v2` and `v5` are redundant too, as nothing is writing into corresponding properties. Fortunately [GVN](http://en.wikipedia.org/wiki/Global_value_numbering) pass that is later applied to the IR will eliminate redundant checks and loads:
+This IR checks `v0` against the same shape 4 times even though there is nothing between checks that could affect the `v0`'s shape. Attentive reader will also spot that loads `v2` and `v5` are redundant too, as nothing is writing into corresponding properties. Fortunately the [GVN](http://en.wikipedia.org/wiki/Global_value_numbering) pass that is later applied to the IR will eliminate redundant checks and loads:
 
 <pre class="hydrogen">
    ;; After GVN
@@ -266,7 +266,7 @@ Finally in some cases optimizing compiler can completely give up on specializing
 * operation is polymorphic and optimizer does not know how to build a decision tree correctly for this operation (e.g. used to be the case for polymorphic keyed accesses `arr[i]` in V8 - but not anymore);
 * operation does not have any actionable type feedback to specialize upon (operation were never executed, GC cleared collected type feedback, etc).
 
-In all such (arguably rare) cases optimizer just emits a generic variant of the operation in the IR.
+In all such (arguably rare) cases the optimizer just emits a generic variant of the operation in the IR.
 
 ### Performance implications
 
@@ -276,7 +276,7 @@ Lets summarize what we learned:
 * moderately polymorphic operations result in decision trees, which obstruct type-flow and make it harder for optimizer to propagate types and eliminate redundancies. Memory dependent conditional jumps that constitute those decision trees might be bad news if polymorphic operation is right in the middle of the tight number crunching loop;
 * highly polymorphic/megamorphic operations are not specialized entirely and result in a generic operation being emitted as part of the optimized IR. This generic operation is a call - with all associated bad consequences for both optimizations and raw CPU performance.
 
-# Undiscussed 
+# Undiscussed
 
 I have intentionally ignored some implementation details when writing this post to avoid making it too broad in scope.
 
@@ -339,7 +339,7 @@ handle(new B());
 // obj.foo() callsite is polymorphic
 {% endhighlight %}
 
-<p class="sidenote-host"><small class="sidenote">Unsurprisingly JVMs use inline caches to optimize <code>invokeinterface</code> and <code>invokevirtual</code> calls</small> Being able to write code against the <em>interface</em> and have this code process objects of different <em>implementation</em> is an important abstraction mechanism. Polymorphism in statically typed programming languages has similar performance implications to the ones discussed above.</p>  
+<p class="sidenote-host"><small class="sidenote">[unsurprisingly JVMs use inline caches to optimize <code>invokeinterface</code> and <code>invokevirtual</code> calls]</small> Being able to write code against the <em>interface</em> and have this code process objects of different <em>implementation</em> is an important abstraction mechanism. Polymorphism in statically typed programming languages has similar performance implications to the ones discussed above.</p>
 
 ### Not all caches are the same
 
@@ -360,6 +360,29 @@ inv(G)
 {% endhighlight %}
 
 If `inv` is optimized when inline cache for `cb(...)` invocation is monomorphic then optimizing compiler can potentially inline this call (which is very important for small functions on hot paths). When this cache is megamorphic optimizer will not be able to inline anything (it does not know _what_ - as there is no single target) and will just leave a generic invocation operation in the IR.
+
+### Representing _path-to-the-property_
+
+At this point it might seem that IC associated with property <code>o.x</code> is simply a dictionary mapping shapes to property offsets, something like <code>Dictionary&lt;Shape, int&gt;</code>. However this representation is way too narrow to be useful: property can reside on one of the objects within the prototype chain or be an <em>accessor property</em> (one with a getter and/or a setter). An interesting observation to make here is that accessor properties are in the certain sense more generic than normal data properties.
+
+<p class="sidenote-host"><small class="sidenote">[Dart VM implements fields access in this way]</small>For example <code>o = {x: 1}</code> can be perceived as an object with an accessor property <code>x</code> that has a getter/setter accessing a hidden internal slot using VM intrinsics:</p>
+
+{% highlight javascript %}
+// pseudo-code reimagining o = { x: 1 }
+var o = {
+  get x () {
+    return $LoadByOffset(this, offset_of_x)
+  },
+  set x (value) {
+    $StoreByOffset(this, offset_of_x, value)
+  }
+  // both getter and setter are generated internally by VM
+  // and are invisible to normal JS code.
+};
+$StoreByOffset(this, offset_of_x, 1)
+{% endhighlight %}
+
+<p class="sidenote-host"><small class="sidenote">[in reality V8's ICs are patchable callsites that call special runtime generated IC stubs, see <a href="http://mrale.ph/blog/2012/06/03/explaining-js-vms-in-js-inline-caches.html">this post</a> for more accurate analogy]</small> In the light of this observation it becomes clear that IC should be more akin to <code>Dictionary&lt;Shape, Function&gt;</code>: mapping shapes to accessor functions that should be executed IC is hit. Such IC representation would allow to optimize cases that were impossible to cover with a simplistic representation from the above (properties on the prototype chain, accessor properties and even ES6 proxy objects).</p>
 
 # Final performance advice
 
