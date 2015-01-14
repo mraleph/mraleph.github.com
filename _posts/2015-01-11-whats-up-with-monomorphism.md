@@ -242,6 +242,17 @@ if ($GetShape(o) === A) {
 
 One thing to notice here is that polymorphic accesses lack useful property that monomorphic accesses have. After specialized monomorphic access and until an interfering side-effect we can guarantee that object has a certain shape. This allows to eliminate redundancy between monomorphic accesses. Polymorphic accesses give a very weak guarantee "object's shape is one of A, B, C". We can't use this information to eliminate much redundancy between two similar polymorphic accesses that follow each other (at most we could use it to eliminate the last comparison and deoptimization block - but V8 does not try to do this).
 
+V8 however does build a more efficient IR if property is located in the same place in *all* shapes. In this case a polymorphic typeguard will be emitted instead of the decision tree:
+
+{% highlight javascript %}
+// Check that o's shape is one of A, B or C - deoptimize otherwise.
+$TypeGuard(o, [A, B, C])
+// Load property. It's in the same place in A, B and C.
+var o_x = $LoadByOffset(o, offset_x)
+{% endhighlight %}
+
+This IR has one important benefit for redundancy elimination: if there are no interfering side effects between two `$TypeGuard(o, [A, B, C])` instructions then the second one is redundant just like in the monomorphic case.
+
 If type feedback tells optimizing compiler that property access saw more different shapes than optimizing compiler considers feasible to handle inline then optimizer will instead build a slightly different decision tree that ends with a generic operation instead of deoptimization:
 
 {% highlight javascript %}
@@ -277,7 +288,7 @@ In all such (arguably rare) cases the optimizer just emits a generic variant of 
 Lets summarize what we learned:
 
 * monomorphic operations are easiest to specialize, give optimizer most actionable information and enable further optimizations. Hulk-style summary **ONE TYPE CLOSE TO METAL**!
-* moderately polymorphic operations result in decision trees, which obstruct type-flow and make it harder for optimizer to propagate types and eliminate redundancies. Memory dependent conditional jumps that constitute those decision trees might be bad news if polymorphic operation is right in the middle of the tight number crunching loop;
+* moderately polymorphic operations which require a polymorphic type guard or in the worst case a decision tree are slower then monomorphic ones. Decision trees complicate control flow and make it harder for optimizer to propagate types and eliminate redundancies. Polymorphic type guards don't obstruct type flow that much and still allow for some redundancy elimination - but each polymorphic type guard is still somewhat slower than monomorphic type guard (that checks against one shape). Memory dependent conditional jumps that constitute those decision trees might be bad news if polymorphic operation is right in the middle of the tight number crunching loop;
 * highly polymorphic/megamorphic operations are not specialized entirely and result in a generic operation being emitted as part of the optimized IR. This generic operation is a call - with all associated bad consequences for both optimizations and raw CPU performance.
 
 # Undiscussed
