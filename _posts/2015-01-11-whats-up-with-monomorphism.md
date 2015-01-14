@@ -5,7 +5,11 @@ date: 2015-01-11
 stylesheets: ['/css/table.css']
 ---
 
-Talks and blog posts about JavaScript performance often emphasize importance of *monomorphic* code. However they usually don't provide any digestible explanation of what monomorphism/polymorhism is and why it matters. Even my own talks often boil down to Hulk-style &laquo;**ONE TYPE GOOD. TWO TYPE BAD!!!**&raquo; dichotomy. Unsurprisingly one of the most common requests I get when people reach out to me for a performance advice is a request to explain _what monomorphism actually means_, how polymorphism arises and why it is bad. I have answered this question in so many different ways that I finally decided to write a blog post about it - so that next time I can just link to it and not improvise.
+Talks and blog posts about JavaScript performance often emphasize importance of *monomorphic* code. However they usually don't provide any digestible explanation of what monomorphism/polymorhism is and why it matters. Even my own talks often boil down to Hulk-style &laquo;**ONE TYPE GOOD. TWO TYPE BAD!!!**&raquo; dichotomy. Unsurprisingly one of the most common requests I get when people reach out to me for a performance advice is a request to explain _what monomorphism actually means_, how polymorphism arises and why it is bad.
+
+It does not help that the word "polymorphism" itself is extremely overloaded. Within the classical object-oriented programming _polymorphism_ usually means [subtyping](http://en.wikipedia.org/wiki/Subtyping) and ability to override behavior of the base class. Haskell programmers would think about [parametric polymorphism](http://en.wikipedia.org/wiki/Parametric_polymorphism) instead. However polymorphism which JS performance talks warn against is somewhat different --- it's a _call site polymorphism_.
+
+I have explained this notion in so many different ways before that I finally decided to write a blog post about it - so that next time I can just link to it and not improvise.
 
 <small>[I also decided to try a new approach to explaining things - trying to capture interactions between various parts of the virtual machine in short comics. This is an new area for me, so please don't hesitate and send any feedback my way. Does it make it easier to understand? Does it make it harder to understand? This post also omits various details that I considered not important, redundant or only tangentially related - feel free to send questions my way if you feel I omitted something you really wanted to know]</small>
 
