@@ -15,7 +15,7 @@ date: 2012-06-03
 <h3>Implementing dynamic language in JavaScript</h3>
 <p>Imagine that you want to implement in JavaScript a VM for a language that is very&nbsp;similar&nbsp;to JavaScript in terms semantics but has a much simpler object model: instead of JS objects it has <em>tables</em> mapping keys of <em>any type</em> to values. For simplicity lets just think about <a href="http://www.lua.org" target="_blank">Lua</a>, which is&nbsp;actually both very&nbsp;similar&nbsp;to JavaScript and very different as a language. My favorite <em>"make array of points and then compute vector sum"&nbsp;</em>example would look approximately like this:</p>
 
-{% highlight javascript %}
+{% highlight lua %}
 function MakePoint(x, y)
   local point = {}
   point.x = x

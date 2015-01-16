@@ -1,5 +1,12 @@
 body {
   font-family: 'Open Sans', sans-serif;
+  font-size: 20px;
+}
+
+sup {
+  vertical-align: top;
+  position: relative;
+  top: -0.15em;
 }
 
 .post-body, .post-title, .post-comments {
@@ -13,11 +20,12 @@ body {
 }
 
 .post-title div {
-  font-family: 'Oswald', serif;
+  font-family: 'Lato', serif;
   font-size: 2em;
   margin-top: 0.83em;
-  margin-bottom: 0px;
+  margin-bottom: 5px;
   font-weight: bold;
+  letter-spacing: 0.05em;
 }
 
 .post-title time {
@@ -35,7 +43,7 @@ a:hover {
 }
 
 h1, h2, h3, h4 {
-  font-family: 'Oswald', serif;
+  font-family: 'Lato', serif;
 }
 
 code, pre {
@@ -72,4 +80,34 @@ img.centered {
 
 .hydrogen .lir {
   background: rgba(125, 167, 217, 0.15) !important;
+}
+
+.hydrogen .src-range {
+  margin-bottom: .2em;
+  margin-top: .2em;
+  display: inline-block;
+}
+.hydrogen .src-range-transparent { opacity: 0.3; }
+.hydrogen .src-range-point { position: relative; }
+.hydrogen .src-range-point::before {
+  position: absolute;
+  left: 0.0em;
+  top: 0.8em;
+  content: "^";
+  font-weight: 900;
+  color: gold;
+}
+
+.hydrogen td.loop-1 {
+  border-left: 3px solid #C00;
+}
+
+.sidenote-host { position: relative; }
+.sidenote {
+  margin-right: -260px;
+  position: absolute;
+  right: 0;
+  top: auto; /* default */
+  width: 240px;
+  color: gray;
 }
