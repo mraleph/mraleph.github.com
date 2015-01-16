@@ -400,7 +400,7 @@ inv(f)
 // here inline cache is monomorpic, have seen only objects with
 // a shape like f.
 inv(g)
-// hereinline cache is polymorphic, seen objects with two different
+// here inline cache is polymorphic, seen objects with two different
 // shapes: like f and like g
 {% endhighlight %}
 
