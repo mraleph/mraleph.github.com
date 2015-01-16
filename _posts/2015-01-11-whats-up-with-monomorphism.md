@@ -380,6 +380,47 @@ inv(G)
 
 If `inv` is optimized when inline cache for `cb(...)` invocation is monomorphic then optimizing compiler can potentially inline this call (which is very important for small functions on hot paths). When this cache is megamorphic optimizer will not be able to inline anything (it does not know _what_ - as there is no single target) and will just leave a generic invocation operation in the IR.
 
+This comes in contrast with method invocation expressions `o.m(...)` that are handled similarly to property accesses. ICs at method invocation sites have intermediate polymorphic state between monomorphic and megamorphic state. V8 is capable of inlining at monomorphic, polymorphic and megamorphic sites and it builds IR in the same way as for properties: choosing between a decision tree or a single polymorphic type guard before inlined function body. There is one limitation however: for V8 to be able to inline method call it needs _it to be part of the shape_.
+
+{% highlight javascript %}
+function inv(o) {
+  return o.cb(0)
+}
+
+var f = {
+  cb: function F(v) { return v },
+};
+
+var g = {
+  cb: function G(v) { return v + 1 },
+};
+
+inv(f)
+inv(f)
+// inline cache is monomorpic, have seen only objects with a shape like f.
+inv(g)
+// inline cache is polymorphic, seen objects with two different shapes (like f and like g).
+{% endhighlight %}
+
+It might be surprising that `f` and `g` have different shapes above. This happens because when we assign a function to a property V8 tries (if possible) to attach it to object's shape instead of saving it directly on the object. In this example `f` has a shape like this `{cb: F}` i.e. the shape itself is pointing directly to the closure. In our previous examples we only had shapes that simply declared the presence of the property at a certain offset, however this shape also captures the value of the property. This makes V8's shapes similar to classes in an language like Java or C++ where class is essentially a set of fields _and methods_.
+
+Of course if you later overwrite functional property with a different function V8 decides that this doesn't look like a class-method relationship and switches to a shape that reflects this: 
+
+{% highlight javascript %}
+var f = {
+  cb: function F(v) { return v },
+};
+
+// Shape of f is {cb: F}
+
+f.cb = function H(v) { return v - 1 }
+
+// Shape of f is {cb: *}
+
+{% endhighlight %}
+
+Overall the topic of how V8 builds and maintains shapes (hidden classes) is worthy of a large separate post by itself.
+
 ### Representing _path-to-the-property_
 
 At this point it might seem that IC associated with property <code>o.x</code> is simply a dictionary mapping shapes to property offsets, something like <code>Dictionary&lt;Shape, int&gt;</code>. However this representation is way too narrow to be useful: property can reside on one of the objects within the prototype chain or be an <em>accessor property</em> (one with a getter and/or a setter). An interesting observation to make here is that accessor properties are in the certain sense more generic than normal data properties.
@@ -402,6 +443,10 @@ $StoreByOffset(this, offset_of_x, 1)
 {% endhighlight %}
 
 <p class="sidenote-host"><small class="sidenote">[in reality V8's ICs are patchable callsites that call special runtime generated IC stubs, see <a href="http://mrale.ph/blog/2012/06/03/explaining-js-vms-in-js-inline-caches.html">this post</a> for more accurate analogy]</small> In the light of this observation it becomes clear that IC should be more akin to <code>Dictionary&lt;Shape, Function&gt;</code>: mapping shapes to accessor functions that should be executed IC is hit. Such IC representation would allow to optimize cases that were impossible to cover with a simplistic representation from the above (properties on the prototype chain, accessor properties and even ES6 proxy objects).</p>
+
+### Premonomorphic state
+
+Some ICs in V8 actually have so called _premonomorphic_ state between _unitialized_ and _monomorphic_. It exists to avoid compiling IC stubs for ICs that are only executed once. I decided to avoid discussing this state because it is a somewhat obscure implementation detail. 
 
 # Final performance advice
 
