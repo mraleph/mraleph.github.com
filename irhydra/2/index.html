@@ -1933,13 +1933,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <style type="text/css" scoped="">
       div[data-hir], div[data-lir] { display: none; };
     </style>
+    <div data-hir="changes-all">
+      <p>This instruction has side effects <b>unknown</b> to the compiler. </p>
+      <p>It can change hidden classes of objects, kind of array backing stores, etc.</p>
+      <p>Such instructions should be avoided inside hot loops because they inhibit optimizations.</p>
+    </div>
+    <div data-hir="UnknownOSRValue">
+      <p>An implementation detail of the <em>On Stack Replacement</em> mechanism</p>
+      <p><em>On Stack Replacement</em> (OSR) is a process when an unoptimized code for a running function is replaced by an optimized code while the function is running (is on the stack). OSR is used to optimize functions with long running loops while these loops are still running.</p>
+      <p>In this case function is entered through a special block known as an <em>OSR entry point</em> instead of the normal entry (<code>B0</code>). <code>UnknownOSRValue</code> instructions evaluate to the values that were in the corresponding places in the environment (a set of local and parameter values) during execution of the unoptimized code - allowing optimized code to continue from the place where unoptimized code was.</p>
+      <p>Block containing these instructions is never executed if the function entered through normal entry.</p>
+      <p>OSR entry block inhibits LICM, so if OSR occured in one of the inner loops instead of the outermost one it might negatively impact code quality.</p>
+    </div>
+    <div data-hir="OsrEntry">
+      <p>An implementation detail of the <em>On Stack Replacement</em> mechanism</p>
+      <p><em>On Stack Replacement</em> (OSR) is a process when an unoptimized code for a running function is replaced by an optimized code while the function is running (is on the stack). OSR is used to optimize functions with long running loops while these loops are still running.</p>
+      <p>In this case function is entered through a special block known as an <em>OSR entry point</em> instead of the normal entry (<code>B0</code>). <code>UnknownOSRValue</code> instructions evaluate to the values that were in the corresponding places in the environment (a set of local and parameter values) during execution of the unoptimized code - allowing optimized code to continue from the place where unoptimized code was.</p>
+      <p>Block containing these instructions is never executed if the function entered through normal entry.</p>
+      <p>OSR entry block inhibits LICM, so if OSR occured in one of the inner loops instead of the outermost one it might negatively impact code quality.</p>
+    </div>
     <div data-hir="CheckMaps" data-lir="check-maps">
       <p>Checks whether value's hidden class matches expected value and deoptimizes if this is not the case.</p>
       <p>Deoptimization at <code>CheckMaps</code> usually indicates that the code is polymorphic.</p>
     </div>
     <div data-hir="Deoptimize" data-lir="deoptimize">
       <p>When executed this instruction always deoptimizes.</p>
-      <p>V8 generates then on control flow paths that were never executed before and thus contain no actionable type feedback that could be used to optimize the code.</p>
+      <p>V8 generates them on control flow paths that were never executed before and thus contain no actionable type feedback that could be used to optimize the code.</p>
       <p>For a function with a long running loop it is not uncommon to hit at OSR in the loop and then deoptimize on a <code>Deoptimize</code> emitted after the loop</p>
     </div>
     <div data-lir="lazy-bailout">
@@ -2257,6 +2276,7 @@ pre {
 
 .hir-changes-all {
   color: red;
+  cursor: help;
 }
 
 .lir-env,
@@ -3479,6 +3499,7 @@ pre {
 
 .hir-changes-all {
   color: red;
+  cursor: help;
 }
 
 .lir-env,
@@ -3749,35 +3770,35 @@ h4.deopt-header-soft > .first-word {
           <li>
             <h3>V8</h3>
             <ul>
-              <li><a href="#demo-1">demo #1</a> [<a href="https://code.google.com/p/irhydra/source/browse/web/demos/v8/deopt-eager/demo.js?name=polymerized" target="_blank">source file</a>]</li>
-              <li><a href="#demo-2">demo #2</a> [<a href="https://code.google.com/p/irhydra/source/browse/web/demos/v8/deopt-lazy/demo.js?name=polymerized" target="_blank">source file</a>]</li>
-              <li><a href="#demo-3">demo #3</a> [<a href="https://code.google.com/p/irhydra/source/browse/web/demos/v8/deopt-soft/demo.js?name=polymerized" target="_blank">source file</a>]</li>
+              <li><a href="#demo-1">demo #1</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/v8/deopt-eager/demo.js" target="_blank">source file</a>]</li>
+              <li><a href="#demo-2">demo #2</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/v8/deopt-lazy/demo.js" target="_blank">source file</a>]</li>
+              <li><a href="#demo-3">demo #3</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/v8/deopt-soft/demo.js" target="_blank">source file</a>]</li>
             </ul>
           </li>
           <li>
             <h3>Dart VM</h3>
             <ul>
-              <li><a href="#demo-4">demo #4</a> [<a href="https://code.google.com/p/irhydra/source/browse/web/demos/dart/demo.dart?name=polymerized" target="_blank">source file</a>]</li>
+              <li><a href="#demo-4">demo #4</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/dart/demo.dart" target="_blank">source file</a>]</li>
             </ul>
           </li>
           <li>
             <h3>WebRebels 2014</h3>
             <ul>
-              <li><a href="#webrebels-2014-concat">String concatenation</a> [<a href="https://github.com/mraleph/irhydra/blob/interesting-mode/web/demos/webrebels2014/1-concat/concat.js" target="_blank">source file</a>]</li>
-              <li><a href="#webrebels-2014-concat-fixed">String concatenation (with a fix in V8)</a> [<a href="https://github.com/mraleph/irhydra/blob/interesting-mode/web/demos/webrebels2014/2-concat-fixed/concat.js" target="_blank">source file</a>]</li>
-              <li><a href="#webrebels-2014-prototype-node">Prototype chain traversal (node v0.10.x): data property</a> [<a href="https://github.com/mraleph/irhydra/blob/interesting-mode/web/demos/webrebels2014/3-prototype-node/prototype.js" target="_blank">source file</a>]</li>
-              <li><a href="#webrebels-2014-prototype-node-getter">Prototype chain traversal (node v0.10.x): getter</a> [<a href="https://github.com/mraleph/irhydra/blob/interesting-mode/web/demos/webrebels2014/4-prototype-node-getter/prototype.js" target="_blank">source file</a>]</li>
-              <li><a href="#webrebels-2014-prototype">Prototype chain traversal (newer V8): data property, 2 runs</a> [<a href="https://github.com/mraleph/irhydra/blob/interesting-mode/web/demos/webrebels2014/5-prototype/prototype.js" target="_blank">source file</a>]</li>
-              <li><a href="#webrebels-2014-prototype-tostring">Prototype chain traversal (newer V8): data property, 2 runs, <code>toString</code>-hack</a>  [<a href="https://github.com/mraleph/irhydra/blob/interesting-mode/web/demos/webrebels2014/6-prototype-tostring/prototype.js" target="_blank">source file</a>]</li>
-              <li><a href="#webrebels-2014-method-function">Method vs. Function</a> [<a href="https://github.com/mraleph/irhydra/blob/interesting-mode/web/demos/webrebels2014/7-method-function/method-function.js" target="_blank">source file</a>]</li>
-              <li><a href="#webrebels-2014-method-function-hack">Method vs. Function with more ICs</a> [<a href="https://github.com/mraleph/irhydra/blob/interesting-mode/web/demos/webrebels2014/8-method-function-hack/method-function.js" target="_blank">source file</a>]</li>
+              <li><a href="#webrebels-2014-concat">String concatenation</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/webrebels2014/1-concat/concat.js" target="_blank">source file</a>]</li>
+              <li><a href="#webrebels-2014-concat-fixed">String concatenation (with a fix in V8)</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/webrebels2014/2-concat-fixed/concat.js" target="_blank">source file</a>]</li>
+              <li><a href="#webrebels-2014-prototype-node">Prototype chain traversal (node v0.10.x): data property</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/webrebels2014/3-prototype-node/prototype.js" target="_blank">source file</a>]</li>
+              <li><a href="#webrebels-2014-prototype-node-getter">Prototype chain traversal (node v0.10.x): getter</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/webrebels2014/4-prototype-node-getter/prototype.js" target="_blank">source file</a>]</li>
+              <li><a href="#webrebels-2014-prototype">Prototype chain traversal (newer V8): data property, 2 runs</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/webrebels2014/5-prototype/prototype.js" target="_blank">source file</a>]</li>
+              <li><a href="#webrebels-2014-prototype-tostring">Prototype chain traversal (newer V8): data property, 2 runs, <code>toString</code>-hack</a>  [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/webrebels2014/6-prototype-tostring/prototype.js" target="_blank">source file</a>]</li>
+              <li><a href="#webrebels-2014-method-function">Method vs. Function</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/webrebels2014/7-method-function/method-function.js" target="_blank">source file</a>]</li>
+              <li><a href="#webrebels-2014-method-function-hack">Method vs. Function with more ICs</a> [<a href="https://github.com/mraleph/irhydra/blob/master/web/demos/webrebels2014/8-method-function-hack/method-function.js" target="_blank">source file</a>]</li>
             </ul>
           </li>
         </ul>
         <h2>Compilation Artifacts Cheatsheet</h2>
         <p>If you already have some artifacts collected go ahead and explore them with&nbsp;<i class="fa fa-folder-open"></i>&nbsp;otherwise here is how you can collect some.</p>
         <h3>V8</h3>
-        <p class="alpha-warning">You need V8 version &gt;= 2.24.39 to use IRHydra<sup>2</sup>. You can check <code>about:version</code> to see if your browser comes with the suitable version.</p>
+        <p class="alpha-warning">You need V8 version &gt;= 3.24.39 to use IRHydra<sup>2</sup>. You can check <code>about:version</code> to see if your browser comes with the suitable version.</p>
         <p>You need to pass the following flags to V8 to collect IR and deoptimization artifacts and be able to use source level view:</p>
         <pre><span data-toggle="tooltip" data-title="Produce hydrogen.cfg containing high-level and low-level intermediate representations used by Crankshaft optimizing compiler.">--trace-hydrogen</span>
 <span data-toggle="tooltip" data-title="Dump only IR from the very last phase">--trace-phase=Z</span>
