@@ -397,9 +397,11 @@ var g = {
 
 inv(f)
 inv(f)
-// inline cache is monomorpic, have seen only objects with a shape like f.
+// here inline cache is monomorpic, have seen only objects with
+// a shape like f.
 inv(g)
-// inline cache is polymorphic, seen objects with two different shapes (like f and like g).
+// hereinline cache is polymorphic, seen objects with two different
+// shapes: like f and like g
 {% endhighlight %}
 
 It might be surprising that `f` and `g` have different shapes above. This happens because when we assign a function to a property V8 tries (if possible) to attach it to object's shape instead of saving it directly on the object. In this example `f` has a shape like this `{cb: F}` i.e. the shape itself is pointing directly to the closure. In our previous examples we only had shapes that simply declared the presence of the property at a certain offset, however this shape also captures the value of the property. This makes V8's shapes similar to classes in an language like Java or C++ where class is essentially a set of fields _and methods_.
