@@ -11,12 +11,13 @@
   var cases = [];
   for (var i = 0; i < scripts.length; i++) {
     var script = scripts[i].text;
-    if (script.indexOf("ui" + ".add") >= 0) {  // Avoid finding this script tag.
+    if (script.indexOf("ui.add") >= 0 && script.indexOf("PLEASEIGNOREME") === -1) {  // Avoid finding this script tag.
       // Compile and invoke script with fake ui object that will collect
       // all test cases.
       new Function("ui", "Benchmark", script)({  // ui
         browserscope: { },
-        add: function (name, src) {
+        add: function (name, opts) {
+          var src = typeof opts === 'string' ? opts : opts.fn;
           cases.push({
             // Cleanup case name, we will use it as a function name in dynamically
             // generated JS source.
@@ -25,7 +26,7 @@
             // Wrap case body just like Benchmark.js wraps it. This will allow to avoid
             // some false-positives when one test case is a prefix of another.
             // (but it does not eliminate all false positives).
-            src: "{" + src.trim() + "\n}"
+            src: "{" + typeof src.trim() + "\n}"
           });
           return this;
         }
@@ -56,8 +57,8 @@
         for (var i = 0; i < cases.length; i++) {
           if (src.indexOf(cases[i].src) >= 0) {  // Looks like it is one of the cases.
             var name = cases[i].name;
-            // Rewrite anonymous function into a named one.
-            child = document.createTextNode(src.replace('=function(', '=function ' + name + ' ('));
+            // Rewrite anonymous function into a named one. Only rename the first occurrence. 
+            child = document.createTextNode(src.replace(/=function\(/, '=function ' + name + ' ('));
             break;
           }
         }
