@@ -26,7 +26,7 @@
             // Wrap case body just like Benchmark.js wraps it. This will allow to avoid
             // some false-positives when one test case is a prefix of another.
             // (but it does not eliminate all false positives).
-            src: "{" + typeof src.trim() + "\n}"
+            src: "{" + src.trim() + "\n}"
           });
           return this;
         }
