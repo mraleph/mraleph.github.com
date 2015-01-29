@@ -22,6 +22,10 @@ a:focus {
   color: #F39C12;
   font-weight: 500 !important; }
 
+.deopt-debugger {
+  color: #827717;
+  font-weight: 500 !important; }
+
 .deopt-soft {
   color: #8E44AD;
   font-weight: 500 !important; }

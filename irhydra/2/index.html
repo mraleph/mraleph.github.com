@@ -2097,6 +2097,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         background-color: #F1C40F;
       }
 
+      .x-deopt-link-debugger > a {
+        background-color: #827717;
+      }
+
+      .x-deopt-link-debugger > a:hover {
+        background-color: #9E9D24;
+      }
+
       .x-deopt-link-soft > a {
         background-color: #8E44AD;
       }
@@ -2457,6 +2465,14 @@ pre {
   background-color: #F1C40F;
 }
 
+.deopt-marker-debugger {
+  background-color: #827717;
+}
+
+.deopt-marker-debugger:hover {
+  background-color: #9E9D24;
+}
+
 .deopt-marker-soft {
   background-color: #8E44AD;
 }
@@ -2569,6 +2585,10 @@ a:focus {
 
 .deopt-lazy {
   color: #F39C12;
+  font-weight: 500 !important; }
+
+.deopt-debugger {
+  color: #827717;
   font-weight: 500 !important; }
 
 .deopt-soft {
@@ -3102,6 +3122,14 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 
       code-mirror::shadow .deopt-bookmark-lazy:hover {
         color: #F1C40F;
+      }
+
+      code-mirror::shadow .deopt-bookmark-debugger {
+        color: #827717;
+      }
+
+      code-mirror::shadow .deopt-bookmark-debugger:hover {
+        color: #9E9D24;
       }
 
       code-mirror::shadow .deopt-bookmark-soft {
@@ -3686,6 +3714,14 @@ pre {
   background-color: #F1C40F;
 }
 
+.deopt-marker-debugger {
+  background-color: #827717;
+}
+
+.deopt-marker-debugger:hover {
+  background-color: #9E9D24;
+}
+
 .deopt-marker-soft {
   background-color: #8E44AD;
 }
@@ -3977,8 +4013,6 @@ h4.deopt-header-soft > .first-word {
         document.addEventListener("HydraReady", function () {
           spinner.stop();
         }, false);
-
-        document.location.hash = "";
       })();
 
       function DESTROY_SPLASH() {
