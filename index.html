@@ -4,6 +4,7 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link href='http://fonts.googleapis.com/css?family=Gloria+Hallelujah' rel='stylesheet' type='text/css'>
 <title>Vyacheslav Egorov</title>
 <link href="/atom.xml" rel="alternate" title="atom feed" type="application/atom+xml">
@@ -17,7 +18,7 @@ body {
 }
 
 .box {
-  width: 22em;
+  /* width: 22em; */
   margin-left: auto;
   margin-right: auto;
   text-align: center;
@@ -33,6 +34,19 @@ body {
 .favicons img {
   width: 16px;
   height: 16px;
+}
+
+.posts {
+  text-align: justify;
+  padding: 5px;
+  background: whitesmoke;
+  border: none;
+}
+
+@media (min-width: 700px) {
+  .posts {
+    width: 40em;
+  }
 }
 </style>
 
@@ -68,7 +82,7 @@ body {
     </div>
   </div>
   <br/>
-  <div class="box" style="text-align: justify; width: 40em; padding: 5px; background: whitesmoke; border: none;">
+  <div class="box posts">
     <article style="font-family: 'Gloria Hallelujah', monospace, cursive;">
       <time datetime="" style="color: grey;">&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</time> <a href="/v8/resources.html">A list of V8 related resources</a>
     </article>
