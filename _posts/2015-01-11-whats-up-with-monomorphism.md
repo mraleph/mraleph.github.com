@@ -83,7 +83,7 @@ f({ x: 2 })
 
 What's the expected number of cached entries for IC at `o.x`?
 
-<p class="sidenote-host"><small class="sidenote">[mono- ("one") + -morphic ("of a form")]</small>Given that <code>{x: 1}</code> and <code>{x: 2}</code> have the same shape (aka _hidden class_ or _map_) the answer is 1. This is precisely the state of cache that we call <em>monomorphic</em> because it saw only objects of a single shape.</p>
+<p class="sidenote-host">Given that <code>{x: 1}</code> and <code>{x: 2}</code> have the same shape (aka _hidden class_ or _map_) the answer is 1. This is precisely the state of cache that we call <em>monomorphic</em> because it saw only objects of a single shape.<small class="sidenote">[mono- ("one") + -morphic ("of a form")]</small></p>
 
 <img src="/images/2015-01-11/ic-poly.png" style="float: right;">
 
@@ -161,7 +161,7 @@ g({x: 0, y: 0})
 
 For example in the function above each IC (there are 7: `.x`, `.x`, `*`, `.y`, `.y`, `*`, `+`) will act on its own. Each property load IC will check `o` against the same cached shape. Arithmetic IC at `+` will check whether its inputs are numbers (and what kind of number - as V8 internally has different number representations) - even though this could be derived from that state of `*` ICs.
 
-<p class="sidenote-host"><small class="sidenote">[asm.js uses this inherent typing to define an extremely restricted subset of JavaScript that is completely statically typed and can be optimized ahead-of-time, removing the need for speculative adaptive compilation]</small> Arithmetic operations in JavaScript are inherently typed e.g. <code>a|0</code> always returns 32-bit integer and <code>+a</code> always returns a number, but most other operations have no such guarantees. This turns writing an ahead-of-time optimizing compiler for JavaScript into an extremely difficult problem. Instead of compiling JavaScript once in an AOT fashion, most JavaScript VMs sport several execution tiers. For example in V8 code starts to execute without any optimizations, compiled with a baseline non-optimizing compiler. Hot functions are later recompiled by an optimizing compiler.</p>
+<p class="sidenote-host">Arithmetic operations in JavaScript are inherently typed e.g. <code>a|0</code> always returns 32-bit integer and <code>+a</code> always returns a number, but most other operations have no such guarantees. This turns writing an ahead-of-time optimizing compiler for JavaScript into an extremely difficult problem. Instead of compiling JavaScript once in an AOT fashion, most JavaScript VMs sport several execution tiers. For example in V8 code starts to execute without any optimizations, compiled with a baseline non-optimizing compiler. Hot functions are later recompiled by an optimizing compiler.<small class="sidenote">[asm.js uses this inherent typing to define an extremely restricted subset of JavaScript that is completely statically typed and can be optimized ahead-of-time, removing the need for speculative adaptive compilation]</small></p>
 
 Waiting for code to warm up serves two distinct purposes:
 
@@ -358,7 +358,7 @@ handle(new B());
 // obj.foo() callsite is polymorphic
 {% endhighlight %}
 
-<p class="sidenote-host"><small class="sidenote">[unsurprisingly JVMs use inline caches to optimize <code>invokeinterface</code> and <code>invokevirtual</code> calls]</small> Being able to write code against the <em>interface</em> and have this code process objects of different <em>implementation</em> is an important abstraction mechanism. Polymorphism in statically typed programming languages has similar performance implications to the ones discussed above.</p>
+<p class="sidenote-host">Being able to write code against the <em>interface</em> and have this code process objects of different <em>implementation</em> is an important abstraction mechanism. Polymorphism in statically typed programming languages has similar performance implications to the ones discussed above.<small class="sidenote">[unsurprisingly JVMs use inline caches to optimize <code>invokeinterface</code> and <code>invokevirtual</code> calls]</small></p>
 
 ### Not all caches are the same
 
@@ -380,7 +380,7 @@ inv(G)
 
 If `inv` is optimized when inline cache for `cb(...)` invocation is monomorphic then optimizing compiler can potentially inline this call (which is very important for small functions on hot paths). When this cache is megamorphic optimizer will not be able to inline anything (it does not know _what_ - as there is no single target) and will just leave a generic invocation operation in the IR.
 
-<p class="sidenote-host"><small class="sidenote">[in fact <code>o.m(...)</code> compiles into two ICs: one <code>LoadIC</code> that does property load and another <code>CallIC</code> that invokes loaded property with appropriate receiver and arguments. <code>CallIC</code> is the same kind of IC that is described above for <code>cb(...)</code>-like calls. It is only capable of recording monomorphic only megamorphic state. That's why its state is ignored when optimizing method call and only state of the property load IC is used]</small>This comes in contrast with method invocation expressions <code>o.m(...)</code> that are handled similarly to property accesses. ICs at method invocation sites have intermediate polymorphic state between monomorphic and megamorphic state. V8 is capable of inlining at monomorphic, polymorphic and megamorphic sites and it builds IR in the same way as for properties: choosing between a decision tree or a single polymorphic type guard before inlined function body. There is one limitation however: for V8 to be able to inline method call it needs <em>it to be part of the shape</em>.</p>
+<p class="sidenote-host">This comes in contrast with method invocation expressions <code>o.m(...)</code> that are handled similarly to property accesses. ICs at method invocation sites have intermediate polymorphic state between monomorphic and megamorphic state. V8 is capable of inlining at monomorphic, polymorphic and megamorphic sites and it builds IR in the same way as for properties: choosing between a decision tree or a single polymorphic type guard before inlined function body. There is one limitation however: for V8 to be able to inline method call it needs <em>it to be part of the shape</em>.<small class="sidenote">[in fact <code>o.m(...)</code> compiles into two ICs: one <code>LoadIC</code> that does property load and another <code>CallIC</code> that invokes loaded property with appropriate receiver and arguments. <code>CallIC</code> is the same kind of IC that is described above for <code>cb(...)</code>-like calls. It is only capable of recording monomorphic only megamorphic state. That's why its state is ignored when optimizing method call and only state of the property load IC is used]</small></p>
 
 {% highlight javascript %}
 function inv(o) {
@@ -406,7 +406,7 @@ inv(g)
 
 It might be surprising that `f` and `g` have different shapes above. This happens because when we assign a function to a property V8 tries (if possible) to attach it to object's shape instead of saving it directly on the object. In this example `f` has a shape like this `{cb: F}` i.e. the shape itself is pointing directly to the closure. In our previous examples we only had shapes that simply declared the presence of the property at a certain offset, however this shape also captures the value of the property. This makes V8's shapes similar to classes in an language like Java or C++ where class is essentially a set of fields _and methods_.
 
-Of course if you later overwrite functional property with a different function V8 decides that this doesn't look like a class-method relationship and switches to a shape that reflects this: 
+Of course if you later overwrite functional property with a different function V8 decides that this doesn't look like a class-method relationship and switches to a shape that reflects this:
 
 {% highlight javascript %}
 var f = {
@@ -427,7 +427,7 @@ Overall the topic of how V8 builds and maintains shapes (hidden classes) is wort
 
 At this point it might seem that IC associated with property <code>o.x</code> is simply a dictionary mapping shapes to property offsets, something like <code>Dictionary&lt;Shape, int&gt;</code>. However this representation is way too narrow to be useful: property can reside on one of the objects within the prototype chain or be an <em>accessor property</em> (one with a getter and/or a setter). An interesting observation to make here is that accessor properties are in the certain sense more generic than normal data properties.
 
-<p class="sidenote-host"><small class="sidenote">[Dart VM implements fields access in this way]</small>For example <code>o = {x: 1}</code> can be perceived as an object with an accessor property <code>x</code> that has a getter/setter accessing a hidden internal slot using VM intrinsics:</p>
+<p class="sidenote-host">For example <code>o = {x: 1}</code> can be perceived as an object with an accessor property <code>x</code> that has a getter/setter accessing a hidden internal slot using VM intrinsics:<small class="sidenote">[Dart VM implements fields access in this way]</small></p>
 
 {% highlight javascript %}
 // pseudo-code reimagining o = { x: 1 }
@@ -444,11 +444,11 @@ var o = {
 $StoreByOffset(this, offset_of_x, 1)
 {% endhighlight %}
 
-<p class="sidenote-host"><small class="sidenote">[in reality V8's ICs are patchable callsites that call special runtime generated IC stubs, see <a href="http://mrale.ph/blog/2012/06/03/explaining-js-vms-in-js-inline-caches.html">this post</a> for more accurate analogy]</small> In the light of this observation it becomes clear that IC should be more akin to <code>Dictionary&lt;Shape, Function&gt;</code>: mapping shapes to accessor functions that should be executed IC is hit. Such IC representation would allow to optimize cases that were impossible to cover with a simplistic representation from the above (properties on the prototype chain, accessor properties and even ES6 proxy objects).</p>
+<p class="sidenote-host">In the light of this observation it becomes clear that IC should be more akin to <code>Dictionary&lt;Shape, Function&gt;</code>: mapping shapes to accessor functions that should be executed IC is hit. Such IC representation would allow to optimize cases that were impossible to cover with a simplistic representation from the above (properties on the prototype chain, accessor properties and even ES6 proxy objects).<small class="sidenote">[in reality V8's ICs are patchable callsites that call special runtime generated IC stubs, see <a href="http://mrale.ph/blog/2012/06/03/explaining-js-vms-in-js-inline-caches.html">this post</a> for more accurate analogy]</small></p>
 
 ### Premonomorphic state
 
-Some ICs in V8 actually have so called _premonomorphic_ state between _unitialized_ and _monomorphic_. It exists to avoid compiling IC stubs for ICs that are only executed once. I decided to avoid discussing this state because it is a somewhat obscure implementation detail. 
+Some ICs in V8 actually have so called _premonomorphic_ state between _unitialized_ and _monomorphic_. It exists to avoid compiling IC stubs for ICs that are only executed once. I decided to avoid discussing this state because it is a somewhat obscure implementation detail.
 
 # Final performance advice
 
@@ -460,7 +460,7 @@ If in the middle of your tight number crunching loop you see IR instruction call
 
 <h1 style="text-align: center;">THE END</h1>
 
-<div style="text-align: center;"><img src="/images/2015-01-11/characters.png"></div>
+<div style="text-align: center;"><img style="max-width: 70%;" src="/images/2015-01-11/characters.png"></div>
 
 <script type="text/javascript" src="/js/ir.js">
 </script>
