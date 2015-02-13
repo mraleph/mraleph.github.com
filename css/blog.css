@@ -1,17 +1,6 @@
 body {
   font-family: 'Open Sans', sans-serif;
-}
-
-@media (min-width: 1000px) {
-  body {
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 1000px) {
-  body {
-    font-size: 16px;
-  }
+  font-size: 15px;
 }
 
 sup {
@@ -21,6 +10,10 @@ sup {
 }
 
 @media (min-width: 1000px) {
+  body {
+    font-size: 20px;
+  }
+
   .post-body, .post-title, .post-comments {
     width: 50em;
     margin-left: auto;
