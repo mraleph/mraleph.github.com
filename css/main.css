@@ -1,5 +1,5 @@
-input { 
-    margin: 2px;    
+input {
+    margin: 2px;
     width: 220px;
     border: 1px solid #999;
     font-size: 1em;
@@ -70,7 +70,7 @@ blockquote {
   margin-right:  0px;
 }
 
-ul { 
+ul {
     list-style-type:square;
 }
 
@@ -107,6 +107,12 @@ li {
   margin-top: 3px;
 }
 
+@media (max-width: 1000px) {
+  pre {
+    overflow: auto;
+  }
+}
+
 .CodeMirror-wrapping {
   background: white;
   padding: 5px;
@@ -122,7 +128,7 @@ li {
 .lit{color:#066}
 .pun{color:#660}
 .pln{color:#000}
-pre.prettyprint { 
+pre.prettyprint {
   padding: 5px;
   border-left:1px solid #888
 }

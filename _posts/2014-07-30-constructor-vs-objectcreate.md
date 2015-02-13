@@ -4,13 +4,13 @@ title: new Fn(...) vs. Object.create(P)
 date: 2014-07-30
 ---
 
-_This is a note in reply to Kyle Simpson's [question](https://twitter.com/getify/status/494301107049349120)_ 
+_This is a note in reply to Kyle Simpson's [question](https://twitter.com/getify/status/494301107049349120)_
 
 ## Basics of object layout in V8
 
 Each JavaScript object in V8 looks like this
 
-<pre class="shaky">
+<div class="shaky-container"><pre class="shaky">
 +-------+
 |   *---+-> hidden class (aka map)
 +-------+
@@ -26,18 +26,18 @@ Each JavaScript object in V8 looks like this
 +-------+ |
 |   N   +-+
 +-------+
-</pre>
+</pre></div>
 
-There are several important things to note here: 
+There are several important things to note here:
 
 * Objects can have `0` in-object property slots use a dictionary for out-of-object property storage. This is a very generic and slow representation of a JavaScript object (aka *dictionary mode*). *Fast mode* JavaScript objects have `0` or more in-object properties slots and use an array for out-of-object property storage;
 * The more properties are stored in-object the better: it requires one less indirection to access them and also does not waste any memory on array header for out-of-object storage;
-* Once the object is allocated it is **impossible** to increase the amount of in-object slots for properties. If program continues to add properties to an object that has not free in-object slots then all newly added properties are going into the out-of-object storage which can be grown dynamically --- of course growing it dynamically also costs. That's why it is extremely important to have a good approximation of how properties an object is going to have in total; 
+* Once the object is allocated it is **impossible** to increase the amount of in-object slots for properties. If program continues to add properties to an object that has not free in-object slots then all newly added properties are going into the out-of-object storage which can be grown dynamically --- of course growing it dynamically also costs. That's why it is extremely important to have a good approximation of how properties an object is going to have in total;
 * Hidden class (aka *map*) completely describes layout of the object: how big this object is, which properties does it have and where (for fast mode objects), how many in-object property slots are already used etc. Hidden classes themselves are essentially immutable and everytime a new property is added to the object, this object has to switch to a new hidden class;
 
-### Example 
+### Example
 
-Lets imagine what happens if V8 decides to give an object literal `1` in-object slot and we then add three properties to this object. 
+Lets imagine what happens if V8 decides to give an object literal `1` in-object slot and we then add three properties to this object.
 
 {% highlight javascript %}
 var obj = {};
@@ -51,7 +51,7 @@ The evolution of the object in the heap will go as follows:
 <ol>
 <li>
 <p>Initially it will be empty and have an "empty" hidden class</p>
-<pre class="shaky">    
+<div class="shaky-container"><pre class="shaky">
 +-------+
 |   *---+-> #0 { /* empty hidden class */ }
 +-------+
@@ -60,11 +60,11 @@ The evolution of the object in the heap will go as follows:
 |   *---+-> [ /* empty array */ ]
 +-------+
 |       | <- one slot reserved for in-object properties
-+-------+  
-</pre>
++-------+
+</pre></div>
 </li>
 <li><p>Once we add <code>x</code> the hidden class will change to a new one, which says that object contains property called in the first in-object slot and the value will be stored inside the slot</p>
-<pre class="shaky">    
+<div class="shaky-container"><pre class="shaky">
 +-------+
 |   *---+-> #1 { x: @in 0 }
 +-------+
@@ -73,12 +73,12 @@ The evolution of the object in the heap will go as follows:
 |   *---+-> [ /* empty array */ ]
 +-------+
 |   0   |
-+-------+  
-</pre>
++-------+
+</pre></div>
 </li>
 <li>
 <p>When we try to add <code>y</code> there will be no space inside the object left, so V8 will allocate an array for out-of-object properties and store <code>y</code>'s value there. Hidden class will be changed once again to reflect this</p>
-<pre class="shaky">
+<div class="shaky-container"><pre class="shaky">
 +-------+
 |   *---+-> #2 { x: @in 0, y: @out 0 }
 +-------+
@@ -87,13 +87,13 @@ The evolution of the object in the heap will go as follows:
 |   *---+-> [ /* empty array */ ]
 +-------+
 |   0   |
-+-------+  
-</pre>
++-------+
+</pre></div>
 <p>Notice that V8 overallocated the out-of-object storage a bit, anticipating addition of more properties (growing the storage one property at a time would lead to quadratic complexity and produce garbage).</p>
 </li>
 <li>
 <p>When we try to add <code>z</code> there will be still no space inside the object, but enough space in the out-of-object storage so V8 will just use that.</p>
-<pre class="shaky">
+<div class="shaky-container"><pre class="shaky">
 +-------+
 |   *---+-> #3 { x: @in 0, y: @out 0, z: @out 1 }
 +-------+
@@ -102,8 +102,8 @@ The evolution of the object in the heap will go as follows:
 |   *---+-> [ /* empty array */ ]
 +-------+
 |   0   |
-+-------+  
-</pre>
++-------+
+</pre></div>
 <p>This example once again illustrates why it is very important to estimate the amount of in-object slots ahead of object allocation to achieve the most effecient representation after all properties are added.</p>
 <p><em>Sidenote: if we execute the same code again, <b>no</b> new hidden classes will be allocate and we will arrive to the same hidden class in the end. This is a very important invariant and a lot of optimizations that happen in V8 are centered around it.</em></p>
 </li>
