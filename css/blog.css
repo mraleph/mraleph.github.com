@@ -61,7 +61,7 @@ code, pre {
     overflow: auto;
   }
 
-  img.centered {
+  img {
     max-width: 70%;
   }
 }
