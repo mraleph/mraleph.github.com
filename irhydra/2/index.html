@@ -3438,6 +3438,12 @@ button.unchecked {
   content: "\f059"; }
 </style>
 
+    <paper-toast text="WARNING: file contains CRLF line endings! Some features might not work." duration="3600000" opened="{{crlfDetected}}">
+    </paper-toast>
+
+    <paper-toast text="ERROR: Source does not match IR. See console for more details." duration="3600000" opened="{{sourceAnnotatorFailed}}">
+    </paper-toast>
+
     <paper-toast text="{{progressAction}} {{progressUrl}}" duration="3600000">
       <template if="{{progressValue != null}}">
         <paper-progress value="{{progressValue}}"></paper-progress>
