@@ -1,0 +1,156 @@
+/* Copyright 2015 Google Inc. All Rights Reserved.
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+
+.saga-root pre {
+  font-family: 'Inconsolata', monospace;
+  font-size: 14pt;
+  background: #fdf6e3;
+  color: #657b83 !important;
+  line-height: 1.428571429;
+  cursor: default;
+}
+
+.saga-flex {
+  display: -ms-flex;
+  display: -webkit-flex;
+  display: flex;
+  background: #fdf6e3;
+}
+
+.saga-app {
+  display: -ms-flex;
+  display: -webkit-flex;
+  display: flex;
+  width: 100%;
+  max-height: 100%;
+  position: fixed;
+  display: flex;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+}
+
+.saga-flex > * {
+  width: 100%;
+  padding: 10px;
+  margin: 0px;
+}
+
+.saga-app > * {
+  width: 100%;
+  padding: 10px;
+  overflow-y: scroll;
+  margin: 0px;
+  position: relative;
+}
+
+.asm-immediate,
+.ir-node-konstant {
+  color: #2aa198;
+}
+
+.asm-call-target {
+  color: #d33682;
+  cursor: pointer;
+}
+
+.asm-opcode {
+  color: #859900;
+}
+
+.asm-register {
+  color: #657b83;
+  cursor: pointer;
+}
+
+.asm-label,
+.ir-block-name {
+  color: #268bd2;
+}
+
+.asm-call-target .popover {
+  background: #002b36;
+}
+
+.asm-call-target .popover.top .arrow:after {
+  border-top-color: #002b36;
+}
+
+.asm-call-target button[data-attr] {
+  background: none !important;
+  border: none;
+  padding: 0 !important;
+  font-family: 'Inconsolata', monospace;
+  cursor: pointer;
+  color: #839496;
+  font-size: 13pt;
+}
+
+.asm-call-target button[data-attr]:not(.set) {
+  text-decoration: line-through;
+}
+
+.inline-marker, .outline-marker {
+  display: none;
+  cursor: pointer;
+}
+
+.inline-marker:hover, .ir-use:hover > .inline-marker {
+  display: inline-block;
+}
+
+.node-body-hover {
+  text-decoration: underline;
+}
+
+.node-body-hover > .outline-marker {
+  display: inline-block;
+}
+
+.single-use {
+  color: #859900;
+}
+
+.ir-node-keyword {
+  color: #859900;
+}
+
+.ir-node-op {
+  color: #268bd2;
+}
+
+.ir-block-body {
+  padding-left: 10px;
+}
+
+.ir-node-name {
+  cursor: pointer;
+}
+
+.graph-pane {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.invalid-name {
+  color: #dc322f;
+  font-weight: bold;
+}
+
+.tooltip-def {
+  font-size: 0.95em;
+  font-style: italic;
+}

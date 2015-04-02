@@ -53,7 +53,7 @@ h1, h2, h3, h4 {
 }
 
 code, pre {
-  font-family: 'Inconsolanta', monospace;
+  font-family: 'Inconsolata', monospace;
 }
 
 @media (max-width: 1000px) {
@@ -140,4 +140,12 @@ img.centered {
     margin-top: 0.2em;
     margin-bottom: 0.1em;
   }
+}
+
+code {
+  white-space: nowrap;
+}
+
+pre code {
+  white-space: pre;
 }
