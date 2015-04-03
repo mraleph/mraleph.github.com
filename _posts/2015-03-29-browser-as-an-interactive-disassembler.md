@@ -128,7 +128,7 @@ final boundaries = [];
 var startBlock = true;  // First instruction starts method entry block.
 for (var m in reInstruction.allMatches(text)) {
   if (startBlock) {  // Do we need to start a block?
-    boundaries.add(m.group([1]));
+    boundaries.add([m.group(1)]);
     startBlock = false;
   }
 
