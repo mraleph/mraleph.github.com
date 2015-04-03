@@ -7,7 +7,7 @@
 <link rel="import" href="compilation-timeline.html">
 <link rel="import" href="dropdown-element.html">
 <link rel="import" href="deopt-links.html">
-<link rel="import" href="graph-pane.html">
+<link rel="import" href="../../../../packages/ui_components/components/graph-pane.html">
 <link rel="import" href="ir-pane.html">
 <link rel="import" href="method-list.html">
 <link rel="import" href="open-file-button.html">
@@ -30,7 +30,7 @@
                  opened="{{sourceAnnotatorFailed}}">
     </paper-toast>
 
-    <paper-toast text="{{progressAction}} {{progressUrl}}" duration="3600000">
+    <paper-toast text="{{progressAction}} {{progressUrl}}" duration="3600000" id="progress-toast">
       <template if="{{progressValue != null}}">
         <paper-progress value="{{progressValue}}"></paper-progress>
       </template>

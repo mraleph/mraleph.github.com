@@ -1,6 +1,6 @@
 BUILD LOG
 ---------
-Build Time: 2014-07-24T18:04:50
+Build Time: 2014-10-07T18:03:14
 
 NODEJS INFORMATION
 ==================
@@ -31,15 +31,17 @@ requirejs: 2.1.11
 
 REPO REVISIONS
 ==============
-CustomElements: 2df917e8b1fb1928651a71372ae901a400ddf726
-HTMLImports: d240c62fe5b784239f08f77eff40efb4aabf0105
-NodeBind: 9f0089946c312d9ac9ca45d06913fce507a8b185
-ShadowDOM: 86943c29aa8a10da214bc2f42e3067cf0f190279
-TemplateBinding: d9f4543dc06935824bfd43564c442b0897ce1c54
-WeakMap: 43ab1056a0d821af9b6028fc27ddf30db817c05a
-observe-js: e212e7473962067c099a3d1859595c2f8baa36d7
-platform-dev: 02a0f66b65c34585b4b986e6a3a73cc0d743683a
+WeakMap: 56eebff250e6cf82dfd767b7703599e047d8b10f
+observe-js: fa70c37099026225876f7c7a26bdee7c48129f1c
+
+ShadowDOM: c524de1304cc5a8863326ceeedb325cda43cd42f
+  + cherry pick pull request #515
+  (local hash: 14a48768d21603c7fc54dcef392b48dce0baa33f)
+URL: cf5d82e444d2a029834365a8b9d185fd792227f0
+MutationObservers: b1039ace292dec90b246317db28ff91d653375e7
+HTMLImports: 6dea2dd969dc4dfb594ae33d4b072130c4890da5
+CustomElements: 321f5428f0c0486d45dd6b384aea9d07021e431d
 
 BUILD HASHES
 ============
-build/platform.js: 9ca6c8137fefb7461693d8ec7bac2af8d5a4fd1a
+build/platform.js: 5b8a1707ff61149f8d491be777e197aeaae5da41
