@@ -1,10 +1,10 @@
 ---
 layout: blogpost
-title: The Browser as an Interactive Disassembler
+title: Browser as an Interactive Disassembler
 date: 2015-03-29
 ---
 
-[The title of this post is intentionally a bit misleading - it should be *The Browser as an Interactive Disassembly Exploration Tool* but that's way too confusing]
+[The title of this post is intentionally a bit misleading - it should be *Browser as an Interactive Disassembly Exploration Tool* but that's way too confusing]
 
 Due to the nature of my work I often have to dig through disassembly listings. Usually these are spat out by a compiler I'm working or worked on, which makes it easy to recognize familiar patterns and reconstruct the flow of the program. Assemblers and disassemblers built into V8 and Dart VM additionally support embedded comments which makes reading their output even easier. However from time to time I have to read the code produced by a compiler I only have a passing familiarity with, for a example to find and work around [a bug](https://code.google.com/p/dart/source/detail?r=41581) or to better understand optimizations another compiler is capable of.
 
@@ -367,7 +367,7 @@ To decompile the instruction stream into IR we just execute them block by block,
 
 ## Optimizing IR for readability.
 
-After data-flow graph is constructed we can the use computed information to show the flow of values between instructions in the disassembly. But what if I don't want to read disassembly at all? Maybe I could read IR instead?
+After data-flow graph is constructed we can use the computed information to show the flow of values between instructions in the disassembly. But what if I don't want to read disassembly at all? Maybe I could read IR instead?
 
 Lets take a look at the IR we computed for the block <code>B2</code>, which was already featured above:
 
