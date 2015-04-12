@@ -49,7 +49,7 @@ a:hover {
 }
 
 h1, h2, h3, h4 {
-  font-family: 'Lato', serif;
+  font-family: 'Lato', 'Open Sans', serif;
 }
 
 code, pre {
@@ -72,6 +72,14 @@ img.centered {
   margin-right: auto;
   display: block;
 }
+
+@media (min-width: 1000px) {
+  img {
+    max-width: 50em;
+    height: auto;
+  }
+}
+
 
 .hydrogen {
   background-color: white !important;
