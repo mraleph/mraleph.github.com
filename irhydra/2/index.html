@@ -2896,7 +2896,11 @@ a:focus {
 
 <polymer-element name="method-list">
   <template>
-    <style type="text/css">.method-list {
+    <style type="text/css">:host {
+  max-height: 100%;
+  overflow: auto; }
+
+.method-list {
   display: -webkit-flex;
   display: flex;
   -webkit-flex-flow: column;
@@ -3420,7 +3424,8 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 
 <polymer-element name="source-path">
   <template>
-    <style>.source-path {
+    <style>@charset "UTF-8";
+.source-path {
   color: black;
   background-color: white;
   font-family: 'RobotoDraft';
@@ -3546,7 +3551,8 @@ button.unchecked {
   flex-flow: row;
   position: relative;
   -webkit-flex: 1 1;
-  flex: 1 1; }
+  flex: 1 1;
+  max-height: 100%; }
 
 .sidebar {
   min-width: 250px;
@@ -3664,7 +3670,8 @@ button.unchecked {
 .pane > switching-scope {
   display: -webkit-flex;
   display: flex;
-  overflow: auto; }
+  overflow: auto;
+  max-height: 100%; }
 
 .panes, .panes > div {
   -webkit-flex: 1 1;
