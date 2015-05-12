@@ -1474,7 +1474,7 @@ $ d8 method-vs-function.js
 
         <section>
           <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
-// for (var item in list[i]) { ... }
+// for (var item in list) { ... }
 var sum = 0;
 for (var i = 0, L = arr.length;
      i < arr.length;
@@ -1488,7 +1488,7 @@ for (var i = 0, L = arr.length;
 
         <section>
           <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
-// for (var item in list[i]) { ... }
+// for (var item in list) { ... }
 var sum = 0;
 for (var i = 0, L = arr.length;
      i < arr.length;
@@ -1518,7 +1518,7 @@ $ d8 iteration.js
 
         <section>
           <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
-// for (var item in list[i]) { ... }
+// for (var item in list) { ... }
 var sum = 0;
 for (var i = 0, L = arr.length;
      i < arr.length;
@@ -1532,7 +1532,7 @@ for (var i = 0, L = arr.length;
 
         <section>
           <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
-// for (var item in list[i]) { ... }
+// for (var item in list) { ... }
 var sum = 0;
 for (var i = 0, L = arr.length;
      i < arr.length;
@@ -1682,7 +1682,7 @@ function getBlock(buffer) {
 			// Full list of configuration options available here:
 			// https://github.com/hakimel/reveal.js#configuration
 			Reveal.initialize({
-				controls: false,
+				controls: true,
 				progress: true,
 				history: true,
 				center: true,
