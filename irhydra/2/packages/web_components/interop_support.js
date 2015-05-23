@@ -114,8 +114,8 @@
           if (match) {
             return match[1];
           }
-          return originalGetUnknownTag(o, tag);
         }
+        return originalGetUnknownTag(o, tag);
       };
     });
   }
