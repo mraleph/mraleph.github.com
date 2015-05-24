@@ -18429,7 +18429,7 @@ gvw:[function(a){return"map"},null,null,1,0,9,"tag"]},
 Dn:[function(a){var z,y,x,w,v
 z=J.U6(a)
 if(J.UN(z.OY(a,"$"),0))return new K.aN(a,null,a)
-if(z.nC(a,"$")&&z.Tc(a,"$"))a=z.Nj(a,1,J.aF(z.gv(a),1))
+if(J.vU(z.gv(a),1)&&z.nC(a,"$")&&z.Tc(a,"$"))a=z.Nj(a,1,J.aF(z.gv(a),1))
 z=J.U6(a)
 y=z.cn(a,"$")
 x=J.t(y)
