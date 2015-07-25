@@ -1,0 +1,51 @@
+/* some style */
+
+img {
+  padding: 5px;
+  border-radius: 20px;
+}
+
+.always-show-pick img.picked {
+  background: gold;
+}
+
+.show-pick img {
+  opacity: 0.7;
+}
+
+.show-pick img.picked {
+  background: gold;
+  opacity: 1.0;
+}
+
+.pick-navigator {
+  text-align: center;
+}
+
+.share {
+    float: right;
+}
+
+.pick-index {
+    float: left;
+    letter-spacing: .05em;
+    text-transform: capitalize;
+    font-weight: bold;
+}
+
+body {
+    font-family: 'Fira Sans';
+}
+
+img.taken {
+    display: none;
+}
+
+div.show-taken img.taken {
+    display: inline-block;
+    opacity: 0.5;
+}
+
+.mode-controls {
+  float: right;
+}
