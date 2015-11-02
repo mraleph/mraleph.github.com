@@ -139,7 +139,7 @@ function fac(a0, a1, a2) {
 fac(1, 10, 1);
 {% endhighlight %}
 
-While I believe that an optimization like this is within reach for most JS VMs I still think that if your to-JavaScript compiler emits the first version of the code and not the second then maybe it's time to implement a real optimization pass *in* your compiler - instead of waiting for JS VMs to do it.
+While I believe that an optimization like this is within reach for most JS VMs I still think that if your to-JavaScript compiler emits the first version of the code and not the second then maybe it's time to implement a real optimization pass *in* your compiler - instead of waiting for JS VMs to do it (especially given that JS VMs are likely to shift focus towards optimizing rest parameters and spread operator - given their more reasonable nature).
 
 Even when we look closely at the code like this:
 
@@ -183,3 +183,36 @@ function foo() {
 However this optimization is considerably more complicated (as in "it doesn't fit into a simple allocation sinking pass") because it involves stack allocation of an array literal. My prediction would be that a generic optimization of this sort is unlikely to come to JS engines soon. In other words: try to avoid writing or generating code like that.
 
 <small>[I can't resist noting that `arguments` object not being an `Array` is yet another JavaScript wart that causes nothing but special cases and complexity in optimization pipelines all over the world - makes JavaScript harder to optimize and thus makes harder to write optimizable JavaScript]</small>
+
+### Aliasing between `arguments` object and parameters
+
+Another common bailout is caused by aliasing between parameters and `arguments` object.
+
+{% highlight javascript %}
+function foo(x) {
+  x = 10;
+  return arguments[0];
+}
+
+print(foo(1));  // => 10
+{% endhighlight %}
+
+Crankshaft does not like this aliasing because it influences how SSA-form has to be constructed and refuses to optimize this function. It will happily optimize a strict version of this though as there is no aliasing:
+
+{% highlight javascript %}
+function foo(x) {
+  "use strict";
+  x = 10;
+  return arguments[0];
+}
+
+print(foo(1));  // => 1
+{% endhighlight %}
+
+### Optimizable uses of arguments in V8 (Crankshaft)
+
+Here is a quick check list for optimizable uses of `arguments` object:
+
+* never mix `arguments` object with anything in the same variable;
+* property *loads* (not stores!) `a[i]` and `a.length` are optimizable if variable `a` always contains `arguments`;
+* `foo.apply(x, a)` are optimizable if variable `a` always contains `arguments`, `foo` is a function, this call site is monomorphic and `apply` is `Function.prototype.apply`.
