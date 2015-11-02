@@ -25,7 +25,9 @@ So essentially the code compiles into something like this:
 {% highlight javascript %}
 function foo() {
   var sum = 0;
-  for (var i = 0; i < /* get argument count from the current stack frame */; i++) {
+  for (var i = 0;
+       i < /* get argument count from the current stack frame */;
+       i++) {
     sum += /* get i-th argument from the current stack frame */
   }
 }
