@@ -293,7 +293,7 @@ Lets summarize what we learned:
   * Polymorphic type guards don't obstruct type flow that much and still allow for some redundancy elimination - but each polymorphic type guard is still somewhat slower than monomorphic type guard (that checks against one shape). Performance penalty for a polymorphic type guard depends on how well CPU handles conditional branches;
 * highly polymorphic/megamorphic operations are not specialized entirely and result in a generic operation being emitted as part of the optimized IR. This generic operation is a call - with all associated bad consequences for both optimizations and raw CPU performance.
 
-Take a look at [this microbenchmark](http://jsperf.com/monomorphism-vs-polymorphism/2) trying to capture the difference between all these cases for a property access: monomorphic, polymorphic with matching property offsets (requires polymorphic type guard), polymorphic with different property offsets (requires decision tree), megamorphic.
+Take a look at [this microbenchmark](http://jsperf.com/monomorphism-vs-polymorphism/11) trying to capture the difference between all these cases for a property access: monomorphic, polymorphic with matching property offsets (requires polymorphic type guard), polymorphic with different property offsets (requires decision tree), megamorphic.
 
 # Undiscussed
 
