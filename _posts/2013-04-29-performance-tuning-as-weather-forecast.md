@@ -349,7 +349,7 @@ One of the jsPerf tests that prompted me to start looking into these was caching
   },
 {% endhighlight %}
 
-We have seen that optimizing compiler is more than capable of optimizing `Math.pow` lookup away so surely it caching `pow` manually should not heart performance? Right?
+We have seen that optimizing compiler is more than capable of optimizing `Math.pow` lookup away so surely it caching `pow` manually should not hurt performance? Right?
 
 Unfortunately wrong.
 
