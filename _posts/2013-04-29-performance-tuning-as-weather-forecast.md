@@ -359,7 +359,7 @@ Unfortunately wrong.
 [naive] Math.pow(i, 2) x 4,739,336 ops/sec.
 </pre>
 
-This happens because V8's optimizing compiler has to separate methods to perform inlining of recognized built-ins: [`TryInlineBuiltinMethodCall`](https://code.google.com/p/v8/source/browse/branches/bleeding_edge/src/hydrogen.cc?r=14464#8998) handles inlining at method invocation `o.m()` and [`TryInlineBuiltinFunctionCall`](https://code.google.com/p/v8/source/browse/branches/bleeding_edge/src/hydrogen.cc?r=14464#8950) that handles inlining at free function invocation `f()`.
+This happens because V8's optimizing compiler has to separate methods to perform inlining of recognized built-ins: [`TryInlineBuiltinMethodCall`](https://github.com/v8/v8/blob/6faa6b317ab029c8379eda520a3ba6d28bbd5258/src/crankshaft/hydrogen.cc#L8716) handles inlining at method invocation `o.m()` and [`TryInlineBuiltinFunctionCall`](https://github.com/v8/v8/blob/6faa6b317ab029c8379eda520a3ba6d28bbd5258/src/crankshaft/hydrogen.cc#L8649) that handles inlining at free function invocation `f()`.
 
 Right now `Math.pow` is handled only in `TryInlineBuiltinMethodCall` so it is not recognized or even inlined when it is called as a free function.
 
