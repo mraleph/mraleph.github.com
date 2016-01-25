@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+  <link href='https://fonts.googleapis.com/css?family=Fira+Sans' rel='stylesheet' type='text/css'>
+  <style>
+    body {
+      font-size: 20pt;
+      font-family: 'Fira Sans';
+    }
+    
+    input, textarea {
+      font-size: 1.5em !important;
+      width: 100%;
+    }
+    
+    div {
+      margin-top: 1em;
+    }
+  </style>
+
+</head>
+<body>
+  <div>text comes in (A-Z0-9 characters are supported)</div>
+  <input id="text" value="love"><br/>
+  <div>emorse comes out (😘 is <code>.</code>, 😍 is <code>-</code> and ✋ is a pause between words)</div>
+  <textarea id="morse"></textarea>
+  <div>translator works backwards too (put emorse - get text out)</div>
+  
+  <script>
+    (function () {
+  var TABLE = [
+  "A", ".-",
+  "B", "-...",
+  "C", "-.-.",
+  "D", "-..",
+  "E", ".",
+  "F", "..-.",
+  "G", "--.",
+  "H", "....",
+  "I", "..",
+  "J", ".---",
+  "K", "-.-",
+  "L", ".-..",
+  "M", "--",
+  "N", "-.",
+  "O", "---",
+  "P", ".--.",
+  "Q", "--.-",
+  "R", ".-.",
+  "S", "...",
+  "T", "-",
+  "U", "..-",
+  "V", "...-",
+  "W", ".--",
+  "X", "-..-",
+  "Y", "-.--",
+  "Z", "--..",
+  "0", "-----",
+  "1", ".----",
+  "2", "..---",
+  "3", "...--",
+  "4", "....-",
+  "5", ".....",
+  "6", "-....",
+  "7", "--...",
+  "8", "---..",
+  "9", "----.",
+  " ", "/"
+  ];
+  
+  var EMOJI = { ".": "😘", "-": "😍", "/": "✋" };
+
+  var TO_MORSE = Object.create(null);
+  for (var i = 0; i < TABLE.length; i += 2) {
+    TO_MORSE[TABLE[i]] = TABLE[i + 1];
+  }
+
+  var FROM_MORSE = Object.create(null);
+  for (var i = 0; i < TABLE.length; i += 2) {
+    FROM_MORSE[TABLE[i + 1]] = TABLE[i];
+  }
+
+  function encode(str) {
+    str = str.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+    var result = [];
+    for (var i = 0; i < str.length; i++)
+      result.push(TO_MORSE[str[i]].replace(/[./-]/g, function (x) { return EMOJI[x]; }));
+    return result.join(' ');
+  }
+
+  function decode(str) {
+    str = str.replace(new RegExp(EMOJI['.'], 'g'), '.')
+             .replace(new RegExp(EMOJI['-'], 'g'), '-')
+             .replace(new RegExp(EMOJI['/'], 'g'), '/')
+             .replace(/[^ /.-]/g  , '')
+             .replace(/\s+/g     , ' ')
+             .split(' ');
+    console.log(str);
+    var result = [];
+    for (var i = 0; i < str.length; i++) {
+      result.push(FROM_MORSE[str[i]]);
+    }
+    return result.join('');
+  }
+
+  var textInput = document.querySelector('#text');
+  var morseInput = document.querySelector('#morse');
+
+  textInput.oninput = function () {
+    morseInput.value = encode(textInput.value);
+  };
+
+  morseInput.oninput = function () {
+    textInput.value = decode(morseInput.value);
+  };
+
+  morseInput.value = encode(textInput.value);
+})();
+  </script>
+</body>
+</html>
