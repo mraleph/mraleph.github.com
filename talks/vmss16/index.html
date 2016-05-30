@@ -1,0 +1,2050 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>What I learned from LuaJIT</title>
+
+		<meta name="description" content="What I learned from LuaJIT">
+		<meta name="author" content="Vyacheslav Egorov">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/simple.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="css/googlecode.css">
+
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<![endif]-->
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-6701581-4', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+        <section data-background-color="#4162bf">
+          <h2 style="color: white;">What I learned from Lua<span style="color: #ffb380;">JIT</span></h2>
+        </section>
+
+        <section>
+          <div style="text-align: left;">
+          <h2 style="background: #288; color: white; padding-left: .3em;">Excelsior JET</h2>
+          <h2 style="background: #3F89EC; color: white; padding-left: .3em;">V8</h2>
+          <h2 style="background: linear-gradient(45deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%); color: white; padding-left: .3em;">Dart VM</h2>
+          <h2 style="background: #4162bf; color: white; padding-left: .3em;">Lua<span style="color: #ffb380;">JIT</span></h2>
+          </div>
+        </section>
+
+        <section data-background-color="#065150">
+          <h2 style="color: white;">torch</h2>
+          <p  style="color: white;">&laquo;A SCIENTIFIC COMPUTING FRAMEWORK FOR LUAJIT&raquo;</p>
+        </section>
+
+        <section>
+          <h3 style="color: #F44336; text-decoration: line-through; font-weight: bold;">deep internal insight</h3>
+          <h3 style="color: #4CAF50; font-weight: bold;">overview of interesting things</h3>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="lua">
+local p = { x = 1, y = 1 }
+for i = 1, 100 do
+  p = { x = p.x + i, y = p.y - i }
+end
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="nasm">
+->LOOP:
+  xorps xmm5, xmm5
+  cvtsi2sd xmm5, ebp
+  addsd xmm6, xmm5
+  subsd xmm7, xmm5
+  add ebp, +0x01
+  cmp ebp, +0x64
+  jle ->LOOP
+  jmp ->4
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>&laquo; how does it <br/> do it? &raquo;</h2>
+          <h3>learning by reading sources</h3>
+        </section>
+
+         <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="lua">
+local p = { x = 1, y = 1, <span class="golden">[1] = 1</span> }
+for i = 1, 100 do
+  p = { x = p.x + i, y = p.y - i, <span class="golden">[1] = p[1]</span> }
+end
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: .7em; line-height: 1em; float: left; width: 40%;"><code data-trim data-noescape class="nasm">
+->LOOP:
+  movsd [rsp+0x28], xmm6
+  movsd [rsp+0x30], xmm7
+  mov [rsp+0x24], eax
+  mov edi, [0x000423d8]
+  cmp edi, [0x000423dc]
+  jb skip
+  mov esi, 0x1
+  mov edi, 0x000423b8
+  call ->lj_gc_step_jit
+  test eax, eax
+  jnz ->4
+skip:
+  mov edi, [0x000424b0]
+  mov esi, 0x00052948
+  call ->lj_tab_dup
+  mov esi, eax
+  mov [rsp+0x20], esi
+  mov edi, [0x000424b0]
+  mov eax, [rsp+0x24]
+  movsd xmm7, [rsp+0x30]
+  movsd xmm5, [rsp+0x28]
+  cmp dword [rax+0x1c], +0x01
+  jnz ->4
+  mov r15d, [rax+0x14]
+  mov rbx, 0xfffffffb00053e50
+  cmp rbx, [r15+0x20]
+  jnz ->4
+          </code></pre>
+            <pre class="smaller" style="font-size: .7em; line-height: 1em;float:right; width: 40%;"><code data-trim data-noescape class="nasm">
+xorps xmm6, xmm6
+cvtsi2sd xmm6, ebp
+addsd xmm5, xmm6
+movsd [rsp+0x10], xmm5
+mov ebx, [rsi+0x14]
+movsd [rbx+0x18], xmm5
+mov rdx, 0xfffffffb0004a188
+cmp rdx, [r15+0x8]
+jnz ->5
+subsd xmm7, xmm6
+movsd [rsp+0x18], xmm7
+movsd [rbx], xmm7
+cmp dword [rax+0x18], +0x01
+jbe ->6
+mov ebx, [rax+0x8]
+cmp dword [rbx+0xc], 0xfffeffff
+jnb ->6
+movsd xmm5, [rbx+0x8]
+movsd [rsp+0x8], xmm5
+mov edx, 0x000535d8
+call ->lj_tab_newkey
+mov ebx, eax
+mov eax, [rsp+0x20]
+movsd xmm7, [rsp+0x18]
+movsd xmm6, [rsp+0x10]
+movsd xmm5, [rsp+0x8]
+movsd [rbx], xmm5
+add ebp, +0x01
+cmp ebp, +0x64
+jle ->LOOP
+jmp ->7
+          </code></pre>
+        </section>
+
+        <section data-background="../webrebels2014/images/slide5.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section>
+          <h2>&laquo; why does it<br/><b style="color: #F44336;">not</b> do it? &raquo;</h2>
+          <h3>learning by fixing bugs</h3>
+        </section>
+
+        <section>
+          <h2>1GB memory limit</h2>
+          <h3>(pre v2.1)</h3>
+        </section>
+
+        <section>
+          <h2>Lua is dynamically typed</h2>
+        </section>
+
+        <section>
+          <h2>NaN-tagging</h2>
+        </section>
+
+        <section>
+          <pre>
+sign      mantissa (52 bit)
+v     /------------------------\
+████████████████████████████████
+ \---/
+  exponent (11 bit)
+
+
+          </pre>
+        </section>
+
+        <section>
+          <pre>
+sign      mantissa (52 bit)
+v     /------------------------\
+████████████████████████████████
+ \---/
+  exponent (11 bit)
+
+NaN: E = 7ff &amp; M ≠ 0
+          </pre>
+        </section>
+
+        <section>
+          <pre>
+sign      mantissa (52 bit)
+v     /------------------------\
+████████████████████████████████ (64 bits)
+ \---/
+  exponent (11 bit)
+
+NaN: E = 7ff &amp; M ≠ 0 (whole family of NaNs)
+          </pre>
+        </section>
+
+        <section>
+          <h2><code>TValue</code></h2>
+          <h3>dynamically typed slot</h3>
+        </section>
+
+        <section>
+          <pre style="line-height: 1.5em;">
+/      MSW     \/      LSW     \ 64 bit
+████████████ double ████████████ number
+<span class="mat-red">██████ tag █████</span><span class="mat-green">█████ ptr ██████</span> gc obj
+
+
+
+          </pre>
+        </section>
+
+        <section>
+          <pre style="line-height: 1.5em;">
+/      MSW     \/      LSW     \ 64 bit
+████████████ double ████████████ number
+<span class="mat-red">██████ tag █████</span><span class="mat-green">█████ ptr ██████</span> gc obj
+
+<b>number</b> tag < ffff0000
+<b>table</b>  tag = fffffff4 = ~11u
+          </pre>
+        </section>
+
+        <section>
+          <pre style="line-height: 1.5em;">
+/      MSW     \/      LSW     \ 64 bit
+████████████ double ████████████ number
+<span style="color: #EF5350;">██████<span style="color: #B71C1C;">██</span></span><span class="mat-green">█████████████ ptr ██████</span> gc64 obj
+\1..1/\/\-------- 47 bits -----/
+      tag (4 bits)
+
+          </pre>
+        </section>
+
+        <section>
+          <h2>kinda works</h2>
+          <h3>AArch64: 52-bit VA</h3>
+        </section>
+
+        <section>
+          <h2>changing tagging<br/> tough exercise</h2>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="cpp">
+...
+|
+|// Macros to test operand types.
+|.macro checktp, reg, tp
+|  cmp dword [BASE+reg*8+4], tp
+|.endmacro
+|.macro checktab, reg, target
+|  checktp reg, LJ_TTAB
+|  jne target
+|.endmacro
+|
+...
+  case BC_TGETB:
+    |  ins_ABC  // RA = dst, RB = table, RC = byte literal
+    |  checktab RB, ->vmeta_tgetb
+    |  mov TAB:RB, [BASE+RB*8]
+...
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>DynASM</h2>
+          <h3>generates code that<br/> generates code</h3>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="cpp">
+  case BC_TGETB:
+    //|  ins_ABC  // RA = dst, RB = table, RC = byte literal
+    //|  checktab RB, ->vmeta_tgetb
+    //|  mov TAB:RB, [BASE+RB*8]
+...
+    dasm_put(Dst, 10994, LJ_TTAB, Dt6(->asize), Dt6(->array), LJ_TNIL, Dt6(->metatable), Dt6(->metatable), Dt6(->nomm), 1&lt;&lt;MM_index);
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="cpp">
+|// Type definitions. Some of these are only used for documentation.
+|.type L,    lua_State
+|.type GL,   global_State
+...
+  |  mov GL:RB, <span class="golden">L:RB->glref</span>
+  |  mov dword GL:RB->vmstate, ~LJ_VMST_C
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="cpp">
+|// Type definitions. Some of these are only used for documentation.
+|.type L,    lua_State
+|.type GL,   global_State
+...
+  |  mov GL:RB, <span class="golden">[RB, #offsetof(lua_State, glref)]</span>
+  |  mov dword GL:RB->vmstate, ~LJ_VMST_C
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>no actual understanding of types</h3>
+        </section>
+
+        <section>
+          <pre style="font-size: 1em; line-height: 1em;"><code data-noescape class="cpp">
+|  cmp dword L:RB->openupval, 0
+
+          </code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 1em; line-height: 1em;"><code data-noescape class="cpp">
+|  cmp <span class="redish">dword</span> L:RB->openupval, 0
+             ^^^^^^^^^^^^^^^ pointer
+          </code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 1em; line-height: 1em;"><code data-noescape class="cpp">
+|  cmp <span class="golden">aword</span> L:RB->openupval, 0
+
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>what is interpreter<br/><span class="mat-red">interpreting?</span></h2>
+        </section>
+
+        <section>
+          <pre>
+/----- 32 bits -----\
++----+----+----+----+
+| OP |    |    |    | Format ABC
++----+----+----+----+
+| OP |    |         | Format AD
++---------+----+----+
+0...................32
+</pre>
+        </section>
+
+        <section>
+          <pre>
+     BASE
+     &darr;
+~----+-----+-----+-----+-----+---~
+     | R0  | R1  | R2  | R3  |
+~----+-----+-----+-----+-----+---~
+      &uarr;&uarr;&uarr;&uarr;&uarr;
+      TValue (64bit)
+</pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: .7em;"><code class="lua">
+CALL A, ResN, ArgN
+                          F <- R(A);
+R(A), ..., R(A+ResN-2) <- F(R(A+1), ..., R(A+ArgN-1)), if ResN != 0
+R(A), ...              <- F(R(A+1), ..., R(A+ArgN-1)), if ResN == 0
+</code></pre>
+        </section>
+
+        <section>
+          <pre>
+     BASE
+     &darr;
+~----+-~ ~-+------+------+------+---~
+     |     | Func | Arg0 | Arg1 |
+~----+-~ ~-+------+------+------+---~
+           &uarr;
+           R(A)
+</pre>
+        </section>
+
+        <section>
+          <pre>
+     <span style="opacity:.3;">BASE</span>         BASE
+     <span style="opacity:.3;">&darr;</span>            &darr;
+~----+-~ ~-+------+------+------+---~
+     |     | Func | Arg0 | Arg1 |
+~----+-~ ~-+------+------+------+---~
+                  &uarr;
+                  R(0)
+
+</pre>
+        </section>
+
+        <section>
+          <h2>frame linking</h2>
+        </section>
+
+        <section>
+          <pre>
+     <span style="opacity:.3;">BASE</span>         BASE
+     <span style="opacity:.3;">&darr;</span>            &darr;
+~----+-~ ~-+------+------+------+---~
+     |     | Func | Arg0 | Arg1 |
+~----+-~ ~-+------+------+------+---~
+          /        \
+         /          \
+       [  tag | ptr  ]
+
+</pre>
+        </section>
+
+        <section>
+          <pre>
+     <span style="opacity:.3;">BASE</span>         BASE
+     <span style="opacity:.3;">&darr;</span>            &darr;
+~----+-~ ~-+------+------+------+---~
+     |     | Func | Arg0 | Arg1 |
+~----+-~ ~-+------+------+------+---~
+          /        \
+         /          \
+       [ <span class="mat-red">link</span> | ptr  ]
+
+</pre>
+        </section>
+
+        <section>
+          <pre>
+        link |
+-------------+---------------------
+      PC  00 | Lua frame
+   delta 001 | C frame
+   delta 010 | Continuation frame
+   delta 011 | Lua vararg frame
+   delta 101 | cpcall() frame
+       .... etc ...
+
+PC is 4 byte aligned
+delta is 8 byte aligned
+</pre>
+        </section>
+
+        <section>
+          <pre>
+        link |
+-------------+---------------------
+<span class="mat-green-bold">      PC  00 | Lua frame</span>
+   delta 001 | C frame
+   delta 010 | Continuation frame
+   delta 011 | Lua vararg frame
+   delta 101 | cpcall() frame
+       .... etc ...
+
+PC is 4 byte aligned
+delta is 8 byte aligned
+</pre>
+        </section>
+
+        <section>
+<h3>when unwinding look at PC-1 to determine caller's BASE</h3>
+<pre><code>
+CALL A, ... => CallerBASE = BASE - A
+</code></pre>
+        </section>
+
+        <section>
+          <pre>
+        link |
+-------------+---------------------
+      PC  00 | Lua frame
+   delta 001 | C frame
+<span class="mat-green-bold">   delta 010 | Continuation frame</span>
+   delta 011 | Lua vararg frame
+   delta 101 | cpcall() frame
+       .... etc ...
+
+PC is 4 byte aligned
+delta is 8 byte aligned
+</pre>
+        </section>
+
+        <section>
+<h3><em>continuations</em> allow to specify action to perform when callee returns</h3>
+        </section>
+
+        <section>
+<pre>
+<em>;; jump to target if R(A) == R(D)</em>
+<b>ISEQV</b> A, D
+<b>JUMP</b> target
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre>
+<em>;; jump to target if R(A) == R(D)</em>
+<b>ISEQV</b> A, D
+<b>JUMP</b> target
+<em><span class="mat-red">;; what if R(A) has __eq metamethod?</span></em>
+
+
+</pre>
+        </section>
+
+        <section>
+<pre>
+<em>;; jump to target if R(A) == R(D)</em>
+<b>ISEQV</b> A, D
+<b>JUMP</b> target
+<em><span class="mat-red">;; what if R(A) has __eq metamethod?</span></em>
+<em><span class="mat-green">;; need to call metamethod
+;; ... then branch on return</span></em>
+</pre>
+        </section>
+
+        <section>
+<pre>
+<em>;; jump to target if R(A) == R(D)</em>
+<b>ISEQV</b> A, D
+<b>JUMP</b> target
+<em><span class="mat-red">;; what if R(A) has __eq metamethod?</span></em>
+<em><span class="mat-green">;; need to call metamethod
+;; ... then branch on return</span></em>
+</pre>
+        </section>
+
+        <section>
+          <h2>let's talk about DISPATCH</h2>
+        </section>
+
+        <section>
+          <pre style="font-size: 1em; line-height: 1em;"><code data-noescape class="nasm">
+|  jmp aword [DISPATCH+OP*4]
+
+
+          </code></pre>
+        </section>
+
+        <section>
+          <pre style="font-size: 1em; line-height: 1em;"><code data-noescape class="nasm">
+|  jmp aword [DISPATCH+OP*4]
+              &uarr;
+              can replace handlers
+          </code></pre>
+        </section>
+
+        <section>
+          <ul>
+            <li>hooks (~ debugging)</li>
+            <li>profiling</li>
+            <li><span class="mat-green">recording</span></li>
+          </ul>
+        </section>
+
+        <section>
+<pre>
+<em>;; hotcounting
+;; loop bytecodes</em>
+<b>FORL
+ITERL
+LOOP</b>
+
+<em>;; function entries</em>
+<b>FUNCF</b>
+</pre>
+        </section>
+
+        <section>
+<pre><code class="nasm" data-noescape>
+|.macro hotloop, reg
+|  mov reg, PC
+|  shr reg, 1
+|  and reg, HOTCOUNT_PCMASK
+|  sub word [DISPATCH+reg+GG_DISP2HOT],
+|           HOTCOUNT_LOOP
+|  jb ->vm_hotloop
+|.endmacro
+</code></pre>
+        </section>
+
+        <section>
+<pre><code class="cpp" data-noescape>
+
+
+hotcount[(PC>>2) & (HOTCOUNT_SIZE-1)]
+
+
+</code></pre>
+        </section>
+
+        <section>
+<pre><code class="cpp" data-noescape>
+#define HOTCOUNT_SIZE   64
+
+hotcount[(PC>>2) & (HOTCOUNT_SIZE-1)]
+
+
+</code></pre>
+        </section>
+
+        <section>
+<pre><code class="cpp" data-noescape>
+#define HOTCOUNT_SIZE   64
+
+hotcount[(PC>>2) & (HOTCOUNT_SIZE-1)]
+
+/* can cause non-determenism */
+</code></pre>
+        </section>
+
+        <section>
+          <h3>recording pipeline</h3>
+        </section>
+
+        <section>
+<pre class="smaller2">
+
+            concrete                  SSA
+             values                   refs
+INTERPRETER    |           RECORDER    |
++--------------v------+    +-----------v-------+
+|  ~-+---+---+---+-~  |    | ~-+---+---+---+-~ |
+|    |   |   |   |    |    |   |   |   |   |   |
+|  ~-+---+---+---+-~  |    | ~-+---+---+---+-~ |
+|  ...                |    |               ... |
+|> <span style="font-weight: bold;">ADDVV</span> r0, r0, r1 ==================> SSA IR |
+|  ...                |    |               ... |
++---------------------+    +-------------------+
+</pre>
+        </section>
+
+
+        <section>
+<pre class="smaller2">
+
+            concrete                  SSA
+             values                   refs
+INTERPRETER    |           RECORDER    |
++--------------v------+    +-----------v-------+
+|  ~-+---+---+---+-~  |    | ~-+---+---+---+-~ |
+|    |num|num|   |    |    |   |001|002|   |   |
+|  ~-+---+---+---+-~  |    | ~-+---+---+---+-~ |
+|  ...                |    |               ... |
+|> <span style="font-weight: bold;">ADDVV</span> r0, r0, r1 ==================> SSA IR |
+|  ...                |    |               ... |
++---------------------+    +-------------------+
+</pre>
+        </section>
+
+        <section>
+<pre class="smaller2">
+
+            concrete                  SSA
+             values                   refs
+INTERPRETER    |           RECORDER    |
++--------------v------+    +-----------v-------+
+|  ~-+---+---+---+-~  |    | ~-+---+---+---+-~ |
+|    |num|num|   |    |    |   |<span class="mat-green">003</span>|002|   |   |
+|  ~-+---+---+---+-~  |    | ~-+---+---+---+-~ |
+|  <span style="opacity: .4;"><span style="font-weight: bold;">ADDVV</span> r0, r0, r1</span>   |    | <span class="mat-green">003:</span> ADD 001, 002 |
+|> <span style="font-weight: bold;">SUBVN</span> r1, r1, +1 ==================> SSA IR |
+|  ...                |    |               ... |
++---------------------+    +-------------------+
+</pre>
+        </section>
+
+        <section>
+<pre class="smaller2">
+
+            concrete                  SSA
+             values                   refs
+INTERPRETER    |           RECORDER    |
++--------------v------+    +-----------v-------+
+|  ~-+---+---+---+-~  |    | ~-+---+---+---+-~ |
+|    |num|num|   |    |    |   |003|<span class="mat-green">004</span>|   |   |
+|  ~-+---+---+---+-~  |    | ~-+---+---+---+-~ |
+|  <span style="opacity: .4;"><span style="font-weight: bold;">SUBVN</span> r1, r1, +1</span>   |    | <span class="mat-green">004:</span> SUB 002,  +1 |
+|> ...              ==================> SSA IR |
+|  ...                |    |               ... |
++---------------------+    +-------------------+
+</pre>
+        </section>
+
+        <section>
+          <h1>IR</h1>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code class="cpp" data-noescape>
+/* Trace object. */
+typedef struct GCtrace {
+  /* IR instructions/constants.
+  ** Biased with REF_BIAS.
+  */
+  IRIns *ir;
+
+} GCtrace;
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code class="cpp" data-noescape>
+/* Trace object. */
+typedef struct GCtrace {
+  /* IR instructions/constants.
+  ** <b>Biased with REF_BIAS</b>.
+  */
+  IRIns *ir;
+
+} GCtrace;
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code class="cpp" data-noescape>
+typedef uint16_t IRRef1;
+
+/* Fixed references. */
+enum {
+  REF_TRUE =  REF_BIAS-3,
+  REF_FALSE = REF_BIAS-2,
+  REF_NIL = REF_BIAS-1,
+  /* \--- Constants grow downwards. */
+  <b>REF_BIAS =  0x8000,</b>
+  /* /--- IR grows upwards. */
+  REF_FIRST = REF_BIAS+1,
+  REF_DROP =  0xffff
+};
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2">
+    <-- constants --\ /-- non-constants -->
+~--+-----+-----+-----+-----+-----+-----+--~
+   |false|true |nil  |     |     |     |
+~--+-----+-----+-----+-----+-----+-----+--~
+                     ^ &ir[REF_BIAS]
+
+ir := irbuf + nconsts - REF_BIAS
+          </pre>
+        </section>
+
+        <section>
+          <pre class="highlight-bold">
+ <b>IRIns</b>
+    16      16     8   8   8   8
+ +-------+-------+---+---+---+---+
+ |  op1  |  op2  | t | o | r | s |
+ +-------+-------+---+---+---+---+
+ |  op12/i/gco   |   ot  | prev  |
+ +---------------+-------+-------+
+        32           16      16
+
+
+</pre>
+        </section>
+
+        <section>
+          <pre class="highlight-bold">
+
+
+ +-------+-------+---+---+---+---+
+ |  op1  |  op2  | t | o | r | s |
+ +-------+-------+---+---+---+---+
+ |  op12/i/gco   |   ot  | <b>prev</b>  |
+ +---------------+-------+-------+
+
+<b>prev</b> is the reference to the previous
+     instruction with the same opcode
+</pre>
+        </section>
+
+        <section>
+          <pre class="highlight-bold">
+
+
+ +-------+-------+---+---+---+---+
+ |  op1  |  op2  | t | o | <b>r</b> | <b>s</b> |
+ +-------+-------+---+---+---+---+
+ |  op12/i/gco   |   ot  | prev  |
+ +---------------+-------+-------+
+
+<b>r/s</b> register allocation state
+
+</pre>
+        </section>
+
+        <section>
+          <pre class="highlight-bold">
+
+
+ +-------+-------+---+---+---+---+
+ |  op1  |  op2  | <b>t</b> | <b>o</b> | r | s |
+ +-------+-------+---+---+---+---+
+ |  op12/i/gco   |   ot  | prev  |
+ +---------------+-------+-------+
+
+<b>o</b> opcode
+<b>t</b> type
+</pre>
+        </section>
+
+        <section>
+          <pre class="highlight-bold">
+
+
+ +-------+-------+---+---+---+---+
+ |  <b>op1</b>  |  <b>op2</b>  | t | o | r | s |
+ +-------+-------+---+---+---+---+
+ |  op12/i/gco   |   ot  | prev  |
+ +---------------+-------+-------+
+
+<b>op1/op2</b> IR references
+
+</pre>
+        </section>
+
+        <section>
+          <pre class="highlight-bold">
+
+
+ +-------+-------+---+---+---+---+
+ |  op1  |  op2  | t | o | r | s |
+ +-------+-------+---+---+---+---+
+ |  op12/<b>i/gco</b>   |   ot  | prev  |
+ +---------------+-------+-------+
+
+<b>i/gco</b> constants (32 bit)
+
+</pre>
+        </section>
+
+        <section>
+          <pre><code data-noescape class="cpp">
+/* Tagged IR references (32 bit).
+**
+** +-------+-------+---------------+
+** |  irt  | flags |      ref      |
+** +-------+-------+---------------+
+**
+** The tag holds a copy of the IRType
+** and speeds up IR type checks.
+*/
+
+typedef uint32_t TRef;
+</code></pre>
+        </section>
+
+        <section>
+<pre class="highlight-bold">
+  BYTECODE <b>===================&gt;</b> SSA IR
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="highlight-bold">
+  BYTECODE <b style="opacity: .4;">===================&gt;</b> SSA IR
+  |                                  ^
+  v                                  |
+  interpret -> specialize -> fold&emit
+</pre>
+        </section>
+
+        <section><pre class="smaller2"><code data-noescape class="cpp">
+case BC_LEN:
+  if (tref_isstr(rc))
+    rc = emitir(IRTI(IR_FLOAD), rc, IRFL_STR_LEN);
+  else if (!LJ_52 && tref_istab(rc))
+    rc = lj_ir_call(J, IRCALL_lj_tab_len, rc);
+  else
+    rc = rec_mm_len(J, rc, rcv);
+  break;
+</code></pre></section>
+
+        <section><pre class="smaller2"><code data-noescape class="cpp">
+case <span class="golden">BC_LEN</span>:
+  if (<span class="golden">tref_isstr(rc)</span>)
+    rc = emitir(IRTI(IR_FLOAD), rc, IRFL_STR_LEN);
+  else if (!LJ_52 && tref_istab(rc))
+    rc = lj_ir_call(J, IRCALL_lj_tab_len, rc);
+  else
+    rc = rec_mm_len(J, rc, rcv);
+  break;
+</code></pre></section>
+
+        <section><pre class="smaller2"><code data-noescape class="cpp">
+case BC_LEN:
+  if (tref_isstr(rc))
+    rc = <span class="golden">emitir(IRTI(IR_FLOAD), rc, IRFL_STR_LEN)</span>;
+  else if (!LJ_52 && tref_istab(rc))
+    rc = lj_ir_call(J, IRCALL_lj_tab_len, rc);
+  else
+    rc = rec_mm_len(J, rc, rcv);
+  break;
+</code></pre></section>
+
+        <section>
+          <h3><code>emitir</code> passes instruction<br/> to FOLD engine</h3>
+        </section>
+
+        <section><pre><code data-noescape class="cpp">
+LJFOLD(FLOAD SNEW IRFL_STR_LEN)
+LJFOLDF(fload_str_len_snew)
+{
+  /* Return length passed to SNEW. */
+
+  return fleft->op2;
+}
+
+
+</code></pre></section>
+
+        <section><pre><code data-noescape class="cpp">
+<span class="golden">LJFOLD(FLOAD SNEW IRFL_STR_LEN)</span>
+LJFOLDF(fload_str_len_snew)
+{
+  /* Return length passed to SNEW. */
+
+  return fleft->op2;
+}
+// Rules hashtable generated by build
+// Rules applied until fixpoint
+</code></pre></section>
+
+        <section>
+          <ul style="font-size: 3.2em; list-style: none; width: 5em;">
+            <li><code>FWD</code></li>
+            <li><code>DSE</code></li>
+            <li><code>NARROW</code></li>
+            <li><code>ABCelim</code></li>
+            <li><code>CSE</code></li>
+          </ul>
+        </section>
+
+        <section>
+          <ul style="font-size: 3.2em; list-style: none; width: 5em;">
+            <li><code>DCE</code></li>
+            <li><code>LOOP</code></li>
+            <li><code>SPLIT</code></li>
+            <li><code>SINK</code></li>
+          </ul>
+        </section>
+
+        <section>
+          <ul style="font-size: 3.2em; list-style: none; width: 5em;">
+            <li><code>DCE</code></li>
+            <li class="mat-red-bold"><code>LOOP</code></li>
+            <li><code>SPLIT</code></li>
+            <li><code>SINK</code></li>
+          </ul>
+        </section>
+
+        <section><pre><code class="lua">
+local sum = 0
+for i = 1, n do
+  sum = sum + arr[i]
+end
+</code></pre></section>
+
+        <section><pre class="smaller3">
+0001 >  int SLOAD  #6    CRI
+0002 >  int LE     0001  +2147483646
+0003    int SLOAD  #5    CI
+0004 >  tab SLOAD  #2    T
+0005    int FLOAD  0004  tab.asize
+0006 >  p32 ABC    0005  0001
+0007    p32 FLOAD  0004  tab.array
+0008    p32 AREF   0007  0003
+0009 >  num ALOAD  0008
+0010 >  num SLOAD  #4    T
+0011  + num ADD    0010  0009
+0012  + int ADD    0003  +1
+0013 >  int LE     0012  0001
+....        SNAP   #2   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3 highlight-bold">
+<b>0001 SLOAD  #6    CRI</b>          |
+0002 LE     0001  +2147483646  |
+0003 SLOAD  #5    CI           |
+0004 SLOAD  #2    T            |
+0005 FLOAD  0004  tab.asize    |
+0006 ABC    0005  0001         |
+0007 FLOAD  0004  tab.array    |
+0008 AREF   0007  0003         |
+0009 ALOAD  0008               |
+0010 SLOAD  #4    T            |
+0011 ADD    0010  0009         |
+0012 ADD    0003  +1           |
+0013 LE     0012  0001         |
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3 highlight-bold">
+<b>0001 SLOAD  #6    CRI</b>          |
+0002 LE     0001  +2147483646  |
+0003 SLOAD  #5    CI           |
+0004 SLOAD  #2    T            |
+0005 FLOAD  0004  tab.asize    |
+0006 ABC    0005  0001         |
+0007 FLOAD  0004  tab.array    |
+0008 AREF   0007  0003         |
+0009 ALOAD  0008               |
+0010 SLOAD  #4    T            |
+0011 ADD    0010  0009         |
+0012 ADD    0003  +1           |
+0013 LE     0012  0001         |
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 <b>0001</b> ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+<b>0001 SLOAD  #6    CRI</b>          | <span class="mat-green-bold">===> 0001</span>
+0002 LE     0001  +2147483646  |
+0003 SLOAD  #5    CI           |
+0004 SLOAD  #2    T            |
+0005 FLOAD  0004  tab.asize    |
+0006 ABC    0005  0001         |
+0007 FLOAD  0004  tab.array    |
+0008 AREF   0007  0003         |
+0009 ALOAD  0008               |
+0010 SLOAD  #4    T            |
+0011 ADD    0010  0009         |
+0012 ADD    0003  +1           |
+0013 LE     0012  0001         |
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+<b>0002 LE     0001  +2147483646</b>  |
+0003 SLOAD  #5    CI           |
+0004 SLOAD  #2    T            |
+0005 FLOAD  0004  tab.asize    |
+0006 ABC    0005  0001         |
+0007 FLOAD  0004  tab.array    |
+0008 AREF   0007  0003         |
+0009 ALOAD  0008               |
+0010 SLOAD  #4    T            |
+0011 ADD    0010  0009         |
+0012 ADD    0003  +1           |
+0013 LE     0012  0001         |
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+<b>0002 LE     0001  +2147483646</b>  | <span class="mat-green-bold">===> LE    <b>[0001]</b> +2147483646</span>
+0003 SLOAD  #5    CI           |
+0004 SLOAD  #2    T            |
+0005 FLOAD  0004  tab.asize    |
+0006 ABC    0005  0001         |
+0007 FLOAD  0004  tab.array    |
+0008 AREF   0007  0003         |
+0009 ALOAD  0008               |
+0010 SLOAD  #4    T            |
+0011 ADD    0010  0009         |
+0012 ADD    0003  +1           |
+0013 LE     0012  0001         |
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+<b>0002 LE     0001  +2147483646</b>  | <span class="mat-green-bold">===> LE     0001  +2147483646</span>
+0003 SLOAD  #5    CI           |
+0004 SLOAD  #2    T            |
+0005 FLOAD  0004  tab.asize    |
+0006 ABC    0005  0001         |
+0007 FLOAD  0004  tab.array    |
+0008 AREF   0007  0003         |
+0009 ALOAD  0008               |
+0010 SLOAD  #4    T            |
+0011 ADD    0010  0009         |
+0012 ADD    0003  +1           |
+0013 LE     0012  0001         |
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+<b>0002 LE     0001  +2147483646</b>  | <span class="mat-green-bold">0002</span>
+0003 SLOAD  #5    CI           |
+0004 SLOAD  #2    T            |
+0005 FLOAD  0004  tab.asize    |
+0006 ABC    0005  0001         |
+0007 FLOAD  0004  tab.array    |
+0008 AREF   0007  0003         |
+0009 ALOAD  0008               |
+0010 SLOAD  #4    T            |
+0011 ADD    0010  0009         |
+0012 ADD    0003  +1           |
+0013 LE     0012  0001         |
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+<b>0003 SLOAD  #5    CI</b>           | <span class="mat-green-bold">0012</span>
+0004 SLOAD  #2    T            |
+0005 FLOAD  0004  tab.asize    |
+0006 ABC    0005  0001         |
+0007 FLOAD  0004  tab.array    |
+0008 AREF   0007  0003         |
+0009 ALOAD  0008               |
+0010 SLOAD  #4    T            |
+0011 ADD    0010  0009         |
+0012 ADD    0003  +1           |
+0013 LE     0012  0001         |
+.... SNAP   [ ---- ---- ---- ---- 0011 <b>0012</b> 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+<b>0004 SLOAD  #2    T</b>            | <span class="mat-green-bold">0004</span>
+0005 FLOAD  0004  tab.asize    | <span class="mat-green-bold"></span>
+0006 ABC    0005  0001         | <span class="mat-green-bold"></span>
+0007 FLOAD  0004  tab.array    | <span class="mat-green-bold"></span>
+0008 AREF   0007  0003         | <span class="mat-green-bold"></span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- <b>----</b> ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+<b>0005 FLOAD  0004  tab.asize</b>    | <span class="mat-green-bold">===> FLOAD  0004  tab.asize</span>
+0006 ABC    0005  0001         | <span class="mat-green-bold"></span>
+0007 FLOAD  0004  tab.array    | <span class="mat-green-bold"></span>
+0008 AREF   0007  0003         | <span class="mat-green-bold"></span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+<b>0005 FLOAD  0004  tab.asize</b>    | <span class="mat-green-bold">0005</span>
+0006 ABC    0005  0001         | <span class="mat-green-bold"></span>
+0007 FLOAD  0004  tab.array    | <span class="mat-green-bold"></span>
+0008 AREF   0007  0003         | <span class="mat-green-bold"></span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+<b>0006 ABC    0005  0001</b>         | <span class="mat-green-bold">===> ABC    0005  0001</span>
+0007 FLOAD  0004  tab.array    | <span class="mat-green-bold"></span>
+0008 AREF   0007  0003         | <span class="mat-green-bold"></span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+<b>0006 ABC    0005  0001</b>         | <span class="mat-green-bold">0006</span>
+0007 FLOAD  0004  tab.array    | <span class="mat-green-bold"></span>
+0008 AREF   0007  0003         | <span class="mat-green-bold"></span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+<b>0007 FLOAD  0004  tab.array</b>    | <span class="mat-green-bold">0007</span>
+0008 AREF   0007  0003         | <span class="mat-green-bold"></span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+<b>0008 AREF   0007  0003</b>         | <span class="mat-green-bold">===> AREF  <b>[0007][0003]</b></span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+<b>0008 AREF   0007  0003</b>         | <span class="mat-green-bold">===> AREF   0007  0012</span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+<b>0008 AREF   0007  0003</b>         | <span class="mat-green-bold">0015 AREF   0007  0012</span>
+0009 ALOAD  0008               | <span class="mat-green-bold"></span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+<b>0009 ALOAD  0008</b>               | <span class="mat-green-bold">0016 ALOAD  0015</span>
+0010 SLOAD  #4    T            | <span class="mat-green-bold"></span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+0009 ALOAD  0008               | 0016 ALOAD  0015
+<b>0010 SLOAD  #4    T</b>            | <span class="mat-green-bold">0011</span>
+0011 ADD    0010  0009         | <span class="mat-green-bold"></span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- <b>0011</b> 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+0009 ALOAD  0008               | 0016 ALOAD  0015
+0010 SLOAD  #4    T            | 0011
+<b>0011 ADD    0010  0009</b>         | <span class="mat-green-bold">0017 ADD    0011  0016</span>
+0012 ADD    0003  +1           | <span class="mat-green-bold"></span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+0009 ALOAD  0008               | 0016 ALOAD  0015
+0010 SLOAD  #4    T            | 0011
+0011 ADD    0010  0009         | 0017 ADD    0011  0016
+<b>0012 ADD    0003  +1</b>           | <span class="mat-green-bold">0018 ADD    0012  +1</span>
+0013 LE     0012  0001         | <span class="mat-green-bold"></span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+0009 ALOAD  0008               | 0016 ALOAD  0015
+0010 SLOAD  #4    T            | 0011
+0011 ADD    0010  0009         | 0017 ADD    0011  0016
+0012 ADD    0003  +1           | 0018 ADD    0012  +1
+<b>0013 LE     0012  0001</b>         | <span class="mat-green-bold">0019 LE     0018  0001</span>
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+0009 ALOAD  0008               | 0016 ALOAD  0015
+0010 SLOAD  #4    T            | 0011
+0011 ADD    0010  0009         | 0017 ADD    0011  0016
+0012 ADD    0003  +1           | 0018 ADD    0012  +1
+0013 LE     0012  0001         | 0019 LE     0018  0001
+<b>.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]</b>
+
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+0009 ALOAD  0008               | 0016 ALOAD  0015
+0010 SLOAD  #4    T            | 0011
+0011 ADD    0010  0009         | 0017 ADD    0011  0016
+0012 ADD    0003  +1           | 0018 ADD    0012  +1
+0013 LE     0012  0001         | 0019 LE     0018  0001
+<b>.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]</b>
+<span class="mat-green-bold">.... SNAP   [ ---- ---- ---- ---- 0017 0018 0001 ---- 0018 ]</span>
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+0009 ALOAD  0008               | 0016 ALOAD  0015
+0010 SLOAD  #4    T            | 0011
+0011 ADD    0010  0009         | 0017 ADD    0011  0016
+0012 ADD    0003  +1           | 0018 ADD    0012  +1
+0013 LE     0012  0001         | 0019 LE     0018  0001
+.... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+<span class="mat-green-bold">.... SNAP   [ ---- ---- ---- ---- <b>0017</b> <b>0018</b> 0001 ---- <b>0018</b> ]</span>
+</pre></section>
+
+        <section><pre class="smaller3  highlight-bold">
+0001 SLOAD  #6    CRI          | 0001
+0002 LE     0001  +2147483646  | 0002
+0003 SLOAD  #5    CI           | 0012
+0004 SLOAD  #2    T            | 0004
+0005 FLOAD  0004  tab.asize    | 0005
+0006 ABC    0005  0001         | 0006
+0007 FLOAD  0004  tab.array    | 0007
+0008 AREF   0007  0003         | 0015 AREF   0007  0012
+0009 ALOAD  0008               | 0016 ALOAD  0015
+0010 SLOAD  #4    T            | 0011
+0011 ADD    0010  0009         | 0017 ADD    0011  0016
+0012 ADD    0003  +1           | 0018 ADD    0012  +1
+0013 LE     0012  0001         | 0019 LE     0018  0001
+                                 <span class="mat-green-bold">0020 PHI    0012  0018
+                                 0021 PHI    0011  0017</span>
+</pre></section>
+
+        <section><pre><code data-noescape class="cpp">
+LJFOLD(FLOAD SNEW IRFL_STR_LEN)
+LJFOLDF(fload_str_len_snew)
+{
+  /* Return length passed to SNEW. */
+
+  return fleft->op2;
+}
+</code></pre></section>
+
+        <section><pre><code data-noescape class="cpp">
+LJFOLD(FLOAD SNEW IRFL_STR_LEN)
+LJFOLDF(fload_str_len_snew)
+{
+  /* Return length passed to SNEW. */
+  /* What if fleft is not invariant? */
+  return fleft->op2;
+}
+</code></pre></section>
+
+        <section><pre><code data-noescape class="cpp">
+LJFOLD(FLOAD SNEW IRFL_STR_LEN)
+LJFOLDF(fload_str_len_snew)
+{
+  /* Return length passed to SNEW. */
+  <b>PHIBARRIER(fleft);</b>
+  return fleft->op2;
+}
+</code></pre></section>
+
+        <section><pre><code data-noescape class="cpp">
+LJFOLD(FLOAD SNEW IRFL_STR_LEN)
+LJFOLDF(fload_str_len_snew)
+{
+  /* Return length passed to SNEW. */
+  <b>PHIBARRIER(fleft);</b>
+  return fleft->op2;
+}
+</code></pre></section>
+
+        <section>
+          <ul style="font-size: 3.2em; list-style: none; width: 5em;">
+            <li><code>DCE</code></li>
+            <li><code>LOOP</code></li>
+            <li><code>SPLIT</code></li>
+            <li class="mat-red-bold"><code>SINK</code></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>assemble</h2>
+        </section>
+
+        <section><pre><code class="c">
+asm_guardcc(as, CC_E);
+emit_rr(as, XO_TEST, RID_RET, RID_RET);
+
+
+        </code></pre></section>
+
+        <section><pre><code class="c">
+asm_guardcc(as, CC_E);
+emit_rr(as, XO_TEST, RID_RET, RID_RET);
+/* looks a bit strange?  */
+
+        </code></pre></section>
+
+        <section><pre><code class="c">
+asm_guardcc(as, CC_E);
+emit_rr(as, XO_TEST, RID_RET, RID_RET);
+/* assembled backwards!  */
+/* test rax, rax; je ... */
+        </code></pre></section>
+
+        <section>
+          <h2>linear scan</h2>
+        </section>
+
+        <section>
+          <h2>THE END</h2>
+        </section>
+
+        <section>
+          <h2>...</h2>
+        </section>
+
+        <section>
+          <h2>tab.fld</h2>
+        </section>
+
+        <section>
+<pre class="highlight-bold">
+0003 int FLOAD 0002 tab.hmask
+0004 int EQ    0003 <b>XXXX</b>
+0005 p32 FLOAD 0002 tab.node
+0006 p32 HREFK 0005 "fld" @<b>YYYY</b>
+0007 <b>num</b> HLOAD 0006
+</pre>
+        </section>
+
+        <section>
+<pre><code class="nasm">
+cmp dword [rdx+0x1c], XXXX
+jnz ->0
+mov ecx, [rdx+0x14] ; tab.node
+mov rdi, 0xfffffffb00052de0 ; "fld"
+cmp rdi, [rcx+YYYY]
+jnz ->0
+lea eax, [rcx+0x18]
+cmp dword [rax+0x4], 0xfffeffff
+jnb ->0 ; is num?
+</code></pre>
+        </section>
+
+        <section>
+<pre><code class="nasm">
+cmp dword [rdx+0x1c], XXXX
+jnz ->0
+mov ecx, [rdx+0x14] ; tab.node
+mov rdi, 0xfffffffb00052de0 ; "fld"
+cmp rdi, [rcx+YYYY]
+jnz ->0
+lea eax, [rcx+0x18]
+cmp dword [rax+0x4], 0xfffeffff
+jnb ->0 ; is num?
+</code></pre>
+        </section>
+
+        <section>
+          <h2>OOP?</h2>
+        </section>
+
+        <section>
+          <h2>traces are not reentrant</h2>
+          <p>[can't call lua_CFunction&stay on trace]</p>
+          <p>[though LJ2.1 has <em>stitching</em>]
+        </section>
+
+        <section>
+          <h2>builtin library?</h2>
+        </section>
+
+        <section>
+          <h2>builtin library?</h2>
+          <p>[need to record manually]</p>
+          <p>[LJ2.1 has LJLIB_LUA]</p>
+        </section>
+
+        <section>
+<pre class="smaller2"><code class="cpp">
+LJLIB_LUA(table_remove) /*
+  function(t, pos)
+    CHECK_tab(t)
+    local len = #t
+    if pos == nil then
+      if len ~= 0 then
+        local old = t[len]
+        t[len] = nil
+        return old
+      end
+    else
+      -- ...
+    end
+  end
+*/
+</code></pre>
+        </section>
+
+
+        <section>
+          <h2>FFI</h2>
+        </section>
+
+        <section>
+<pre><code class="lua">
+ffi.cdef [[
+typedef struct { uint8_t a, b; } S;
+double f(S* p, size_t n);
+]]
+local S = ffi.typeof('S')
+
+local arr = ffi.new('S[?]', 2)
+arr[0] = S(1, 2)
+arr[1] = S(3, 4)
+ffi.C.f(arr, 2)
+</code></pre>
+        </section>
+
+        <section>
+          <h3>ffi objects have<br/> frozen metatables</h3>
+          <p>[see issue #41 for normal tables]</p>
+        </section>
+
+        <section>
+          <h2>side-traces</h2>
+        </section>
+
+        <section>
+          <h2>side-traces</h2>
+          <p>[not all values are carried inside]</p>
+          <p>[rejoins at the trace entry]</p>
+        </section>
+
+        <section>
+          <h2>... one more thing</h2>
+        </section>
+
+        <section>
+<pre class="smaller2"><code class="lua">
+local function faster(arr, n)
+  local sum = 0
+  for i = 1, n do
+    sum = sum + arr[i]
+  end
+  return sum
+end
+
+local function slower(arr, n)
+  local sum, i = 0, 1
+  while i <= n do
+    sum = sum + arr[i]
+    i = i + 1
+  end
+  return sum
+end
+</code></pre>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <h2 style="color: white;">What I learned from Lua<span style="color: #ffb380;">JIT</span></h2>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <h2 style="color: white; text-transform: uppercase;"><span style="color: #ffb380;">elegance</span> is a<br/> double-edged<br/> sword</h2>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <h2 style="color: white; text-transform: uppercase;">do not fear <br/><span style="color: #ffb380;">the preprocessing</span></h2>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <h2 style="color: white; text-transform: uppercase;">users don't understand<br/><span style="color: #ffb380;">what is fast</span></h2>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <h2 style="color: white; text-transform: uppercase;">performance implications of tracing are <span style="color: #ffb380;">nontrivial</span></h2>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <h2 style="color: white; text-transform: uppercase;">search for <br/><span style="color: #ffb380;">the balance</span></h2>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <h2 style="color: white; text-transform: uppercase;">make your <br/><span style="color: #ffb380;">own rules</span></h2>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <h2 style="color: white; text-transform: uppercase;">Thank you!</span></h2>
+        </section>
+
+      </div>
+
+      <div id="footer" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          font-size: 1.0em; text-align: center;
+          padding: 4px; z-index: 99;
+      "></div>
+		</div>
+
+		<script src="js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+        slideNumber: true,
+
+				theme: 'simple', // available themes are in /css/theme
+				transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+				backgroundTransition: 'none',
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+        margin: 0.0,
+        // width: 1950,
+        // height: 1080,
+        width: 1024, // 1950,
+        height: 768, // 1080,
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'js/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				]
+			});
+
+      function updateFooter(slide) {
+        var footer = document.getElementById("footer");
+        footer.innerHTML = "";
+
+        var text = slide.getAttribute("data-footer") || "";
+
+        if (text !== "") {
+          var anchor = document.createElement("a");
+          anchor.href = anchor.innerText = text;
+          footer.appendChild(anchor);
+        }
+      }
+
+      Reveal.addEventListener('ready', function(event) { updateFooter(event.currentSlide); });
+      Reveal.addEventListener('slidechanged', function(event) { updateFooter(event.currentSlide); });
+
+      (function () {
+        var style = document.createElement("style");
+        document.head.appendChild(style);
+
+        var percents = [].slice.call(document.querySelectorAll(".x")).forEach(function (el) {
+          var classes = el.classList.toString();
+          var p = classes.match(/\bx(\d+)\b/)[1];
+
+          style.sheet.addRule(".x" + p + "::after", "width: " + p + "%;")
+        });
+      })();
+		</script>
+
+    <style>
+      .x-confirmed-2 {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+
+      }
+
+      .x-confirmed {
+        font-weight: bold;
+        border: 10px solid green !important;
+        color: green;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+      .x-confirmed-red {
+        font-weight: bold;
+        border: 10px solid #dc1e1a !important;
+        color: #dc1e1a;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+
+      pre.bigger {
+        font-size: 1.4em !important;
+      }
+
+      pre:not(.smaller) {
+        font-size: 1.4em !important;
+      }
+
+      pre.smaller2 {
+        font-size: 1.1em !important;
+      }
+
+      pre.smaller3 {
+        font-size: .7em !important;
+      }
+
+      pre.bigger15 {
+        font-size: 1.75em !important;
+      }
+
+      pre.bigger2 {
+        font-size: 2em !important;
+      }
+
+      pre.bigger3 {
+        font-size: 3em !important;
+      }
+
+      pre.mediumer {
+        font-size: 1.2em !important;
+      }
+
+      .B h1 {
+        font-size: 6em;
+      }
+
+      .B h2 {
+        font-size: 4em;
+      }
+
+      .B h3 {
+        font-size: 2em;
+      }
+
+      .B ul {
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      section:not(.S) h1 {
+        font-size: 6em;
+      }
+
+      section:not(.S) h2 {
+        font-size: 4em;
+      }
+
+      section:not(.S) h3 {
+        font-size: 2em;
+      }
+
+      section:not(.S) ul {
+        font-size: 3em;
+        line-height: 1em;
+      }
+
+      /*
+      .B p {
+        font-size: 1.5em;
+      }
+      */
+
+      span.green {
+        font-weight: bold !important;
+        color: green;
+      }
+
+      span.red {
+        font-weight: bold !important;
+        color: red !important;
+      }
+
+      .mat-red {
+        color: #F44336 !important;
+      }
+
+      .mat-red-bold {
+        color: #F44336 !important;
+        font-weight: bold;
+      }
+
+      span.mat-green {
+        color: #4CAF50;
+      }
+
+      span.mat-green-bold {
+        color: #4CAF50 !important;
+        font-weight: bold;
+      }
+
+      pre.highlight-bold b {
+        color: #E65100;
+      }
+
+      span.greenish-block {
+        background: rgba(0, 255, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.fade-away {
+        opacity: 0.1;
+      }
+
+      span.anti-fade {
+        font-weight: bold;
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      .yellow {
+        color: #f57f17;
+        font-weight: bold !important;
+      }
+
+      .dr, .dr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+      }
+
+      .udr, .udr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+        text-decoration: underline;
+      }
+
+      .pinkish {
+        color: #dc1e1a !important;
+      }
+
+      .ccc {
+        display: inline-block !important;
+        width: auto !important;
+      }
+
+      .borderish {
+        border: 1px dashed;
+      }
+
+      span.leftish {
+        text-align: left;
+        display: inline-block;
+      }
+
+      span.leftish50 {
+        text-align: left;
+        display: inline-block;
+        max-width: 70%;
+
+      }
+
+      .golden-block {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.golden {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      span.redish {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      .redish-block {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+
+          .y {
+  position: relative;
+}
+
+.x {
+  position: relative;
+  z-index: 100;
+  color: black;
+}
+
+.x::after {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+}
+
+.x-red::after {
+  background: rgba(215, 25, 28 , 1.0);
+}
+
+.x-green::after {
+  background: rgba(145, 207, 96, 1.0);
+}
+
+.x-gold::after {
+  background: rgba(253,174,97, 1.0);
+}
+
+.x::before {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+    </style>
+
+	</body>
+</html>

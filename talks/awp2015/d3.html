@@ -1,0 +1,69 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="heap.css">
+
+  <script src="../cwp2013/js/jquery.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+
+  <style>
+    body > div {
+      width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+    #right-column {
+      border: 1px solid black;
+    }
+
+    button {
+      border: 1px solid black;
+      color: white;
+      background: black;
+      width: 50px;
+      height: 50px;
+      font-size: 2em;
+    }
+
+    #curwrp {
+      font-size: 2em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <button id="dec">&lt;</button>
+    <span id="curwrp">[<span id="cur"></span>]</span>
+    <button id="inc">&gt;</button>
+  </div>
+
+  <div id="right-column" style="height: 50%;">
+  </div>
+
+  <script src="heap.js"></script>
+  <script src="klass.js"></script>
+
+  <script>
+    $(function () {
+      var stage = 1;
+
+      $("#cur").text(String(stage))
+      Klass.toStage(stage);
+
+      $("#inc").click(function () {
+        $("#cur").text(String(++stage))
+        Klass.toStage(stage);
+      });
+
+      $("#dec").click(function () {
+        $("#cur").text(String(--stage))
+        Klass.toStage(stage);
+      });
+    })
+  </script>
+</body>
+
+</html>

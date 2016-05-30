@@ -1,0 +1,46 @@
+.link-transition {
+  fill: none;
+  stroke: #D35400;
+  stroke-width: 1.5px;
+  stroke-dasharray: 0,2 1;
+}
+
+.link-ref {
+  fill: none;
+  stroke: black;
+  stroke-width: 1.5px;
+}
+
+#arrow-ref {
+  fill: black;
+}
+
+#arrow-transition {
+  fill: #D35400;
+}
+
+.klass {
+  fill: #2980B9;
+  stroke: #2980B9;
+  stroke-width: 1.5px;
+}
+
+text {
+  font: 10pt "Monaco";
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.object-slot-text {
+  font: 10px monospace !important;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+
+.object-slot {
+  fill: white;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+.invisible { visibility: hidden; }

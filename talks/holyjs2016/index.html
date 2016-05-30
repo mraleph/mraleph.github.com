@@ -1,0 +1,2248 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Производительность JavaScript через подзорную трубу</title>
+
+		<meta name="description" content="Производительность JavaScript через подзорную трубу">
+		<meta name="author" content="Vyacheslav Egorov">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/simple.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="css/googlecode.css">
+
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<![endif]-->
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-6701581-4', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+        <section>
+          <h2 style="text-transform:uppercase; font-weight: 600; font-family: 'Phenomena'">производительность JavaScript через<br/> подзорную трубу</h2>
+        </section>
+
+        <section>
+          <div style="text-align: left;">
+            <h2 style="background: #288; color: white; padding-left: .3em;">Excelsior JET</h2>
+            <h2 style="background: #3F89EC; color: white; padding-left: .3em;">V8</h2>
+            <h2 style="background: linear-gradient(45deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%); color: white; padding-left: .3em;">Dart VM</h2>
+            <h2 style="background: #4162bf; color: white; padding-left: .3em;">Lua<span style="color: #ffb380;">JIT</span></h2>
+          </div>
+        </section>
+
+        <section>
+          <div style="text-align: left;">
+            <h2 style="opacity: .2; background: #288; color: white; padding-left: .3em;">Excelsior JET</h2>
+            <h2 style="background: #3F89EC; color: white; padding-left: .3em;">V8</h2>
+            <h2 style="opacity: .2; background: linear-gradient(45deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%); color: white; padding-left: .3em;">Dart VM</h2>
+            <h2 style="opacity: .2; background: #4162bf; color: white; padding-left: .3em;">Lua<span style="color: #ffb380;">JIT</span></h2>
+          </div>
+        </section>
+
+        <section>
+          <h1>ВСЁ <span class="pinkish">СЛОЖНО</span></h1>
+        </section>
+
+        <section>
+          <pre><code data-noescape class="javascript">
+
+function find(val){
+  function index(value) {
+    return [1, 2, 3].indexOf(value);
+  }
+
+  return index(val);
+}
+
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-noescape class="javascript">
+
+function find(val){
+  function index(value) {
+    return [1, 2, 3].indexOf(value);
+  }
+
+  return index(val);
+}
+// => 5464 op/ms
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-noescape class="javascript">
+<span class="golden">var arr = [1, 2, 3];</span>
+function find(val){
+  function index(value) {
+    return <span class="golden">arr</span>.indexOf(value);
+  }
+
+  return index(val);
+}
+
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-noescape class="javascript">
+<span class="golden">var arr = [1, 2, 3];</span>
+function find(val){
+  function index(value) {
+    return <span class="golden">arr</span>.indexOf(value);
+  }
+
+  return index(val);
+}
+// => 14084 op/ms
+          </code></pre>
+        </section>
+
+        <section>
+          <h2 style="font-size: 3.2em;">&laquo;аллокация массива &mdash;<br/> дорогая операция&raquo;</h2>
+        </section>
+
+        <section>
+          <pre><code data-noescape class="javascript">
+<span class="golden">var makeArr = () => [1, 2, 3];</span>
+function find(val){
+  function index(value) {
+    return <span class="golden">makeArr()</span>.indexOf(value);
+  }
+
+  return index(val);
+}
+
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-noescape class="javascript">
+<span class="golden">var makeArr = () => [1, 2, 3];</span>
+function find(val){
+  function index(value) {
+    return <span class="golden">makeArr()</span>.indexOf(value);
+  }
+
+  return index(val);
+}
+// => 12048 op/ms
+          </code></pre>
+        </section>
+
+        <section data-wat>
+          <pre><code data-noescape class="javascript">
+<span class="golden">var makeArr = () => [1, 2, 3];</span>
+function find(val){
+  function index(value) {
+    return <span class="golden">makeArr()</span>.indexOf(value);
+  }
+
+  return index(val);
+}
+// => 12048 op/ms
+          </code></pre>
+        </section>
+
+        <section>
+          <pre>
+$ perf record d8 <b>--perf-basic-prof</b> test.js
+$ perf report
+          </pre>
+        </section>
+
+        <section>
+          <pre>
+14.80% v8::internal::Factory::NewFunction
+ 9.98% v8::internal::Factory::NewFunctionFromSharedFunctionInfo
+ 8.74% *InnerArrayIndexOf native array.js:1019
+ 7.24% v8::internal::Factory::NewFunctionFromSharedFunctionInfo
+ 5.79% v8::internal::Runtime_NewClosure
+ 4.84% Builtin:ArgumentsAdaptorTrampoline
+ 4.44% v8::internal::Heap::AllocateRaw
+ 4.30% v8::internal::Factory::New<v8::internal::JSFunction>
+ 3.74% v8::internal::SharedFunctionInfo::SearchOptimizedCodeMap
+ 3.20% ~index test.js:2
+          </pre>
+        </section>
+
+        <section>
+          <pre>
+<span class="pinkish">14.80% v8::internal::Factory::NewFunction</span>
+<span class="pinkish"> 9.98% v8::internal::Factory::NewFunctionFromSharedFunctionInfo</span>
+<span class=""> 8.74% *InnerArrayIndexOf native array.js:1019</span>
+<span class="pinkish"> 7.24% v8::internal::Factory::NewFunctionFromSharedFunctionInfo</span>
+<span class="pinkish"> 5.79% v8::internal::Runtime_NewClosure</span>
+ 4.84% Builtin:ArgumentsAdaptorTrampoline
+ 4.44% v8::internal::Heap::AllocateRaw
+<span class="pinkish"> 4.30% v8::internal::Factory::New&lt;v8::internal::JSFunction&gt;</span>
+<span class="pinkish"> 3.74% v8::internal::SharedFunctionInfo::SearchOptimizedCodeMap</span>
+<span class=""> 3.20% ~index test.js:2</span>
+          </pre>
+        </section>
+
+        <section>
+          <pre>
+14.49% *InnerArrayIndexOf native array.js:1019
+10.47% LoadIC:A load IC from the snapshot
+ 8.45% ~index b2.js:12
+ 8.05% Stub:FastNewClosureStub
+ 5.77% Builtin:ArgumentsAdaptorTrampoline
+ 5.23% *find2 b2.js:11
+          </pre>
+        </section>
+
+        <section>
+          <pre>
+14.49% *InnerArrayIndexOf native array.js:1019
+10.47% LoadIC:A load IC from the snapshot
+ 8.45% ~index b2.js:12
+<b class="greenish"> 8.05% Stub:FastNewClosureStub</b>
+ 5.77% Builtin:ArgumentsAdaptorTrampoline
+ 5.23% *find2 b2.js:11
+          </pre>
+        </section>
+
+        <section>
+          <h3><code>FastNewClosureStub</code><br/> не умела создавать функции<br/> содержащие литералы</h3>
+          <h4 class="fragment">[сейчас уже умеет, пример из Февраля]</h4>
+        </section>
+
+        <section data-background="images/strange.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h1>ChaCha20</h1>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="javascript">
+function getBlock(buffer) {
+  var x = new Uint32Array(16);
+
+  for (var i = 16; i--;) x[i] = input[i];
+  for (var i = 20; i > 0; i -= 2) {
+    quarterRound(x, 0, 4, 8,12);
+    quarterRound(x, 1, 5, 9,13);
+    quarterRound(x, 2, 6,10,14);
+    quarterRound(x, 3, 7,11,15);
+    quarterRound(x, 0, 5,10,15);
+    quarterRound(x, 1, 6,11,12);
+    quarterRound(x, 2, 7, 8,13);
+    quarterRound(x, 3, 4, 9,14);
+  }
+  for (i = 16; i--;) x[i] += input[i];
+  for (i = 16; i--;) U32TO8_LE(buffer, 4 * i, x[i]);
+  input[12]++;
+  return buffer;
+}          </code></pre>
+        </section>
+
+        <section>
+          <h1>19MB/s</h1>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="javascript">
+function getBlock(buffer) {
+  var x = new Uint32Array(16);
+
+  for (var i = 16; i--;) x[i] = input[i];
+  for (var i = 20; i > 0; i -= 2) {
+    <span class="golden-block">quarterRound(x, 0, 4, 8,12);</span>
+    quarterRound(x, 1, 5, 9,13);
+    quarterRound(x, 2, 6,10,14);
+    quarterRound(x, 3, 7,11,15);
+    quarterRound(x, 0, 5,10,15);
+    quarterRound(x, 1, 6,11,12);
+    quarterRound(x, 2, 7, 8,13);
+    quarterRound(x, 3, 4, 9,14);
+  }
+  for (i = 16; i--;) x[i] += input[i];
+  for (i = 16; i--;) U32TO8_LE(buffer, 4 * i, x[i]);
+  input[12]++;
+  return buffer;
+}          </code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="javascript">
+function getBlock(buffer) {
+  var x = new Uint32Array(16);
+
+  for (var i = 16; i--;) x[i] = input[i];
+  for (var i = 20; i > 0; i -= 2) {
+    // quarterRound(x, 0, 4, 8,12);
+<span class="golden-block">    x[ 0] += x[ 4]; x[12] = ((x[12] ^ x[ 0]) << 16) | ((x[12] ^ x[ 0]) >>> 16);
+    x[ 8] += x[12]; x[ 4] = ((x[ 4] ^ x[ 8]) << 12) | ((x[ 4] ^ x[ 8]) >>> 20);
+    x[ 0] += x[ 4]; x[12] = ((x[12] ^ x[ 0]) <<  8) | ((x[12] ^ x[ 0]) >>> 24);
+    x[ 8] += x[12]; x[ 4] = ((x[ 4] ^ x[ 8]) <<  7) | ((x[ 4] ^ x[ 8]) >>> 25);</span>
+    // ... и так далее ...
+  }
+  for (i = 16; i--;) x[i] += input[i];
+  for (i = 16; i--;) U32TO8_LE(buffer, 4 * i, x[i]);
+  input[12]++;
+  return buffer;
+}          </code></pre>
+        </section>
+
+        <section>
+          <h1 class="pinkish">2MB/s</h1>
+        </section>
+
+        <section data-background="../webrebels2014/images/slide5.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section>
+          <h3 class="pinkish cap">&laquo;инлайн же должен улучшать производильность!&raquo;</h3>
+        </section>
+
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+function U32TO8_LE(x, i, u) {
+    x[i]   = u; u >>>= 8;
+    x[i+1] = u; u >>>= 8;
+    x[i+2] = u; u >>>= 8;
+    x[i+3] = u;
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: .7em; line-height: 1em;"><code data-trim data-noescape class="javascript">
+function U32TO8_LE(x, i, u) {
+<span class="golden-block">    // ____     ___  ____   __________              _        ____   ___       ___
+    // `MM'     `M' 6MMMMb\ `MMMMMMMMM             dM.      6MMMMb\ `MMb     dMM'
+    //  MM       M 6M'    `  MM      \            ,MMb     6M'    `  MMM.   ,PMM
+    //  MM       M MM        MM                   d'YM.    MM        M`Mb   d'MM
+    //  MM       M YM.       MM    ,             ,P `Mb    YM.       M YM. ,P MM
+    //  MM       M  YMMMMb   MMMMMMM             d'  YM.    YMMMMb   M `Mb d' MM
+    //  MM       M      `Mb  MM    `            ,P   `Mb        `Mb  M  YM.P  MM
+    //  MM       M       MM  MM                 d'    YM.        MM  M  `Mb'  MM
+    //  YM       M       MM  MM                ,MMMMMMMMb        MM  M   YP   MM
+    //   8b     d8 L    ,M9  MM      /         d'      YM. L    ,M9  M   `'   MM
+    //    YMMMMM9  MYMMMM9  _MMMMMMMMM       _dM_     _dMM_MYMMMM9  _M_      _MM_
+    //</span>
+    x[i]   = u; u >>>= 8;
+    x[i+1] = u; u >>>= 8;
+    x[i+2] = u; u >>>= 8;
+    x[i+3] = u;
+}
+</code></pre>
+        </section>
+
+        <section>
+          <h1 style="color: green;">19MB/s</h1>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: .7em; line-height: 1em;"><code data-trim data-noescape class="javascript">
+function U32TO8_LE(x, i, u) {
+    // ____     ___  ____   __________              _        ____   ___       ___
+    // `MM'     `M' 6MMMMb\ `MMMMMMMMM             dM.      6MMMMb\ `MMb     dMM'
+    //  MM       M 6M'    `  MM      \            ,MMb     6M'    `  MMM.   ,PMM
+    //  MM       M MM        MM                   d'YM.    MM        M`Mb   d'MM
+    //  MM       M YM.       MM    ,             ,P `Mb    YM.       M YM. ,P MM
+    //  MM       M  YMMMMb   MMMMMMM             d'  YM.    YMMMMb   M `Mb d' MM
+    //  MM       M      `Mb  MM    `            ,P   `Mb        `Mb  M  YM.P  MM
+    //  MM       M       MM  MM                 d'    YM.        MM  M  `Mb'  MM
+    //  YM       M       MM  MM                ,MMMMMMMMb        MM  M   YP   MM
+    //   8b     d8 L    ,M9  MM      /         d'      YM. L    ,M9  M   `'   MM
+    //    YMMMMM9  MYMMMM9  _MMMMMMMMM       _dM_     _dMM_MYMMMM9  _M_      _MM_
+    //
+<span class="golden-block">    // ^^^^^^ Don't remove this comment it makes the code 10x faster. ^^^^^^</span>
+    x[i]   = u; u >>>= 8;
+    x[i+1] = u; u >>>= 8;
+    x[i+2] = u; u >>>= 8;
+    x[i+3] = u;
+}
+</code></pre>
+        </section>
+
+        <section>
+          <h1>...</h1>
+        </section>
+
+        <section>
+          <h3 style="">говорим <span class="pinkish">производительность</span> <br/> подразумеваем <span class="pinkish">jsperf</span></h3>
+        </section>
+
+        <section>
+          <h3 style="">говорим <span class="pinkish">производительность</span> <br/> подразумеваем <span class="pinkish">микробенчмарк</span></h3>
+          <p>[jsperf.com сейчас мертвый]</p>
+        </section>
+
+        <section data-background="images/slide-1-1.png" data-background-size="contain"  data-background-color="#c4c4c4">
+        </section>
+
+        <section data-background="images/slide-1-2.png" data-background-size="contain"  data-background-color="#c4c4c4">
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+// split
+str.split("e").length - 1;
+
+// while
+var count = 0;
+while (str.length) {
+  if (str.charAt(0) === "e") {
+    count += 1;
+  }
+  str = str.slice(1);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+// split <b>(на FF показывает больше 9000K OP/S!)</b>
+str.split("e").length - 1;
+
+// while
+var count = 0;
+while (str.length) {
+  if (str.charAt(0) === "e") {
+    count += 1;
+  }
+  <span class="redish-block">str = str.slice(1);</span>
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1 class="pinkish">СОМНЕВАЙСЯ</h1>
+          <h1>ВО ВСЁМ</h1>
+        </section>
+
+        <section>
+          <h2>&micro;бенчмарки<br/> для чайников</h2>
+        </section>
+
+        <section>
+          <h2>цена одной операции <code>OP</code>?</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function benchmark() {
+  var start = Date.now();
+  /* OP */
+  return (Date.now() - start);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>а что если <code>OP</code> быстрее часов?</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function benchmark(N) {
+  var start = Date.now();
+  for (var i = 0; i < N; i++) {
+    /* OP */
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>\[C\]</h1>
+        </section>
+
+        <section>
+          <h1>\[C \times N\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C \times N}{N}\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C \times \cancel{N}}{\cancel{N}}\]</h1>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+
+
+
+
+    while (str.length) {
+      if (str.charAt(0) === "e") {
+        count += 1;
+      }
+      str = str.slice(1);
+    }
+
+
+
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+function benchmark() {
+  var str = "...";
+  var start = Date.now();
+  for (var i = 0; i < N; i++) {
+    var count = 0;
+    while (str.length) {
+      if (str.charAt(0) === "e") {
+        count += 1;
+      }
+      str = str.slice(1);
+    }
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section data-wat>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+function benchmark() {
+  var str = "...";
+  var start = Date.now();
+  <b class="golden-block">for (var i = 0; i < N; i++) {</b>
+    var count = 0;
+    <b>while (str.length) {</b>
+      if (str.charAt(0) === "e") {
+        count += 1;
+      }
+      <b class="redish-block">str = str.slice(1);</b>
+    <b>}</b>
+  }  // здесь str == ""
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>повторения начинаются <br/>со <code>str === ""</code></h2>
+        </section>
+
+        <section>
+          <h1>\[C \times N\]</h1>
+        </section>
+
+        <section>
+          <h2 style="font-size: 3.2em;">\[C \times 1 + 0 \times (N - 1)\]</h2>
+        </section>
+
+        <section>
+          <h2 style="font-size: 3.2em;">\[\frac{C \times 1 + 0 \times (N - 1)}{N}\]</h2>
+        </section>
+
+        <section>
+          <h1>\[\frac{C}{N}\]</h1>
+        </section>
+
+        <section>
+          <h1>\[\frac{C}{N} \approx 0\]</h1>
+        </section>
+
+        <section>
+          <h2>неправильный бенчмарк</h2>
+          <h3><code>OP</code> должен стоить одинаково</h3>
+          <h3>при каждом повторении</h3>
+        </section>
+
+        <section data-background="../lxjs2013/images/jsperf.png" data-background-size="contain" data-background-color="#c4c4c4">
+        </section>
+
+        <section data-background="../lxjs2013/images/jsperf-magic.png" data-background-size="contain">
+          <h1 class="fragment">&laquo;<code>~~</code> быстрее всех&raquo;</h1>
+        </section>
+
+        <section>
+          <h1 class="pinkish">НЕТУШКИ</h1>
+        </section>
+
+        <section>
+          <h1>JITы умны</h1>
+        </section>
+
+        <section>
+          <h3>JITы оптимизируют <br/><em class="pinkish">одновременно с исполнением</em></h3>
+        </section>
+
+        <section>
+          <h1>\[C \times N\]</h1>
+        </section>
+
+        <section>
+          <h1 style="font-size: 5em;">\[C_u N_u + C_o N_o\]</h1>
+          <h4>[неоптимизированая + оптимизированная версия]</h4>
+        </section>
+
+        <section>
+          <h1>\[{\sum C_{i} N_i}\]</h1>
+          <h4>[множественные оптимизированные версии]</h4>
+        </section>
+
+        <section>
+          <h3>\[{\sum C_{i} N_i} + \color{#dc1e1a}{\frac{1}{\sqrt{2\pi}}\int C(\xi) e ^ {-\frac{\xi^2}{2}} d\xi}\]</h3>
+          <h4>[математика становится слишком мудрённой]</h4>
+        </section>
+
+        <section>
+          <h1>JITы умны</h1>
+          <h3>хочется измерить что-то,<br/> нужно <em class="pinkish">перехитрить</em></h3>
+        </section>
+
+        <section>
+          <h3><span class="leftish50"><span class="pinkish">Предупреждение</span>: На слайдах оптимизации, выполняемые JITом, изображены как трансформации исходного кода. В реальности JITы оперируют на более сложных внутренних представлениях.</span></h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = '1561565', j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = ~~i;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = <span style="background: rgba(255, 215, 0, 0.4); border-radius: 10px;">~~'1561565'</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = <span style="background: rgba(255, 215, 0, 0.4); border-radius: 10px;">~-1561566</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = <span style="background: rgba(255, 215, 0, 0.4); border-radius: 10px;">1561565</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>протяжка констант</h1>
+          <p><em>constant propagation</em></p>
+        </section>
+
+        <section>
+          <h2>&laquo;а я знаю как обхитрить компилятор!&raquo;</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), j;
+  //  ^ not a constant any more
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = ~~i;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1 class="pinkish">&laquo;НЕТУШКИ<sup>2</sup>&raquo;</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    j = ~~i;
+    //  ^^^ loop invariant
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), j;
+  var start = Date.now();
+  var j0 = ~~i;
+  //  ^^^^^^^^ hoisted from the loop
+  for (var n = 0; n &lt; N; n++) {
+    j = j0;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1 style="font-size: 5em;">вынос инвариантов цикла</h1>
+          <p><em>loop invariant code motion</em></p>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), j;
+  var start = Date.now();
+  var j0 = ~~i;
+  for (var n = 0; n &lt; N; n++) {
+    j = j0;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j</span>;
+  var start = Date.now();
+  var j0 = ~~i;
+  for (var n = 0; n &lt; N; n++) {
+    <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j = j0</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var i = Date.now().toString(), <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j</span>;
+  var start = Date.now();
+  <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">var j0 = ~~i;</span>
+  for (var n = 0; n &lt; N; n++) {
+    <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j = j0</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">i = Date.now().toString()</span>, <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j</span>;
+  var start = Date.now();
+  <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">var j0 = ~~i;</span>
+  for (var n = 0; n &lt; N; n++) {
+    <span style="background: rgba(255, 0, 0, 0.4); border-radius: 10px;">j = j0</span>;
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    /* стрекотание сверчков */
+  }
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+  var start = Date.now();
+  /*
+   * стрекотание сверчков
+   */
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>удаление<br/> мертвого<br/> кода</h2>
+          <p><em>dead code elimination</em></p>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-trim data-noescape class="javascript">
+// Помните этот пример?
+// split <b>(на FF показывает больше 9000K OP/S!)</b>
+str.split("e").length - 1;
+<span class="fragment">// FF просто видит, что это мертвый код</span>
+</code></pre>
+        </section>
+
+        <section>
+          <h3>КОМПИЛЯТОР КУШАЕТ<br/> &micro;БЕНЧМАРКИ НА ЗАВТРАК</h3>
+        </section>
+
+        <section>
+          <h3>КАК БЫ СДЕЛАТЬ ТАКОЙ,<br/> ЧТОБЫ ОН ПОДАВИЛСЯ?</h3>
+        </section>
+
+        <section>
+          <h3>ЛУЧШЕ, КОНЕЧНО, <br/> НИКАКИХ НЕ ПИСАТЬ,<br/> НО...</h3>
+        </section>
+
+        <section>
+          <h2 style="font-size: 3em;">
+            <ol>
+              <li class="fragment"><b class="pinkish">проверка результатов</b></li>
+              <li>никаких констант</li>
+              <li>никаких инвариантов</li>
+              <li>никакого мертвого кода</li>
+            </ol>
+          </h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape>
+function benchmark() {
+<span class="greenish-block fragment">  var i = Date.now().toString(),
+      i1 = Date.now().toString(), t;</span>
+  var j;
+  var start = Date.now();
+  for (var n = 0; n &lt; N; n++) {
+    <span class="greenish-block fragment">t = i; i = i1; i1 = t;</span>
+    j = ~~i;
+  }
+  <span class="greenish-block fragment">if (i != j || i1 != j) throw "ммм?";</span>
+  return (Date.now() - start) / N;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>неплохо</h1>
+        </section>
+
+        <section>
+          <h2>(возможно)</h2>
+          <h1>недостаточно</h1>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+for (var n = 0; n &lt; N; n++) {
+  t = i; i = i1; i1 = t;
+  j = ~~i;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+for (var n = 0; n &lt; <span class="golden">(N / 2)</span>; n++) {
+  t = i; i = i1; i1 = t;
+  j = ~~i;
+<span class="golden-block">  t = i; i = i1; i1 = t;
+  j = ~~i;              </span>
+}
+<span class="golden-block">if ((N % 2) === 1) {
+  t = i; i = i1; i1 = t;
+  j = ~~i;
+} </span>
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape  class="javascript">
+for (var n = 0; n &lt; (N / 2); n++) {
+  j = ~~i1;
+  t = i1;
+  j = ~~i;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+for (var n = 0; n &lt; (N / 2); n++) {
+  j = ~~i1; /* dead */
+  t = i1;   /* dead */
+  j = ~~i;  /* invariant */
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h1>развертка циклов</h1>
+          <p><em>loop unrolling</em></p>
+        </section>
+
+        <section>
+          <h1>V8 не умеет</h1>
+          <h3 class="fragment">но я хочу вселить параною &#9786; </h3>
+        </section>
+
+<!--
+        <section>
+          <h1 style="font-size: 5em;">&micro;бенчмарки vs VM</h1>
+        </section>
+
+        <section data-background="../webrebels2014/images/slide4.png" data-background-size="contain"  data-background-color="#c4c4c4">
+        </section>
+
+        <section>
+                  <pre class="bigger">
+$ d8 concat.js
+<table>
+  <tr>
+    <td>Inside </td>
+    <td class="y"><span class="x x19 x-red">x 198,893,290 ops/sec &pm;1.08%</span></td>
+  </tr>
+  <tr>
+    <td>Outside</td>
+    <td class="y"><span class="x x67 x-green">x 674,248,118 ops/sec &pm;1.08%</span></td>
+  </tr>
+</table>Fastest is Outside
+</pre>
+        </section>
+
+        <section>
+          <h1 style="font-size: 4.5em;">&laquo;быстрее! выносите все ваши строки в переменные&raquo;</h1>
+        </section>
+
+        <section data-background="../webrebels2014/images/slide5.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h2>пришло время<br/>посмотреть на код</h2>
+          <h3>ожидаем, что оба варианта<br/> ничего не делают</h3>
+        </section>
+
+        <section>
+          <h1><a href="http://mrale.ph/irhydra/2" target="_blank">IRHydra<sup>2</sup></a></h1>
+          <h3>все примеры из этого доклада<br/>это демки доступные на сайте</h3>
+        </section>
+
+        <section>
+          <h1>почему <code>Outside</code> быстрее?</h1>
+        </section>
+
+        <section data-background="images/concat.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/concat-0.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/concat-1.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h2>за деревьями<br/> леса не видно</h2>
+        </section>
+
+        <section data-background="images/concat-2.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/concat-3.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/concat-4.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h2><code>Outside</code> <br/> <em class="pinkish">ничего не делает </em></h2>
+        </section>
+
+        <section>
+          <h2>V8 не смог<br/> свернуть конкатенацию</h2>
+          <h2 class="pinkish">[баг!]</h2>
+        </section>
+
+        <section>
+          <h1>можно починить!</h1>
+        </section>
+
+        <section>
+<pre class="smaller" style="font-size: .7em; line-height: 1em;"><code data-trim data-noescape>
+--- src/hydrogen.cc (revision 21348)
++++ src/hydrogen.cc (working copy)
+@@ -9639,6 +9639,14 @@
+       return left;
+     }
+
++    if (FLAG_fold_constants &&
++        left-&gt;IsConstant() && HConstant::cast(left)-&gt;HasStringValue() &&
++        right-&gt;IsConstant() && HConstant::cast(right)-&gt;HasStringValue()) {
++      return AddUncasted&lt;HStringAdd&gt;(
++          left, right, allocation_mode.GetPretenureMode(),
++          STRING_ADD_CHECK_NONE, allocation_mode.feedback_site());
++    }
++
+     // Register the dependent code with the allocation site.
+     if (!allocation_mode.feedback_site().is_null()) {
+       ASSERT(!graph()-&gt;info()-&gt;IsStub());
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger">
+$ d8 concat.js
+<table>
+  <tr>
+    <td>Inside </td>
+    <td class="y"><span class="x x75 x-green">x 758,530,478 ops/sec &pm;1.82%</span></td>
+  </tr>
+  <tr>
+    <td>Outside</td>
+    <td class="y"><span class="x x67 x-gold">x 674,248,118 ops/sec &pm;1.14%</span></td>
+  </tr>
+</table>Fastest is Inside
+</pre>
+        </section>
+
+        <section>
+          <h2>теперь оба варианта <span class="pinkish">ничего не делают</span>!</h2>
+        </section>
+-->
+
+        <section>
+          <h2>презумпция производительности</h2>
+        </section>
+
+        <section>
+          <h2><span class="leftish">разумный код<br/>
+          разумно быстр</span></h2>
+        </section>
+
+        <section>
+          <h1 style="font-size: 5em;">confirmation<br/>bias</h1>
+        </section>
+
+        <section>
+          <h3>cклонность к подтверждению<br/> своей точки зрения</h3>
+        </section>
+
+        <section>
+          <h2>&laquo;чепочки прототипов <span class="pinkish">медленные</span>&raquo;</h2>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
+var obj =
+  Object.create(
+    Object.create(
+      Object.create(
+        Object.create(
+          Object.create({prop: 10})))));
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
+var obj =
+  Object.create(
+    Object.create(
+      Object.create(
+        Object.create(
+          Object.create({prop: 10})))));
+               // дети любят LISP ^^^^^
+               // и Серёжа тоже
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function doManyLookups() {
+  var counter = 0;
+  for(var i = 0; i < 1000; i++)
+    for(var j = 0; j < 1000; j++)
+      for(var k = 0; k < 1000; k++)
+        counter += <b class="golden-block">obj.prop</b>;
+  print('Всего: ' + counter);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+function lookupAndCache() {
+  var counter = 0;
+  <b class="golden-block">var value = obj.prop;</b>
+  for(var i = 0; i < 1000; i++)
+    for(var j = 0; j < 1000; j++)
+      for(var k = 0; k < 1000; k++)
+        counter += <b class="golden-block">value</b>;
+  print('Всего: ' + counter);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+// Супер продвинутый бенчмарк фреймворк.
+function measure(f) {
+  var start = Date.now();
+  f();
+  var end = Date.now();
+  print(f.name + ' отработал за ' +
+        (end - start) + ' ms.');
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+measure(doManyLookups);
+measure(lookupAndCache);
+          </code></pre>
+        </section>
+
+        <section>
+<pre class="bigger">$ node prototype.js
+Всего: 10000000000
+<b>doManyLookups</b> отработал за <span style="color: #C00; font-weight: bolder;">8243</span> ms.
+Всего: 10000000000
+<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1058</span> ms.</pre>
+          <h1 class="fragment x-confirmed-2"><span class="x-confirmed" style="font-size: .7em; font-weight: bold;">ПОДТВЕРЖДЕНО</span></h1>
+        </section>
+
+        <section>
+          <h1>усложним задачу</h1>
+        </section>
+
+        <section>
+<pre class="smaller" style="font-size: 1em; line-height: 1.2em;"><code data-trim data-noescape class="diff">
+-   Object.create({ prop: 10 })))));
++   Object.create({ <b>get prop () { return 10 }</b> })))));
+</code></pre>
+        </section>
+
+        <section>
+<pre class="bigger">$ node prototype.js
+Всего: 10000000000
+<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1082</span> ms.
+Всего: 10000000000
+<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1061</span> ms.</pre>
+        </section>
+
+        <section>
+          <h2>&laquo;что за <span class="pinkish">уличная магия</span>?&raquo;</h2>
+        </section>
+
+        <section data-background="images/getter-0.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/getter-1.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <span class="leftish50" style="font-size: 2.5em; line-height: 1em;"><em>очень</em> старая V8 не умела инлайнить обращение к data свойствам объявленным на прототипе</span>
+        </section>
+
+        <section>
+          <h1>попробуем новую V8</h1>
+        </section>
+
+        <section>
+<pre class="bigger">
+$ d8 prototype.js
+Всего: 10000000000
+<b>doManyLookups</b> отработал за <span style="color: #C00; font-weight: bolder;">1294</span> ms.
+Всего: 10000000000
+<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
+        </section>
+
+        <section>
+<pre class="bigger">
+$ d8 prototype.js
+Всего: 10000000000
+<b>doManyLookups</b> отработал за <span style="color: green; border: 5px dashed #C00; font-weight: bolder;">1294</span> ms.
+Всего: 10000000000
+<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
+        </section>
+
+        <section>
+          <h2>проход по цепочке прототипов &mdash; инвариант цикла</h2>
+        </section>
+
+        <section>
+          <h2>а что если <br/>запустить<br/> <span class="pinkish">дважды</span>?</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+measure(doManyLookups);
+measure(doManyLookups);
+measure(lookupAndCache);
+measure(lookupAndCache);
+          </code></pre>
+        </section>
+
+        <section>
+<pre class="bigger">
+$ d8 prototype.js
+<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1301</span> ms.
+<b>doManyLookups</b> отработал за <span style="color: #C00; font-weight: bolder;">3408</span> ms.
+<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1204</span> ms.
+<b>lookupAndCache</b> отработал за <span style="color: #C00; font-weight: bolder;">3406</span> ms.
+</pre>
+        </section>
+
+        <section data-wat>
+<pre class="bigger">
+$ d8 prototype.js
+<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1301</span> ms.
+<b>doManyLookups</b> отработал за <span style="color: #C00; font-weight: bolder;">3408</span> ms.
+<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1204</span> ms.
+<b>lookupAndCache</b> отработал за <span style="color: #C00; font-weight: bolder;">3406</span> ms.
+</pre>
+        </section>
+
+        <section data-background="images/data.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/data-0.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <span class="leftish50" style="font-size: 1.5em; line-height: 1em;">Выражение <code>'Всего: ' + counter</code> влияло на представление выбираемое для переменной <code>counter</code></span>
+        </section>
+
+        <section>
+          <h3>workaround:<br/> спрятать <code>+</code> от <br/> выбора представлений</h3>
+        </section>
+
+        <section>
+<pre class="smaller" style="font-size: 1.2em; line-height: 1.1em;"><code data-trim data-noescape class="diff">
+-   print('Всего: ' + counter);
++   print('Всего: ' + counter.toString());
+</code></pre>
+        </section>
+
+        <section>
+<pre class="bigger">
+$ d8 prototype.js
+<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1298</span> ms.
+<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1119</span> ms.
+<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1188</span> ms.
+<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder; text-decoration: underline;">982</span> ms.
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+Benchmark.prototype.setup = function () {
+  var obj = { }
+
+  var _a = 0;
+  Object.defineProperty(obj, 'a', {
+    get: function () { return _a; },
+    set: function (val) { _a = val; }
+  });
+};
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="javascript">
+suite.add('Accessor', function () {
+  obj.a = 2;
+  obj.a;
+});</code></pre>
+        </section>
+
+        <section>
+<pre class="bigger">$ <b>v5.3</b>/d8 concat.js
+<table>
+  <tr>
+    <td>Accessor </td>
+    <td class="y"><span class="x x19">x   3,840,922 ops/sec &pm;1.54%</span></td>
+  </tr>
+</table>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="bigger">$ <b>v5.3</b>/d8 concat.js
+<table>
+  <tr>
+    <td>Accessor </td>
+    <td class="y"><span class="x x0 x-red">x   3,840,922 ops/sec &pm;1.54%</span></td>
+  </tr>
+</table>
+$ <b>v3.31</b>/d8 concat.js
+<table>
+  <tr>
+    <td>Accessor </td>
+    <td class="y"><span class="x x100 x-green">x 874,731,387 ops/sec &pm;1.09%</span></td>
+  </tr>
+</table>
+</pre>
+        </section>
+
+        <section data-wat>
+<pre class="bigger">$ <b>v5.3</b>/d8 concat.js
+<table>
+  <tr>
+    <td>Accessor </td>
+    <td class="y"><span class="x x0 x-red">x   3,840,922 ops/sec &pm;1.54%</span></td>
+  </tr>
+</table>
+$ <b>v3.31</b>/d8 concat.js
+<table>
+  <tr>
+    <td>Accessor </td>
+    <td class="y"><span class="x x100 x-green">x 874,731,387 ops/sec &pm;1.09%</span></td>
+  </tr>
+</table>
+</pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="javascript">
+function f() {
+  var obj = { }
+  var _a = 0;
+  Object.defineProperty(obj, 'a', {
+    get: function () { return _a; },
+    set: function(val) { _a = val; }
+  });
+  for (var i = 0; i < 1e6; i++) {
+    obj.a = 2;
+    obj.a;
+  }
+}</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+f();  // =>   2ms
+
+
+
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+f();  // =>   2ms
+f();  // => 287ms
+
+
+</code></pre>
+        </section>
+
+        <section data-wat>
+          <pre class="bigger"><code data-noescape class="javascript">
+f();  // =>   2ms
+f();  // => 287ms
+
+
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="javascript">
+Object.defineProperty(obj, 'a', {
+  /* ... */
+});
+print('obj имеет быстрые свойства: ' +
+      <span class="golden">%HasFastProperties(obj)</span>);
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="javascript">
+$ d8 <span class="golden">--allow-natives-syntax</span>
+obj имеет быстрые свойства: true
+f() took 2ms
+obj имеет быстрые свойства: false
+f() took 287ms
+</code></pre>
+        </section>
+
+        <section>
+          <h2><em>hidden class transition clash</em></h2>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="javascript">
+var obj1 = { }
+Object.defineProperty(obj1, 'a', {
+  get: function () { /* ... */ },
+  set: function(val) { /* ... */ }
+});
+var obj2 = { }
+Object.defineProperty(obj2, 'a', {
+  get: function () { /* ... */ },
+  set: function(val) { /* ... */ }
+});
+// Начальный скрытый класс для obj1/obj2 одинаков,
+// а вот после defineProperty они пришли к разным.
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="javascript">
+Object.defineProperty(obj, 'a', {
+  /* ... */
+});
+<span class="golden">Object.create(obj);</span>
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+f();  // =>   4ms
+f();  // =>   3ms
+
+
+
+</code></pre>
+        </section>
+
+        <section data-wat>
+          <pre class="bigger"><code data-noescape class="javascript">
+f();  // =>   4ms
+f();  // =>   3ms
+f();  // =>   3ms
+f();  // =>   9ms
+f();  // =>  28ms
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="javascript">
+function g() {
+  var obj = { }
+  var _a = 0;
+  <span class="golden-block">obj.a = {
+  get: function () { return _a; },
+  set: function(val) { _a = val; }
+};</span>
+
+  for (var i = 0; i < 1e6; i++) {
+    obj.a.set(2);
+    obj.a.get();
+  }
+}</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+g();  // =>  23ms
+g();  // =>  15ms
+g();  // =>  16ms
+g();  // =>  22ms
+g();  // =>  16ms
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="javascript">
+function Box(_a) {
+  this._a = _a;
+}
+
+Box.prototype.get = function () {
+  return this._a;
+};
+
+Box.prototype.set = function (val) {
+  this._a = val;
+};
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="javascript">
+function h() {
+  var obj = { }
+  obj.a = new Box(0);
+  for (var i = 0; i < 1e6; i++) {
+    obj.a.set(2);
+    obj.a.get();
+  }
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+h();  // =>   2ms
+h();  // =>   1ms
+h();  // =>   0ms
+h();  // =>   1ms
+h();  // =>   1ms
+</code></pre>
+        </section>
+
+        <section data-background="../webrebels2014/images/slide5.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section>
+          <h1>а сейчас десерт!</h1>
+        </section>
+
+        <section>
+          <h2>вызов метода <br/>против<br/>вызова функции</h2>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em;"><code data-trim data-noescape>
+function mk(word) {
+  var len = word.length;
+  if (len &gt; 255) return undefined;
+  var i = len &gt;&gt; 2;
+  return String.fromCharCode(
+    (word.charCodeAt(    0) & 0x03) &lt;&lt; 14 |
+    (word.charCodeAt(    i) & 0x03) &lt;&lt; 12 |
+    (word.charCodeAt(  i+i) & 0x03) &lt;&lt; 10 |
+    (word.charCodeAt(i+i+i) & 0x03) &lt;&lt;  8 |
+    len
+  );
+}
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape>
+Benchmark.prototype.setup = function() {
+  function mk(word) {
+    /* ... */
+  }
+
+  var MK = function() { };
+  MK.prototype.mk = mk;
+  var mker = new MK;
+};</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em;"><code data-trim data-noescape>
+suite
+  .add('Function', function() {
+    var key = mk('www.wired.com');
+    key = mk('www.youtube.com');
+    key = mk('scorecardresearch.com');
+    key = mk('www.google-analytics.com');
+  })
+  .add('Method', function() {
+    var key = mker.mk('www.wired.com');
+    key = mker.mk('www.youtube.com');
+    key = mker.mk('scorecardresearch.com');
+    key = mker.mk('www.google-analytics.com');
+  })
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger">
+$ d8 method-vs-function.js
+<table>
+  <tr>
+    <td>Function</td>
+    <td class="y"><div class="x x4 x-red">x   4,149,776 ops/sec &pm;0.62%</div></td>
+  </tr>
+  <tr>
+    <td>Method</td>
+    <td class="y"><div class="x x68 x-green">x 682,273,122 ops/sec &pm;0.72%</div></td>
+  </tr>
+</table>Fastest is Method
+</pre>
+        </section>
+
+        <section>
+          <h2>вызов метода <br/><b class="pinkish">быстрее?</b></h2>
+        </section>
+
+        <section>
+          <h2 style="padding-left: 1em; padding-right: 1em; text-transform: uppercase;">сохраните в секрете то, что вы сейчас увидите</h2>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="diff javascript">
+--- a/method-function.js
++++ b/method-function.js
+@@ -2,6 +2,9 @@
+ load("../benchmark.js");
+
+ Benchmark.prototype.setup = function() {
++   "Разгони" + "свой" + "Жава" + "Скрипт" +
++   "этим" + "супер" + "секретным" + "трюком";
++
+    function mk(word) {
+         var len = word.length;
+         if (len > 255) return undefined;
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger">
+$ d8 method-vs-function.js
+<table>
+  <tr>
+    <td>Function</td>
+    <td class="y"><div class="x x69 x-green">x 695,708,197 ops/sec &pm;0.38%</div></td>
+  </tr>
+  <tr>
+    <td>Method</td>
+    <td class="y"><div class="x x69 x-green">x 692,496,013 ops/sec &pm;0.29%</div></td>
+  </tr>
+</table>Fastest is Function,Method
+</pre>
+        </section>
+
+        <section data-wat>
+          <pre class="bigger">
+$ d8 method-vs-function.js
+<table>
+  <tr>
+    <td>Function</td>
+    <td class="y"><div class="x x69 x-green">x 695,708,197 ops/sec &pm;0.38%</div></td>
+  </tr>
+  <tr>
+    <td>Method</td>
+    <td class="y"><div class="x x69 x-green">x 692,496,013 ops/sec &pm;0.29%</div></td>
+  </tr>
+</table>Fastest is Function,Method
+</pre>
+        </section>
+
+
+        <section data-background="images/function-0.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h2><code>Function</code> не была оптимизирована</h2>
+        </section>
+
+        <section>
+          <span class="leftish50" style="font-size: 1.2em;">
+          <p>&mdash; эвристики принимающие решение о том, что оптимизировать основаны, в частности, на количестве инициализированных встроенных кэшей (inline cache);</p>
+          <p>&mdash; вызов функции не делался через IC, в отличие от вызова метода;</p>
+          <p>&mdash; <code>Method</code> содержал достаточно инициализированных IC, для срабатывания оптимизаций, а вот <code>Function</code> &mdash; нет!</p>
+          <p>&mdash; Добавленные операторы <code>+</code> увеличили количество инициализированных IC.</p>
+            <h1 class="fragment x-confirmed-2"><span class="x-confirmed-red" style="font-size: .7em; font-weight: bold;">БЛА БЛА БЛА</span></h1>
+          </span>
+        </section>
+
+        <section data-background="images/function-1.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/function-2.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h2>опять замеряем <em class="pinkish">практически</em><br/>пустой цикл!</h2>
+        </section>
+
+        <section>
+          <h2>а теперь<br/> наоборот</h2>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
+// for (var item in list) { ... }
+var sum = 0;
+for (var i = 0, L = arr.length;
+     i < arr.length;
+     ++i) {
+<span class="golden-block">  if (arr.length !== L)
+    H.throwConcurrentModificationError(arr);</span>
+  var item = list[i];
+  sum += item;
+}</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
+// for (var item in list) { ... }
+var sum = 0;
+for (var i = 0, L = arr.length;
+     i < arr.length;
+     ++i) {
+<span class="golden-block">  // if (arr.length !== L)
+  //   H.throwConcurrentModificationError(arr);</span>
+  var item = list[i];
+  sum += item;
+}</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger">
+$ d8 iteration.js
+<table>
+  <tr>
+    <td>WithCheck</td>
+    <td class="y"><div class="x x39 x-red">x 396,792 ops/sec &pm;0.37%</div></td>
+  </tr>
+  <tr>
+    <td>WithoutCheck</td>
+    <td class="y"><div class="x x46 x-green">x 456,653 ops/sec &pm;0.82%</div></td>
+  </tr>
+</table>Fastest is WithoutCheck <em class="pinkish">(by 18%)</em>
+</pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
+// for (var item in list) { ... }
+var sum = 0;
+for (var i = 0, L = arr.length;
+     i < arr.length;
+     ++i) {
+<span class="golden-block">  if (arr.length !== L)
+    H.throwConcurrentModificationError(arr);</span>
+  var item = list[i];
+  sum += item;
+}</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1.2em;"><code data-trim data-noescape class="javascript">
+// for (var item in list) { ... }
+var sum = 0;
+for (var i = 0, L = arr.length;
+     i < arr.length;
+     ++i) {
+<span class="golden-block">  if (arr.length !== L)
+    <b>(0,H.throwConcurrentModificationError)</b>(arr);</span>
+  var item = list[i];
+  sum += item;
+}</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger">
+$ d8 iteration.js
+<table>
+  <tr>
+    <td>WithCheck</td>
+    <td class="y"><div class="x x39 x-red">x 396,792 ops/sec &pm;0.37%</div></td>
+  </tr>
+  <tr>
+    <td>WithoutCheck</td>
+    <td class="y"><div class="x x45 x-green">x 456,653 ops/sec &pm;0.82%</div></td>
+  </tr>
+  <tr>
+    <td>WithHack</td>
+    <td class="y"><div class="x x46 x-green">x 462,698 ops/sec &pm;0.48%</div></td>
+  </tr>
+</table>Fastest is WithoutCheck,WithHack
+</pre>
+        </section>
+
+        <section data-wat>
+          <pre class="bigger">
+$ d8 iteration.js
+<table>
+  <tr>
+    <td>WithCheck</td>
+    <td class="y"><div class="x x39 x-red">x 396,792 ops/sec &pm;0.37%</div></td>
+  </tr>
+  <tr>
+    <td>WithoutCheck</td>
+    <td class="y"><div class="x x45 x-green">x 456,653 ops/sec &pm;0.82%</div></td>
+  </tr>
+  <tr>
+    <td>WithHack</td>
+    <td class="y"><div class="x x46 x-green">x 462,698 ops/sec &pm;0.48%</div></td>
+  </tr>
+</table>Fastest is WithoutCheck,WithHack
+</pre>
+        </section>
+
+        <section>
+          <h3>разогнали на <b>18%</b> заменив<br> <code>o.f()</code> на <code>(0,o.f)()</code><br/><span class="pinkish">в коде, который<br/> никогда на исполняется</span></h3>
+        </section>
+
+        <section data-background="images/call-0.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/call-1.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/call-2.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/call-3.png" data-background-size="contain">
+        </section>
+
+        <section data-background="images/call-4.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h1 class="pinkish">СПАСИБО</h1>
+        </section>
+
+        <section>
+          <h1 class="pinkish">ПОСТОЙТЕ</h1>
+          <h3>а как же тот пример с <code>ChaCha20</code>?</h3>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="javascript">
+function getBlock(buffer) {
+  var x = new Uint32Array(16);
+
+  for (var i = 16; i--;) x[i] = input[i];
+  for (var i = 20; i > 0; i -= 2) {
+    // quarterRound(x, 0, 4, 8,12);
+<span class="golden-block">    x[ 0] += x[ 4]; x[12] = ((x[12] ^ x[ 0]) << 16) | ((x[12] ^ x[ 0]) >>> 16);
+    x[ 8] += x[12]; x[ 4] = ((x[ 4] ^ x[ 8]) << 12) | ((x[ 4] ^ x[ 8]) >>> 20);
+    x[ 0] += x[ 4]; x[12] = ((x[12] ^ x[ 0]) <<  8) | ((x[12] ^ x[ 0]) >>> 24);
+    x[ 8] += x[12]; x[ 4] = ((x[ 4] ^ x[ 8]) <<  7) | ((x[ 4] ^ x[ 8]) >>> 25);</span>
+    // ... so on ...
+  }
+  for (i = 16; i--;) x[i] += input[i];
+  for (i = 16; i--;) U32TO8_LE(buffer, 4 * i, x[i]);
+  input[12]++;
+  return buffer;
+}          </code></pre>
+        </section>
+
+        <section data-background="images/use-asm.png" data-background-size="contain">
+        </section>
+
+        <section>
+          <h2>повторяющаяся деоптимизация всегда баг V8</h2>
+        </section>
+
+
+        <section>
+          <span class="leftish50" style="font-size: 1.8em;">
+            <p>&mdash; инлайн <code>U32TO8_LE</code> ломал <em>safe-uint32</em> анализ</p>
+            <p>&mdash; длинный комментарий в <code>U32TO8_LE</code> отключал инлайн</p>
+            <p>&mdash; есть и вменяемые способы обойти проблему</p>
+          </span>
+        </section>
+
+        <section>
+          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="javascript">
+function getBlock(buffer) {
+  var x = new Uint32Array(16);
+
+  for (var i = 16; i--;) x[i] = input[i];
+  for (var i = 20; i > 0; i -= 2) {
+    // ...
+  }
+  for (i = 16; i--;) x[i] += input[i];
+  for (i = 16; i--;) U32TO8_LE(buffer, 4 * i, <b class="golden-block">x[i]|0</b>);
+  //                            ОБРЕЗАТЬ ДО INT32 ^^
+  input[12]++;
+  return buffer;
+}          </code></pre>
+        </section>
+
+        <section>
+          <h2>разработчики VM<br/> ваши друзья! <br/> (шлите баги)</h2>
+        </section>
+
+        <section>
+          <h1 class="pinkish">СПАСИБО</h1>
+        </section>
+
+      </div>
+
+      <div id="footer" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          font-size: 1.0em; text-align: center;
+          padding: 4px; z-index: 99;
+      "></div>
+
+      <div id="right-column"></div>
+		</div>
+
+		<script src="js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: 'simple', // available themes are in /css/theme
+				transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+				backgroundTransition: 'none',
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+        margin: 0.0,
+        width: 1280,
+        height: 720,
+        //width: 1024, // 1950,
+        //height: 768, // 1080,
+
+        slideNumber: 'c/t',
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'js/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'js/math.js', async: true },
+				]
+			});
+
+      function updateFooter(slide) {
+        var footer = document.getElementById("footer");
+        footer.innerHTML = "";
+
+        var text = slide.getAttribute("data-footer") || "";
+
+        if (text !== "") {
+          var anchor = document.createElement("a");
+          anchor.href = anchor.innerText = text;
+          footer.appendChild(anchor);
+        }
+
+        var right_column = document.getElementById("right-column");
+        right_column.classList.toggle('wat', slide.hasAttribute("data-wat"));
+      }
+
+      Reveal.addEventListener('ready', function(event) { updateFooter(event.currentSlide); });
+      Reveal.addEventListener('slidechanged', function(event) { updateFooter(event.currentSlide); });
+
+      (function () {
+        var style = document.createElement("style");
+        document.head.appendChild(style);
+
+        var percents = [].slice.call(document.querySelectorAll(".x")).forEach(function (el) {
+          var classes = el.classList.toString();
+          var p = classes.match(/\bx(\d+)\b/)[1];
+
+          style.sheet.addRule(".x" + p + "::after", "width: " + p + "%;")
+        });
+      })();
+		</script>
+
+    <style>
+      .wat-x {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        background-image: url('images/wat.png');
+        background-attachment: fixed;
+        background-position: center right;
+        background-repeat: no-repeat;
+        background-size: auto 60%;
+      }
+
+      #right-column.wat {
+        background-image: url('images/wat.png');
+        background-attachment: fixed;
+        background-position: center right;
+        background-repeat: no-repeat;
+        background-size: auto 60%;
+      }
+
+      #right-column {
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          top: 0px;
+          width: 100%;
+          z-index: 99;
+      }
+
+      .x-confirmed-2 {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+
+      }
+
+      .x-confirmed {
+        font-weight: bold;
+        border: 10px solid green !important;
+        color: green;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+      .x-confirmed-red {
+        font-weight: bold;
+        border: 10px solid #dc1e1a !important;
+        color: #dc1e1a;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+
+      pre.bigger {
+        font-size: 1.4em !important;
+      }
+
+      pre:not(.smaller) {
+        font-size: 1.4em !important;
+      }
+
+      pre.bigger15 {
+        font-size: 1.75em !important;
+      }
+
+
+      pre.bigger2 {
+        font-size: 2em !important;
+      }
+
+      pre.bigger3 {
+        font-size: 3em !important;
+      }
+
+      pre.mediumer {
+        font-size: 1.2em !important;
+      }
+
+      .B h1 {
+        font-size: 6em;
+      }
+
+      .B h2 {
+        font-size: 4em;
+      }
+
+      .B h3 {
+        font-size: 2em;
+      }
+
+      .B ul {
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      section:not(.S) h1 {
+        font-size: 6em;
+      }
+
+      section:not(.S) h2 {
+        font-size: 4em;
+      }
+
+      section:not(.S) h3 {
+        font-size: 2em;
+      }
+
+      section:not(.S) ul {
+        font-size: 3em;
+        line-height: 1em;
+      }
+
+      /*
+      .B p {
+        font-size: 1.5em;
+      }
+      */
+
+      span.green {
+        font-weight: bold !important;
+        color: green;
+      }
+
+      span.red {
+        font-weight: bold !important;
+        color: red !important;
+      }
+
+      span.greenish-block {
+        background: rgba(0, 255, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.fade-away {
+        opacity: 0.1;
+      }
+
+      span.anti-fade {
+        font-weight: bold;
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      .yellow {
+        color: #f57f17;
+        font-weight: bold !important;
+      }
+
+      .dr, .dr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+      }
+
+      .udr, .udr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+        text-decoration: underline;
+      }
+
+      .pinkish {
+        color: #dc1e1a !important;
+      }
+
+      .greenish {
+        color: green !important;
+      }
+
+      .ccc {
+        display: inline-block !important;
+        width: auto !important;
+      }
+
+      .cap {
+        text-transform: uppercase !important;
+      }
+
+      .borderish {
+        border: 1px dashed;
+      }
+
+      span.leftish {
+        text-align: left;
+        display: inline-block;
+      }
+
+      span.leftish50 {
+        text-align: left;
+        display: inline-block;
+        max-width: 70%;
+
+      }
+
+      .golden-block {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.golden {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      span.redish {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      .redish-block {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+
+          .y {
+  position: relative;
+}
+
+.x {
+  position: relative;
+  z-index: 100;
+  color: black;
+}
+
+.x::after {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+}
+
+.x-red::after {
+  background: rgba(215, 25, 28 , 1.0);
+}
+
+.x-green::after {
+  background: rgba(145, 207, 96, 1.0);
+}
+
+.x-gold::after {
+  background: rgba(253,174,97, 1.0);
+}
+
+.x::before {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+    </style>
+
+	</body>
+</html>
