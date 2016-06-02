@@ -43,7 +43,8 @@
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
         <section>
-          <h2 style="text-transform:uppercase; font-weight: 600; font-family: 'Phenomena'">производительность JavaScript через<br/> подзорную трубу</h2>
+          <h2 style="text-transform:uppercase; font-weight: 800; font-family: 'Phenomena'">производительность JavaScript через<br/> подзорную трубу</h2>
+          <h3 style="text-transform:uppercase; font-weight: 400; font-family: 'Phenomena'">Вячеслав Егоров</h3>
         </section>
 
         <section>
@@ -377,7 +378,7 @@ function U32TO8_LE(x, i, u) {
     //   8b     d8 L    ,M9  MM      /         d'      YM. L    ,M9  M   `'   MM
     //    YMMMMM9  MYMMMM9  _MMMMMMMMM       _dM_     _dMM_MYMMMM9  _M_      _MM_
     //
-<span class="golden-block">    // ^^^^^^ Don't remove this comment it makes the code 10x faster. ^^^^^^</span>
+<span class="golden-block">    // ^^^^^^ НЕ УДАЛЯТЬ! РАЗГОНЯЕТ КОД В 10 РАЗ. ^^^^^^</span>
     x[i]   = u; u >>>= 8;
     x[i+1] = u; u >>>= 8;
     x[i+2] = u; u >>>= 8;
@@ -1076,7 +1077,7 @@ $ d8 concat.js
         </section>
 
         <section>
-          <h2>&laquo;чепочки прототипов <span class="pinkish">медленные</span>&raquo;</h2>
+          <h2>&laquo;цепочки прототипов <span class="pinkish">медленные</span>&raquo;</h2>
         </section>
 
         <section>
@@ -1674,9 +1675,9 @@ $ d8 method-vs-function.js
 
         <section>
           <span class="leftish50" style="font-size: 1.2em;">
-          <p>&mdash; эвристики принимающие решение о том, что оптимизировать основаны, в частности, на количестве инициализированных встроенных кэшей (inline cache);</p>
+          <p>&mdash; эвристики, принимающие решение об оптимизации, основаны в том числе и на количестве инициализированных встроенных кэшей (inline cache);</p>
           <p>&mdash; вызов функции не делался через IC, в отличие от вызова метода;</p>
-          <p>&mdash; <code>Method</code> содержал достаточно инициализированных IC, для срабатывания оптимизаций, а вот <code>Function</code> &mdash; нет!</p>
+          <p>&mdash; <code>Method</code> содержал достаточно инициализированных IC для срабатывания оптимизаций, а вот <code>Function</code> &mdash; нет!</p>
           <p>&mdash; Добавленные операторы <code>+</code> увеличили количество инициализированных IC.</p>
             <h1 class="fragment x-confirmed-2"><span class="x-confirmed-red" style="font-size: .7em; font-weight: bold;">БЛА БЛА БЛА</span></h1>
           </span>
@@ -1895,7 +1896,9 @@ function getBlock(buffer) {
         </section>
 
         <section>
-          <h1 class="pinkish">СПАСИБО</h1>
+          <h1 class="pinkish" style="font-family: Phenomena;">СПАСИБО</h1>
+          <h1 class="pinkish" style="font-family: Phenomena;">Q&A</h1>
+          <h3 style="font-family: Phenomena;">[me@mrale.ph | @mraleph]</h3>
         </section>
 
       </div>

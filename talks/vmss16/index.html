@@ -66,16 +66,125 @@
         </section>
 
         <section>
-          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="lua">
+          <pre><code data-trim data-noescape class="lua">
 local p = { x = 1, y = 1 }
 for i = 1, 100 do
-  p = { x = p.x + i, y = p.y - i }
+  p = { x = p.x + i,
+        y = p.y - i }
+end
+          </code></pre>
+        </section>
+
+        <section><h2>whirlwind introduction to Lua</h2></section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+-- dynamically typed
+local v
+v = 1
+v = "string"
+v = true
+v = { } -- table
+v = function () end
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+-- tables are key-value dictionaries
+-- key is any type
+local p = {
+  x = 1,
+  y = 1,
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+-- tables are key-value dictionaries
+-- key is any type
+local p = {
+  ['x'] = 1,
+  ['y'] = 1,
+  [222] = 1,
+  [{ }] = 1
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+-- single numeric type:
+-- double precision floating point
+type(1)   -- 'number'
+type(1.0) -- 'number'
+type(1.1) -- 'number'
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+-- metatables alter behavior of tables
+local tbl = {}
+setmetatable(tbl, {
+  __index = function (self, key)
+    print('index', key)
+    return 0
+  end,
+  __newindex = function (self, key, val)
+    print('newindex', key, val)
+  end
+})
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+-- metatables alter behavior of tables
+print(tbl['somekey'])
+-- index somekey
+-- 0
+tbl[42] = 'somevalue';
+-- newindex 42 somevalue
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+local tbl = {}
+setmetatable(tbl, {
+  __index = { x = 42 }
+})
+print(tbl.x) -- 42
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+-- metatables alter behavior of tables
+setmetatable(tbl, {
+  -- will be called when evaluating
+  -- + expression with tbl
+  __add = function ()
+    ...
+  end
+})
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+local p = { x = 1, y = 1 }
+for i = 1, 100 do
+  p = { x = p.x + i,
+        y = p.y - i }
 end
           </code></pre>
         </section>
 
         <section>
-          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="nasm">
+          <pre><code data-trim data-noescape class="nasm">
 ->LOOP:
   xorps xmm5, xmm5
   cvtsi2sd xmm5, ebp
@@ -94,10 +203,12 @@ end
         </section>
 
          <section>
-          <pre class="smaller" style="font-size: 1em; line-height: 1em;"><code data-trim data-noescape class="lua">
+          <pre><code data-trim data-noescape class="lua">
 local p = { x = 1, y = 1, <span class="golden">[1] = 1</span> }
 for i = 1, 100 do
-  p = { x = p.x + i, y = p.y - i, <span class="golden">[1] = p[1]</span> }
+  p = { x = p.x + i,
+        y = p.y - i,
+        <span class="golden">[1] = p[1]</span> }
 end
           </code></pre>
         </section>
@@ -555,6 +666,59 @@ delta is 8 byte aligned
         </section>
 
         <section>
+<pre>
+interpreter
++--------------------+
+|      ...           |
+| PC &rarr; <b>ISEQV</b> A, D    |
+|      <b>JUMP</b> target   |
+|      ...           |
++--------------------+
+</pre>
+        </section>
+
+        <section>
+<pre>
+interpreter
++--------------------+
+| +--------------------+
+| | nested interpreter |
+| | for the metamethod |
+| |                    |
++-|                    |
+  +--------------------+
+</pre>
+        </section>
+
+        <section>
+<pre>
+interpreter
++--------------------+
+|      ...           | branch on the result from
+| PC &rarr; <b>ISEQV</b> A, D    | the nested interpreter
+|      <b>JUMP</b> target   |
+|      ...           |
++--------------------+
+</pre>
+        </section>
+
+        <section>
+          <h2>continuations make it simpler</h2>
+        </section>
+
+        <section>
+          <pre>
+     BASE                        metamethod
+     &darr;                          /-- frame -->
+~----+-~ ~-+------+------+------+------+---~
+     |     |      |___   |      |      |
+~----+-~ ~-+------+-&uarr;----+------+------+---~
+     \------------/ continuation callback
+      current frame   (e.g. cont_condt)
+</pre>
+        </section>
+
+        <section>
           <h2>let's talk about DISPATCH</h2>
         </section>
 
@@ -640,6 +804,247 @@ hotcount[(PC>>2) & (HOTCOUNT_SIZE-1)]
 
         <section>
           <h3>recording pipeline</h3>
+        </section>
+
+        <section>
+          <h2>tracing 101</h2>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .
+
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  ._
+
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .__
+
+
+</pre>
+        </section>
+
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .___
+
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>
+      \_
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>
+      \__
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>
+      \___
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>
+      \____
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     _
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     __
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     ___
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     ____
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     _____
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>          _
+  .___<span class='deopt'>/</span>     _____/
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>          __
+  .___<span class='deopt'>/</span>     _____/
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>          ___
+  .___<span class='deopt'>/</span>     _____/
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+                      _
+       <span class='deopt'>_</span>          ___/
+  .___<span class='deopt'>/</span>     _____/   <span class='deopt'>\_</span>
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+                      __
+       <span class='deopt'>_</span>          ___/
+  .___<span class='deopt'>/</span>     _____/   <span class='deopt'>\_</span>
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+                      ___
+       <span class='deopt'>_</span>          ___/
+  .___<span class='deopt'>/</span>     _____/   <span class='deopt'>\_</span>
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+                      ___.
+       <span class='deopt'>_</span>          ___/
+  .___<span class='deopt'>/</span>     _____/   <span class='deopt'>\_</span>
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+                <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .______________________.
+      <span class="deopt2">\_</span>      <span class="deopt2">\_</span>   <span class="deopt2">\_</span>  <span class="deopt2">\_</span>
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .______________________.
+      <span class="deopt2">\_</span>      <span class="deopt2">\_</span>   <span class="deopt2">\_</span>  <span class="deopt2">\_</span>
+<span style="font-weight: normal;">guard-^-------^----^---^</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+<span style="font-weight: normal">hot side exits spawn side traces</span>
+
+  .______________________.
+      <span class="deopt2">\_</span>      <span class="deopt3">\__</span>  <span class="deopt2">\_</span>  <span class="deopt2">\_</span>
+                 <span class="deopt3">\_&hellip;</span>
+</pre>
+        </section>
+
+        <section>
+          <h2>back to recording</h2>
         </section>
 
         <section>
@@ -991,7 +1396,312 @@ for i = 1, n do
 end
 </code></pre></section>
 
-        <section><pre class="smaller3">
+        <section><pre>
+0006 TGETV  r8, r1, r7
+0007 ADDVV  r3, r3, r8
+0008 FORL   r4 => 0006
+
+
+
+
+        </pre></section>
+
+        <section><pre>
+0006 TGETV  r8, r1, r7 ; r8 = r1[r7]
+0007 ADDVV  r3, r3, r8 ; r3 = r3 + r8
+0008 FORL   r4 => 0006 ; r4 = r4 + r6
+                       ; if r4 <= r5 then
+                       ;   r7 = r4
+                       ;   jump 0006
+                       ; end
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ]
+                         &#8214;
+  0006 TGETV  r8, r1, r7 &#8214;
+  0007 ADDVV  r3, r3, r8 &#8214;
+  0008 FORL   r4 => 0006 &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ]
+&rArr; <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214;
+  0006 TGETV  r8, r1, r7 &#8214;
+  0007 ADDVV  r3, r3, r8 &#8214;
+  0008 FORL   r4 => 0006 &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2 highlight-bold">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- ---- ---- ---- <b>0003</b> <b>0001</b> ---- <b>0003</b> ---- ]
+&rArr; <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+  0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2 highlight-bold">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- <b>0004</b> ---- ---- 0003 0001 ---- 0003 ---- ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+&rArr; 0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; <u>0004 SLOAD  R1</u>
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- ---- 0003 0001 ---- 0003 ---- ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+&rArr; 0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; <u>0005 FLOAD  0004  tab.asize</u>
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- ---- 0003 0001 ---- 0003 ---- ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+&rArr; 0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; <u>0006 ABC    0005  0001</u>
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- ---- 0003 0001 ---- 0003 ---- ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+&rArr; 0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; <u>0007 FLOAD  0004  tab.array</u>
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- ---- 0003 0001 ---- 0003 ---- ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+&rArr; 0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; 0007 FLOAD  0004  tab.array
+                         &#8214; <u>0008 AREF   0007  0003</u>
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2 highlight-bold">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- ---- 0003 0001 ---- 0003 <b>0009</b> ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+&rArr; 0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; 0007 FLOAD  0004  tab.array
+                         &#8214; 0008 AREF   0007  0003
+                         &#8214; <u>0009 ALOAD  0008</u>
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- ---- 0003 0001 ---- 0003 0009 ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+  0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+&rArr; 0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; 0007 FLOAD  0004  tab.array
+                         &#8214; 0008 AREF   0007  0003
+                         &#8214; 0009 ALOAD  0008
+                         &#8214;
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2 highlight-bold">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- <b>0010</b> 0003 0001 ---- 0003 0009 ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+  0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+&rArr; 0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; 0007 FLOAD  0004  tab.array
+                         &#8214; 0008 AREF   0007  0003
+                         &#8214; 0009 ALOAD  0008
+                         &#8214; <u>0010 SLOAD  R3</u>
+                         &#8214;
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2 highlight-bold">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- <b>0011</b> 0003 0001 ---- 0003 0009 ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+  0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+&rArr; 0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+  0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; 0007 FLOAD  0004  tab.array
+                         &#8214; 0008 AREF   0007  0003
+                         &#8214; 0009 ALOAD  0008
+                         &#8214; 0010 SLOAD  R3    T
+                         &#8214; <u>0011 ADD    0010  0009</u>
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- 0011 0003 0001 ---- 0003 0009 ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+  0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+&rArr; 0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; 0007 FLOAD  0004  tab.array
+                         &#8214; 0008 AREF   0007  0003
+                         &#8214; 0009 ALOAD  0008
+                         &#8214; 0010 SLOAD  R3
+                         &#8214; 0011 ADD    0010  0009
+                         &#8214;
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2 highlight-bold">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- 0011 <b>0012</b> 0001 ---- <b>0012</b> 0009 ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+  0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+&rArr; 0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; 0007 FLOAD  0004  tab.array
+                         &#8214; 0008 AREF   0007  0003
+                         &#8214; 0009 ALOAD  0008
+                         &#8214; 0010 SLOAD  R3
+                         &#8214; 0011 ADD    0010  0009
+                         &#8214; <u>0012 ADD    0003  +1</u>
+                         &#8214;
+        </pre></section>
+
+        <section><pre class="smaller2">
+                     <em>arr       sum  (i)  lim  step i</em>
+                R0   R1   R2   R3   R4   R5   R6   R7   R8
+         [ ---- ---- 0004 ---- 0011 0012 0001 ---- 0012 0009 ]
+  <span style="opacity: .5;">0005 FORI   r4 => 0009</span> &#8214; 0001 SLOAD  R5
+  0006 TGETV  r8, r1, r7 &#8214; 0002 LE     0001  +2147483646
+  0007 ADDVV  r3, r3, r8 &#8214; 0003 SLOAD  R4
+&rArr; 0008 FORL   r4 => 0006 &#8214; 0004 SLOAD  R1
+                         &#8214; 0005 FLOAD  0004  tab.asize
+                         &#8214; 0006 ABC    0005  0001
+                         &#8214; 0007 FLOAD  0004  tab.array
+                         &#8214; 0008 AREF   0007  0003
+                         &#8214; 0009 ALOAD  0008
+                         &#8214; 0010 SLOAD  R3
+                         &#8214; 0011 ADD    0010  0009
+                         &#8214; 0012 ADD    0003  +1
+                         &#8214; <u>0013 LE     0012  0001</u>
+        </pre></section>
+
+        <section><pre class="smaller2">
 0001 >  int SLOAD  #6    CRI
 0002 >  int LE     0001  +2147483646
 0003    int SLOAD  #5    CI
@@ -1005,10 +1715,27 @@ end
 0011  + num ADD    0010  0009
 0012  + int ADD    0003  +1
 0013 >  int LE     0012  0001
-....        SNAP   #2   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
+....        SNAP   #2   [ &mdash; &mdash; &mdash; &mdash; 0011 0012 0001 &mdash; 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3 highlight-bold">
+        <section><pre class="smaller2 highlight-bold">
+0001 >  <b>int</b> SLOAD  #6    CRI
+0002 >  <b>int</b> LE     0001  +2147483646
+0003    <b>int</b> SLOAD  #5    CI
+0004 >  <b>tab</b> SLOAD  #2    T
+0005    <b>int</b> FLOAD  0004  tab.asize
+0006 >  p32 ABC    0005  0001
+0007    p32 FLOAD  0004  tab.array
+0008    p32 AREF   0007  0003
+0009 >  <b>num</b> ALOAD  0008
+0010 >  <b>num</b> SLOAD  #4    T
+0011  + <b>num</b> ADD    0010  0009
+0012  + <b>int</b> ADD    0003  +1
+0013 >  <b>int</b> LE     0012  0001
+....        SNAP   #2   [ &mdash; &mdash; &mdash; &mdash; 0011 0012 0001 &mdash; 0012 ]
+</pre></section>
+
+        <section><pre class="smaller2 highlight-bold">
 <b>0001 SLOAD  #6    CRI</b>          |
 0002 LE     0001  +2147483646  |
 0003 SLOAD  #5    CI           |
@@ -1025,7 +1752,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3 highlight-bold">
+        <section><pre class="smaller2 highlight-bold">
 <b>0001 SLOAD  #6    CRI</b>          |
 0002 LE     0001  +2147483646  |
 0003 SLOAD  #5    CI           |
@@ -1042,7 +1769,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 <b>0001</b> ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 <b>0001 SLOAD  #6    CRI</b>          | <span class="mat-green-bold">===> 0001</span>
 0002 LE     0001  +2147483646  |
 0003 SLOAD  #5    CI           |
@@ -1059,7 +1786,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 <b>0002 LE     0001  +2147483646</b>  |
 0003 SLOAD  #5    CI           |
@@ -1077,7 +1804,7 @@ end
 </pre></section>
 
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 <b>0002 LE     0001  +2147483646</b>  | <span class="mat-green-bold">===> LE    <b>[0001]</b> +2147483646</span>
 0003 SLOAD  #5    CI           |
@@ -1094,7 +1821,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 <b>0002 LE     0001  +2147483646</b>  | <span class="mat-green-bold">===> LE     0001  +2147483646</span>
 0003 SLOAD  #5    CI           |
@@ -1111,7 +1838,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 <b>0002 LE     0001  +2147483646</b>  | <span class="mat-green-bold">0002</span>
 0003 SLOAD  #5    CI           |
@@ -1128,7 +1855,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 <b>0003 SLOAD  #5    CI</b>           | <span class="mat-green-bold">0012</span>
@@ -1145,7 +1872,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 <b>0012</b> 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1162,7 +1889,7 @@ end
 .... SNAP   [ ---- ---- <b>----</b> ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1179,7 +1906,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1196,7 +1923,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1213,7 +1940,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1230,7 +1957,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1247,7 +1974,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1264,7 +1991,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1281,7 +2008,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1298,7 +2025,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1315,7 +2042,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1332,7 +2059,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- <b>0011</b> 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1349,7 +2076,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1366,7 +2093,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1383,7 +2110,7 @@ end
 .... SNAP   [ ---- ---- ---- ---- 0011 0012 0001 ---- 0012 ]
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1401,7 +2128,7 @@ end
 
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1419,7 +2146,7 @@ end
 <span class="mat-green-bold">.... SNAP   [ ---- ---- ---- ---- 0017 0018 0001 ---- 0018 ]</span>
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1437,7 +2164,7 @@ end
 <span class="mat-green-bold">.... SNAP   [ ---- ---- ---- ---- <b>0017</b> <b>0018</b> 0001 ---- <b>0018</b> ]</span>
 </pre></section>
 
-        <section><pre class="smaller3  highlight-bold">
+        <section><pre class="smaller2  highlight-bold">
 0001 SLOAD  #6    CRI          | 0001
 0002 LE     0001  +2147483646  | 0002
 0003 SLOAD  #5    CI           | 0012
@@ -1570,28 +2297,155 @@ jnb ->0 ; is num?
         </section>
 
         <section>
-<pre><code class="nasm">
-cmp dword [rdx+0x1c], XXXX
-jnz ->0
-mov ecx, [rdx+0x14] ; tab.node
-mov rdi, 0xfffffffb00052de0 ; "fld"
-cmp rdi, [rcx+YYYY]
-jnz ->0
-lea eax, [rcx+0x18]
-cmp dword [rax+0x4], 0xfffeffff
-jnb ->0 ; is num?
+          <h2>OOP?</h2>
+        </section>
+
+        <section>
+<pre><code class="lua">
+local M = {}
+function M:getFld()
+  return self.fld
+end
+
+local s = setmetatable({fld = 1},
+                       {__index = M})
+local sum = 0
+for i = 0, 100 do
+  sum = sum + s:getFld()
+end
 </code></pre>
         </section>
 
         <section>
-          <h2>OOP?</h2>
+<pre class="highlight-bold smaller2">
+0003    p32 HREF   0002  "getFld"
+0004 >  p32 EQ     0003  [0x00042458]
+0005    tab FLOAD  0002  tab.meta
+0006 >  tab NE     0005  NULL
+0007    int FLOAD  0005  tab.hmask
+0008 >  int EQ     0007  +1
+0009    p32 FLOAD  0005  tab.node
+0010 >  p32 HREFK  0009  "__index" @1
+0011 >  tab HLOAD  0010
+0012    int FLOAD  0011  tab.hmask
+0013 >  int EQ     0012  +1
+0014    p32 FLOAD  0011  tab.node
+0015 >  p32 HREFK  0014  "getFld" @0
+0016 >  fun HLOAD  0015
+0017 >  fun EQ     0016  y.lua:4
+<em>... fld load here ...</em>
+</pre>
         </section>
+
+                <section>
+<pre class="highlight-bold smaller2">
+<b>0003    p32 HREF   0002  "getFld"
+0004 >  p32 EQ     0003  [0x00042458]</b>
+0005    tab FLOAD  0002  tab.meta
+0006 >  tab NE     0005  NULL
+0007    int FLOAD  0005  tab.hmask
+0008 >  int EQ     0007  +1
+0009    p32 FLOAD  0005  tab.node
+0010 >  p32 HREFK  0009  "__index" @1
+0011 >  tab HLOAD  0010
+0012    int FLOAD  0011  tab.hmask
+0013 >  int EQ     0012  +1
+0014    p32 FLOAD  0011  tab.node
+0015 >  p32 HREFK  0014  "getFld" @0
+0016 >  fun HLOAD  0015
+0017 >  fun EQ     0016  y.lua:4
+<em>... fld load here ...</em>
+</pre>
+        </section>
+
+                <section>
+<pre class="highlight-bold smaller2">
+0003    p32 HREF   0002  "getFld"
+0004 >  p32 EQ     0003  [0x00042458]
+<b>0005    tab FLOAD  0002  tab.meta
+0006 >  tab NE     0005  NULL
+0007    int FLOAD  0005  tab.hmask
+0008 >  int EQ     0007  +1
+0009    p32 FLOAD  0005  tab.node
+0010 >  p32 HREFK  0009  "__index" @1
+0011 >  tab HLOAD  0010</b>
+0012    int FLOAD  0011  tab.hmask
+0013 >  int EQ     0012  +1
+0014    p32 FLOAD  0011  tab.node
+0015 >  p32 HREFK  0014  "getFld" @0
+0016 >  fun HLOAD  0015
+0017 >  fun EQ     0016  y.lua:4
+<em>... fld load here ...</em>
+</pre>
+        </section>
+
+                <section>
+<pre class="highlight-bold smaller2">
+0003    p32 HREF   0002  "getFld"
+0004 >  p32 EQ     0003  [0x00042458]
+0005    tab FLOAD  0002  tab.meta
+0006 >  tab NE     0005  NULL
+0007    int FLOAD  0005  tab.hmask
+0008 >  int EQ     0007  +1
+0009    p32 FLOAD  0005  tab.node
+0010 >  p32 HREFK  0009  "__index" @1
+0011 >  tab HLOAD  0010
+<b>0012    int FLOAD  0011  tab.hmask
+0013 >  int EQ     0012  +1
+0014    p32 FLOAD  0011  tab.node
+0015 >  p32 HREFK  0014  "getFld" @0
+0016 >  fun HLOAD  0015</b>
+0017 >  fun EQ     0016  y.lua:4
+<em>... fld load here ...</em>
+</pre>
+        </section>
+
+        <section><h2>problematic if not invariant</h2></section>
 
         <section>
           <h2>traces are not reentrant</h2>
           <p>[can't call lua_CFunction&stay on trace]</p>
           <p>[though LJ2.1 has <em>stitching</em>]
         </section>
+
+        <section><pre><code class="lua">
+local str = "abcd"
+local sum = 0
+for i = 0, 100 do
+  str = str:gsub('a', 'z')  -- C func
+           :gsub('z', 'a')  -- C func
+end</code></pre></section>
+
+        <section>
+<pre style="font-size: 4em; font-weight: 900">
+           <span style="font-weight: normal;">gsub</span>
+  *--------X
+  &uarr;                  <span style="font-weight: normal;">gsub</span>
+  .         *--------X
+  .
+  .                  *--+
+  .                     .
+  .                     .
+  .......................
+
+</pre>
+        </section>
+
+        <section>
+<pre style="font-size: 4em; font-weight: 900">
+           <span style="font-weight: normal;">gsub</span>
+  *--------X
+  &uarr;                  <span style="font-weight: normal;">gsub</span>
+  .         *--------X
+  .
+  .                  *--+
+  . <span style="font-weight: normal; color: red;">state transfer via</span>  .
+  . <span style="font-weight: normal; color: red;">interpreter state</span>   .
+  .......................
+
+</pre>
+        </section>
+
 
         <section>
           <h2>builtin library?</h2>
@@ -1631,7 +2485,7 @@ LJLIB_LUA(table_remove) /*
         <section>
 <pre><code class="lua">
 ffi.cdef [[
-typedef struct { uint8_t a, b; } S;
+typedef struct { int32_t x, y; } S;
 double f(S* p, size_t n);
 ]]
 local S = ffi.typeof('S')
@@ -1646,6 +2500,34 @@ ffi.C.f(arr, 2)
         <section>
           <h3>ffi objects have<br/> frozen metatables</h3>
           <p>[see issue #41 for normal tables]</p>
+        </section>
+
+        <section>
+<pre><code class="lua">
+ffi.cdef[[
+typedef struct { int32_t x, y; } S;
+]]
+local M = {}
+function M:getX() return self.x end
+local S = ffi.metatype('S', {__index=M})
+local s = S(1,2)
+
+local sum = 0
+for i = 0, 100 do
+  sum = sum + s:getX()
+end
+</code></pre>
+        </section>
+
+        <section>
+          <pre>
+0003    u16 <b>FLOAD</b>  0002  cdata.ctypeid
+0004 >  int <b>EQ</b>     0003  +<b style="color: red;">XXXX</b>
+0005    p64 <b>ADD</b>    0002  +<b style="color: red;">YYYY</b>
+0006    int <b>XLOAD</b>  0005
+
+<u>no table probing!</u>
+</pre>
         </section>
 
         <section>
@@ -2043,6 +2925,18 @@ end
   z-index: -10;
   width: 100%;
   background: rgba(0, 0, 0, 0.1);
+}
+
+span.deopt {
+  opacity: .3;
+}
+
+span.deopt2 {
+  color: red;
+}
+
+span.deopt3 {
+  color: green;
 }
     </style>
 
