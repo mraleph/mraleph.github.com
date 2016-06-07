@@ -48,6 +48,25 @@
         </section>
 
         <section>
+          <pre><code data-noescape class="nasm">
+20  mov eax,[ebp+0x8]
+23  test al,0x1
+25  jz 242
+31  mov ecx,[eax-0x1]
+34  cmp ecx,0x5600d671 ;; &lt;Map(FAST_HOLEY_ELEMENTS)&gt;
+40  jnz 242
+46  mov edx,[eax+0xb]
+49  movsd xmm1,[edx+0x3]
+54  cmp ecx,0x5600d671 ;; &lt;Map(FAST_HOLEY_ELEMENTS)&gt;
+60  jnz 214
+66  vmulsd xmm1,xmm1,xmm1
+70  cmp ecx,0x5600d671 ;; &lt;Map(FAST_HOLEY_ELEMENTS)&gt;
+76  jnz 219
+
+          </code></pre>
+        </section>
+
+        <section>
           <div style="text-align: left;">
             <h2 style="background: #288; color: white; padding-left: .3em;">Excelsior JET</h2>
             <h2 style="background: #3F89EC; color: white; padding-left: .3em;">V8</h2>
