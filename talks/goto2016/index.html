@@ -4,9 +4,9 @@
 	<head>
 		<meta charset="utf-8">
 
-		<title>Производительность JavaScript через подзорную трубу</title>
+		<title>JavaScript Performance Through the Spyglass</title>
 
-		<meta name="description" content="Производительность JavaScript через подзорную трубу">
+		<meta name="description" content="JavaScript Performance Through the Spyglass">
 		<meta name="author" content="Vyacheslav Egorov">
 
 		<meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,8 +17,8 @@
     <link rel="stylesheet" href="fonts/source-code-pro/source-code-pro.css">
     <link rel="stylesheet" href="fonts/phenomena/phenomena.css">
     <link rel="stylesheet" href="https://code.cdn.mozilla.net/fonts/fira.css">
-    <link rel="stylesheet" href="css/reveal.css">
-    <link rel="stylesheet" href="css/simple.css" id="theme">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/simple.css" id="theme">
 
 		<!-- For syntax highlighting -->
 		<link rel="stylesheet" href="css/googlecode.css">
@@ -45,28 +45,12 @@
 
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
-        <section>
-          <h2 style="text-transform:uppercase; font-weight: 800; font-family: 'Phenomena'">производительность JavaScript через<br/> подзорную трубу</h2>
-          <h3 style="text-transform:uppercase; font-weight: 400; font-family: 'Phenomena'">Вячеслав Егоров</h3>
+        <section data-background-size="contain" data-background="url(images/intro.png) center center no-repeat, linear-gradient(#f57f20 35%, #f79127)">
         </section>
 
-        <section>
-          <pre><code data-noescape class="nasm">
-20  mov eax,[ebp+0x8]
-23  test al,0x1
-25  jz 242
-31  mov ecx,[eax-0x1]
-34  cmp ecx,0x5600d671 ;; &lt;Map(FAST_HOLEY_ELEMENTS)&gt;
-40  jnz 242
-46  mov edx,[eax+0xb]
-49  movsd xmm1,[edx+0x3]
-54  cmp ecx,0x5600d671 ;; &lt;Map(FAST_HOLEY_ELEMENTS)&gt;
-60  jnz 214
-66  vmulsd xmm1,xmm1,xmm1
-70  cmp ecx,0x5600d671 ;; &lt;Map(FAST_HOLEY_ELEMENTS)&gt;
-76  jnz 219
-
-          </code></pre>
+        <section data-background="linear-gradient(#f57f20 35%, #f79127)">
+          <h2 style="color: white; text-transform:uppercase; font-weight: 800; font-family: 'Phenomena'">JavaScript Performance Through the Spyglass</h2>
+          <h3 style="color: white; text-transform:uppercase; font-weight: 400; font-family: 'Phenomena'">Vyacheslav Egorov</h3>
         </section>
 
         <section>
@@ -88,7 +72,7 @@
         </section>
 
         <section>
-          <h1>ВСЁ <span class="pinkish">СЛОЖНО</span></h1>
+          <h1 class="pinkish">complexity</h1>
         </section>
 
         <section>
@@ -148,7 +132,7 @@ function find(val){
         </section>
 
         <section>
-          <h2 style="font-size: 3.2em;">&laquo;аллокация массива &mdash;<br/> дорогая операция&raquo;</h2>
+          <h2 style="font-size: 3.2em; font-family: Gagalin;">&laquo;array allocation <br/> is expensive!&raquo;</h2>
         </section>
 
         <section>
@@ -253,8 +237,8 @@ $ perf report
         </section>
 
         <section>
-          <h3><code>FastNewClosureStub</code><br/> не умела создавать функции<br/> содержащие литералы</h3>
-          <h4 class="fragment">[сейчас уже умеет, пример из Февраля]</h4>
+          <h3><code>FastNewClosureStub</code><br/> did not support allocation of functions with literals inside</h3>
+          <h4 class="fragment">[now it actually can, example is from February 2016]</h4>
         </section>
 
         <section data-background="images/strange.png" data-background-size="contain">
@@ -326,7 +310,7 @@ function getBlock(buffer) {
     x[ 8] += x[12]; x[ 4] = ((x[ 4] ^ x[ 8]) << 12) | ((x[ 4] ^ x[ 8]) >>> 20);
     x[ 0] += x[ 4]; x[12] = ((x[12] ^ x[ 0]) <<  8) | ((x[12] ^ x[ 0]) >>> 24);
     x[ 8] += x[12]; x[ 4] = ((x[ 4] ^ x[ 8]) <<  7) | ((x[ 4] ^ x[ 8]) >>> 25);</span>
-    // ... и так далее ...
+    // ... so on ...
   }
   for (i = 16; i--;) x[i] += input[i];
   for (i = 16; i--;) U32TO8_LE(buffer, 4 * i, x[i]);
@@ -343,9 +327,8 @@ function getBlock(buffer) {
         </section>
 
         <section>
-          <h3 class="pinkish cap">&laquo;инлайн же должен улучшать производильность!&raquo;</h3>
+          <h2 class="cap" style="font-family: Gagalin; color: black;">&laquo;I HEARD INLINE <br/> MUST IMPROVE PERFORMANCE!&raquo;</h3>
         </section>
-
 
         <section>
           <pre class="bigger"><code data-trim data-noescape class="javascript">
@@ -399,8 +382,7 @@ function U32TO8_LE(x, i, u) {
     //  YM       M       MM  MM                ,MMMMMMMMb        MM  M   YP   MM
     //   8b     d8 L    ,M9  MM      /         d'      YM. L    ,M9  M   `'   MM
     //    YMMMMM9  MYMMMM9  _MMMMMMMMM       _dM_     _dMM_MYMMMM9  _M_      _MM_
-    //
-<span class="golden-block">    // ^^^^^^ НЕ УДАЛЯТЬ! РАЗГОНЯЕТ КОД В 10 РАЗ. ^^^^^^</span>
+<span class="golden-block">    // ^^^^^^ Don't remove this comment it makes the code 10x faster. ^^^^^^^^^^^</span>
     x[i]   = u; u >>>= 8;
     x[i+1] = u; u >>>= 8;
     x[i+2] = u; u >>>= 8;
@@ -414,12 +396,12 @@ function U32TO8_LE(x, i, u) {
         </section>
 
         <section>
-          <h3 style="">говорим <span class="pinkish">производительность</span> <br/> подразумеваем <span class="pinkish">jsperf</span></h3>
+          <h2 style="font-size: 3.2em;"><span class="leftish">we say <span class="pinkish">performance</span> <br/> we mean <span class="pinkish">jsperf.com</span></span></h2>
         </section>
 
         <section>
-          <h3 style="">говорим <span class="pinkish">производительность</span> <br/> подразумеваем <span class="pinkish">микробенчмарк</span></h3>
-          <p>[jsperf.com сейчас мертвый]</p>
+          <h2 style="font-size: 3.2em;"><span class="leftish">we say <span class="pinkish">performance</span> <br/> we mean <span class="pinkish">jsperf.com</span></span></h2>
+          <h3>[or at least we used to]</h3>
         </section>
 
         <section data-background="images/slide-1-1.png" data-background-size="contain"  data-background-color="#c4c4c4">
@@ -446,7 +428,7 @@ while (str.length) {
 
         <section>
           <pre class="bigger"><code data-trim data-noescape class="javascript">
-// split <b>(на FF показывает больше 9000K OP/S!)</b>
+// split <b>(IT'S OVER 9000K OP/S ON FF!)</b>
 str.split("e").length - 1;
 
 // while
@@ -461,16 +443,16 @@ while (str.length) {
         </section>
 
         <section>
-          <h1 class="pinkish">СОМНЕВАЙСЯ</h1>
-          <h1>ВО ВСЁМ</h1>
+          <h1 class="pinkish">DOUBT</h1>
+          <h2>EVERYTHING</h1>
         </section>
 
         <section>
-          <h2>&micro;бенчмарки<br/> для чайников</h2>
+          <h1>&micro;bench 101</h1>
         </section>
 
         <section>
-          <h2>цена одной операции <code>OP</code>?</h2>
+          <h1>the cost of <code>OP</code>?</h1>
         </section>
 
         <section>
@@ -484,7 +466,7 @@ function benchmark() {
         </section>
 
         <section>
-          <h2>а что если <code>OP</code> быстрее часов?</h2>
+          <h1>what if <code>OP</code> faster than clock?</h1>
         </section>
 
         <section>
@@ -552,7 +534,7 @@ function benchmark() {
           </code></pre>
         </section>
 
-        <section data-wat>
+        <section>
           <pre class="bigger"><code data-trim data-noescape class="javascript">
 function benchmark() {
   var str = "...";
@@ -565,14 +547,14 @@ function benchmark() {
       }
       <b class="redish-block">str = str.slice(1);</b>
     <b>}</b>
-  }  // здесь str == ""
+  }  <b>// here str === ""</b>
   return (Date.now() - start) / N;
 }
           </code></pre>
         </section>
 
         <section>
-          <h2>повторения начинаются <br/>со <code>str === ""</code></h2>
+          <h2>repetitions start with <code>str === ""</code></h2>
         </section>
 
         <section>
@@ -596,28 +578,28 @@ function benchmark() {
         </section>
 
         <section>
-          <h2>неправильный бенчмарк</h2>
-          <h3><code>OP</code> должен стоить одинаково</h3>
-          <h3>при каждом повторении</h3>
+          <h2><code>benchmark.js</code> misuse</h2>
+          <h3><code>OP</code> should take the same time</h3>
+          <h3>when repeatedly executed</h3>
         </section>
 
         <section data-background="../lxjs2013/images/jsperf.png" data-background-size="contain" data-background-color="#c4c4c4">
         </section>
 
         <section data-background="../lxjs2013/images/jsperf-magic.png" data-background-size="contain">
-          <h1 class="fragment">&laquo;<code>~~</code> быстрее всех&raquo;</h1>
+          <h1 class="fragment">&laquo;<code>~~</code> for the win!&raquo;</h1>
         </section>
 
         <section>
-          <h1 class="pinkish">НЕТУШКИ</h1>
+          <h1 class="pinkish">NOPE</h1>
         </section>
 
         <section>
-          <h1>JITы умны</h1>
+          <h1>JITs are clever</h1>
         </section>
 
         <section>
-          <h3>JITы оптимизируют <br/><em class="pinkish">одновременно с исполнением</em></h3>
+          <h2>JITs optimize <br/><em class="pinkish">as program runs</em></h2>
         </section>
 
         <section>
@@ -626,26 +608,26 @@ function benchmark() {
 
         <section>
           <h1 style="font-size: 5em;">\[C_u N_u + C_o N_o\]</h1>
-          <h4>[неоптимизированая + оптимизированная версия]</h4>
+          <h3>[unoptimized + optimized version]</h3>
         </section>
 
         <section>
           <h1>\[{\sum C_{i} N_i}\]</h1>
-          <h4>[множественные оптимизированные версии]</h4>
+          <h3>[multiple unoptimized and<br/> optimized versions]</h3>
         </section>
 
         <section>
           <h3>\[{\sum C_{i} N_i} + \color{#dc1e1a}{\frac{1}{\sqrt{2\pi}}\int C(\xi) e ^ {-\frac{\xi^2}{2}} d\xi}\]</h3>
-          <h4>[математика становится слишком мудрённой]</h4>
+          <h3>[math gets too complicated to approach analytically]</h3>
         </section>
 
         <section>
-          <h1>JITы умны</h1>
-          <h3>хочется измерить что-то,<br/> нужно <em class="pinkish">перехитрить</em></h3>
+          <h1>JITs are clever</h1>
+          <h3>to measure you need to <em>outsmart</em></h3>
         </section>
 
         <section>
-          <h3><span class="leftish50"><span class="pinkish">Предупреждение</span>: На слайдах оптимизации, выполняемые JITом, изображены как трансформации исходного кода. В реальности JITы оперируют на более сложных внутренних представлениях.</span></h3>
+          <h3><span class="leftish50"><span class="pinkish">Disclaimer</span>: On slides I will show optimizations as source-to-source transformations. In reality compilers operate on more sophisticated representations.</span></h3>
         </section>
 
         <section>
@@ -701,12 +683,11 @@ function benchmark() {
         </section>
 
         <section>
-          <h1>протяжка констант</h1>
-          <p><em>constant propagation</em></p>
+          <h2>constant propagation</h2>
         </section>
 
         <section>
-          <h2>&laquo;а я знаю как обхитрить компилятор!&raquo;</h2>
+          <h2 style="font-family: Gagalin;">&laquo;hey, I can trick the compiler!&raquo;</h2>
         </section>
 
         <section>
@@ -724,7 +705,7 @@ function benchmark() {
         </section>
 
         <section>
-          <h1 class="pinkish">&laquo;НЕТУШКИ<sup>2</sup>&raquo;</h1>
+          <h1 style="font-family: Gagalin;">&laquo;Wrong answer, McFly!&raquo;</h1>
         </section>
 
         <section>
@@ -757,8 +738,7 @@ function benchmark() {
         </section>
 
         <section>
-          <h1 style="font-size: 5em;">вынос инвариантов цикла</h1>
-          <p><em>loop invariant code motion</em></p>
+          <h1 style="font-size: 5em;">loop invariant code motion</h1>
         </section>
 
         <section>
@@ -822,7 +802,7 @@ function benchmark() {
 function benchmark() {
   var start = Date.now();
   for (var n = 0; n &lt; N; n++) {
-    /* стрекотание сверчков */
+    /* sound of silence */
   }
   return (Date.now() - start) / N;
 }
@@ -834,7 +814,7 @@ function benchmark() {
 function benchmark() {
   var start = Date.now();
   /*
-   * стрекотание сверчков
+   * sound of silence
    */
   return (Date.now() - start) / N;
 }
@@ -842,38 +822,37 @@ function benchmark() {
         </section>
 
         <section>
-          <h2>удаление<br/> мертвого<br/> кода</h2>
-          <p><em>dead code elimination</em></p>
+          <h1>dead code elimination</h1>
         </section>
 
         <section>
           <pre class="bigger"><code data-trim data-noescape class="javascript">
-// Помните этот пример?
-// split <b>(на FF показывает больше 9000K OP/S!)</b>
+// Remember this one?
+// split <b>(IT'S OVER 9000K OP/S ON FF!)</b>
 str.split("e").length - 1;
-<span class="fragment">// FF просто видит, что это мертвый код</span>
+<span class="fragment">// it's full of dead code.</span>
 </code></pre>
         </section>
 
         <section>
-          <h3>КОМПИЛЯТОР КУШАЕТ<br/> &micro;БЕНЧМАРКИ НА ЗАВТРАК</h3>
+          <h2>optimizer eats &micro;benchmarks<br/> for breakfast</h2>
         </section>
 
         <section>
-          <h3>КАК БЫ СДЕЛАТЬ ТАКОЙ,<br/> ЧТОБЫ ОН ПОДАВИЛСЯ?</h3>
+          <h2>chew proof &micro;benchmarks?</h2>
         </section>
 
         <section>
-          <h3>ЛУЧШЕ, КОНЕЧНО, <br/> НИКАКИХ НЕ ПИСАТЬ,<br/> НО...</h3>
+          <h2>do <b class="pinkish">not</b> try <br/> to write them</h2>
         </section>
 
         <section>
           <h2 style="font-size: 3em;">
             <ol>
-              <li class="fragment"><b class="pinkish">проверка результатов</b></li>
-              <li>никаких констант</li>
-              <li>никаких инвариантов</li>
-              <li>никакого мертвого кода</li>
+              <li class="fragment"><b class="pinkish">verify results</b></li>
+              <li>no constants</li>
+              <li>no loop invariants</li>
+              <li>no dead code</li>
             </ol>
           </h2>
         </section>
@@ -889,19 +868,19 @@ function benchmark() {
     <span class="greenish-block fragment">t = i; i = i1; i1 = t;</span>
     j = ~~i;
   }
-  <span class="greenish-block fragment">if (i != j || i1 != j) throw "ммм?";</span>
+  <span class="greenish-block fragment">if (i != j || i1 != j) throw "whoa?";</span>
   return (Date.now() - start) / N;
 }
           </code></pre>
         </section>
 
         <section>
-          <h1>неплохо</h1>
+          <h1>not bad</h1>
         </section>
 
         <section>
-          <h2>(возможно)</h2>
-          <h1>недостаточно</h1>
+          <h2>(potentially)</h2>
+          <h1>still not enough</h1>
         </section>
 
         <section>
@@ -949,18 +928,17 @@ for (var n = 0; n &lt; (N / 2); n++) {
         </section>
 
         <section>
-          <h1>развертка циклов</h1>
-          <p><em>loop unrolling</em></p>
+          <h1>loop unrolling</h1>
         </section>
 
         <section>
-          <h1>V8 не умеет</h1>
-          <h3 class="fragment">но я хочу вселить параною &#9786; </h3>
+          <h1>V8 doesn't do it</h1>
+          <h3 class="fragment">but I want to induce paranoia &#9786; </h3>
         </section>
 
 <!--
         <section>
-          <h1 style="font-size: 5em;">&micro;бенчмарки vs VM</h1>
+          <h1 style="font-size: 5em;">&micro;bench vs VM</h1>
         </section>
 
         <section data-background="../webrebels2014/images/slide4.png" data-background-size="contain"  data-background-color="#c4c4c4">
@@ -983,24 +961,24 @@ $ d8 concat.js
         </section>
 
         <section>
-          <h1 style="font-size: 4.5em;">&laquo;быстрее! выносите все ваши строки в переменные&raquo;</h1>
+          <h1 style="font-size: 4.5em;">&laquo;quick! move all your strings out of functions&raquo;</h1>
         </section>
 
         <section data-background="../webrebels2014/images/slide5.png" data-background-size="contain">
         </section>
 
         <section>
-          <h2>пришло время<br/>посмотреть на код</h2>
-          <h3>ожидаем, что оба варианта<br/> ничего не делают</h3>
+          <h1>time to look<br/>at the code</h1>
+          <h3>we expect both variants to be DCEd</h3>
         </section>
 
         <section>
           <h1><a href="http://mrale.ph/irhydra/2" target="_blank">IRHydra<sup>2</sup></a></h1>
-          <h3>все примеры из этого доклада<br/>это демки доступные на сайте</h3>
+          <h3>all samples from this talk<br/>are demos within the tool</h3>
         </section>
 
         <section>
-          <h1>почему <code>Outside</code> быстрее?</h1>
+          <h1>why <code>Outside</code> is fast(er)?</h1>
         </section>
 
         <section data-background="images/concat.png" data-background-size="contain">
@@ -1013,7 +991,7 @@ $ d8 concat.js
         </section>
 
         <section>
-          <h2>за деревьями<br/> леса не видно</h2>
+          <h2>the forest hidden behind the trees</h2>
         </section>
 
         <section data-background="images/concat-2.png" data-background-size="contain">
@@ -1026,16 +1004,16 @@ $ d8 concat.js
         </section>
 
         <section>
-          <h2><code>Outside</code> <br/> <em class="pinkish">ничего не делает </em></h2>
+          <h2><code>Outside</code> is fast<br/>at <em class="pinkish">doing nothing</em></h2>
         </section>
 
         <section>
-          <h2>V8 не смог<br/> свернуть конкатенацию</h2>
-          <h2 class="pinkish">[баг!]</h2>
+          <h2>V8 failed to constant fold</h2>
+          <h2 class="pinkish">[bug!]</h2>
         </section>
 
         <section>
-          <h1>можно починить!</h1>
+          <h1>lets fix it!</h1>
         </section>
 
         <section>
@@ -1077,17 +1055,16 @@ $ d8 concat.js
         </section>
 
         <section>
-          <h2>теперь оба варианта <span class="pinkish">ничего не делают</span>!</h2>
+          <h2>both are now doing <span class="pinkish">nothing</span>!</h2>
         </section>
 -->
-
         <section>
-          <h2>презумпция производительности</h2>
+          <h2>presumption of performance</h2>
         </section>
 
         <section>
-          <h2><span class="leftish">разумный код<br/>
-          разумно быстр</span></h2>
+          <h2><span class="leftish">reasonable code<br/>
+          reasonably fast</span></h2>
         </section>
 
         <section>
@@ -1095,11 +1072,7 @@ $ d8 concat.js
         </section>
 
         <section>
-          <h3>cклонность к подтверждению<br/> своей точки зрения</h3>
-        </section>
-
-        <section>
-          <h2>&laquo;цепочки прототипов <span class="pinkish">медленные</span>&raquo;</h2>
+          <h2>&laquo;prototype chains are <span class="pinkish">slow</span>&raquo;</h2>
         </section>
 
         <section>
@@ -1121,8 +1094,7 @@ var obj =
       Object.create(
         Object.create(
           Object.create({prop: 10})))));
-               // дети любят LISP ^^^^^
-               // и Серёжа тоже
+                  // LISP tribute ^^^^^
           </code></pre>
         </section>
 
@@ -1134,7 +1106,7 @@ function doManyLookups() {
     for(var j = 0; j < 1000; j++)
       for(var k = 0; k < 1000; k++)
         counter += <b class="golden-block">obj.prop</b>;
-  print('Всего: ' + counter);
+  print('In total: ' + counter);
 }
           </code></pre>
         </section>
@@ -1148,19 +1120,19 @@ function lookupAndCache() {
     for(var j = 0; j < 1000; j++)
       for(var k = 0; k < 1000; k++)
         counter += <b class="golden-block">value</b>;
-  print('Всего: ' + counter);
+  print('In total: ' + counter);
 }
           </code></pre>
         </section>
 
         <section>
           <pre><code data-trim data-noescape class="javascript">
-// Супер продвинутый бенчмарк фреймворк.
+// State of art benchmark driver.
 function measure(f) {
   var start = Date.now();
   f();
   var end = Date.now();
-  print(f.name + ' отработал за ' +
+  print(f.name + ' took ' +
         (end - start) + ' ms.');
 }
           </code></pre>
@@ -1175,15 +1147,15 @@ measure(lookupAndCache);
 
         <section>
 <pre class="bigger">$ node prototype.js
-Всего: 10000000000
-<b>doManyLookups</b> отработал за <span style="color: #C00; font-weight: bolder;">8243</span> ms.
-Всего: 10000000000
-<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1058</span> ms.</pre>
-          <h1 class="fragment x-confirmed-2"><span class="x-confirmed" style="font-size: .7em; font-weight: bold;">ПОДТВЕРЖДЕНО</span></h1>
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">8243</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1058</span> ms.</pre>
+          <h1 class="fragment x-confirmed-2"><span class="x-confirmed" style="font-size: .7em; font-weight: bold;">CONFIRMED</span></h1>
         </section>
 
         <section>
-          <h1>усложним задачу</h1>
+          <h1>lets make it harder</h1>
         </section>
 
         <section>
@@ -1195,14 +1167,14 @@ measure(lookupAndCache);
 
         <section>
 <pre class="bigger">$ node prototype.js
-Всего: 10000000000
-<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1082</span> ms.
-Всего: 10000000000
-<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1061</span> ms.</pre>
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1082</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1061</span> ms.</pre>
         </section>
 
         <section>
-          <h2>&laquo;что за <span class="pinkish">уличная магия</span>?&raquo;</h2>
+          <h2>&laquo;what kind of <span class="pinkish">voodoo</span> is this?&raquo;</h2>
         </section>
 
         <section data-background="images/getter-0.png" data-background-size="contain">
@@ -1212,37 +1184,41 @@ measure(lookupAndCache);
         </section>
 
         <section>
-          <span class="leftish50" style="font-size: 2.5em; line-height: 1em;"><em>очень</em> старая V8 не умела инлайнить обращение к data свойствам объявленным на прототипе</span>
+          <span class="leftish50" style="font-size: 2.4em; line-height: 1.5em; text-align: justify;">very old V8 did not inline loads from data properties defined on prototypes</span>
         </section>
 
         <section>
-          <h1>попробуем новую V8</h1>
-        </section>
-
-        <section>
-<pre class="bigger">
-$ d8 prototype.js
-Всего: 10000000000
-<b>doManyLookups</b> отработал за <span style="color: #C00; font-weight: bolder;">1294</span> ms.
-Всего: 10000000000
-<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
+          <h1>trying newer V8</h1>
         </section>
 
         <section>
 <pre class="bigger">
 $ d8 prototype.js
-Всего: 10000000000
-<b>doManyLookups</b> отработал за <span style="color: green; border: 5px dashed #C00; font-weight: bolder;">1294</span> ms.
-Всего: 10000000000
-<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">1294</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
         </section>
 
         <section>
-          <h2>проход по цепочке прототипов &mdash; инвариант цикла</h2>
+<pre class="bigger">
+$ d8 prototype.js
+In total: 10000000000
+<b>doManyLookups</b> took <span style="color: green; border: 5px dashed #C00; font-weight: bolder;">1294</span> ms.
+In total: 10000000000
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1189</span> ms.</pre>
         </section>
 
         <section>
-          <h2>а что если <br/>запустить<br/> <span class="pinkish">дважды</span>?</h2>
+          <h2>prototype chain traversal got <span class="pinkish">LICMed</span></h2>
+        </section>
+
+        <section>
+          <h2>... and now for something <span class="pinkish">completely different</span></h2>
+        </section>
+
+        <section>
+          <h2>what if we run benchmark<br/><span class="pinkish">twice</span>?</h2>
         </section>
 
         <section>
@@ -1256,22 +1232,15 @@ measure(lookupAndCache);
 
         <section>
 <pre class="bigger">
-$ d8 prototype.js
-<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1301</span> ms.
-<b>doManyLookups</b> отработал за <span style="color: #C00; font-weight: bolder;">3408</span> ms.
-<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1204</span> ms.
-<b>lookupAndCache</b> отработал за <span style="color: #C00; font-weight: bolder;">3406</span> ms.
-</pre>
+$ d8 prototype.js | grep took
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1301</span> ms.
+<b>doManyLookups</b> took <span style="color: #C00; font-weight: bolder;">3408</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1204</span> ms.
+<b>lookupAndCache</b> took <span style="color: #C00; font-weight: bolder;">3406</span> ms.
         </section>
 
-        <section data-wat>
-<pre class="bigger">
-$ d8 prototype.js
-<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1301</span> ms.
-<b>doManyLookups</b> отработал за <span style="color: #C00; font-weight: bolder;">3408</span> ms.
-<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1204</span> ms.
-<b>lookupAndCache</b> отработал за <span style="color: #C00; font-weight: bolder;">3406</span> ms.
-</pre>
+        <section>
+          <h1>what just<br/>happened here?</h1>
         </section>
 
         <section data-background="images/data.png" data-background-size="contain">
@@ -1281,27 +1250,27 @@ $ d8 prototype.js
         </section>
 
         <section>
-          <span class="leftish50" style="font-size: 1.5em; line-height: 1em;">Выражение <code>'Всего: ' + counter</code> влияло на представление выбираемое для переменной <code>counter</code></span>
+          <span class="leftish50" style="font-size: 1.5em; line-height: 1em;"><code>'In total: ' + counter</code> type-feedback leaks upwards into the loop and causes excessive boxing of the <code>counter</code> variable</span>
         </section>
 
         <section>
-          <h3>workaround:<br/> спрятать <code>+</code> от <br/> выбора представлений</h3>
+          <h3>workaround: hide <code>+</code> from representation inference</h3>
         </section>
 
         <section>
 <pre class="smaller" style="font-size: 1.2em; line-height: 1.1em;"><code data-trim data-noescape class="diff">
--   print('Всего: ' + counter);
-+   print('Всего: ' + counter.toString());
+-   print('In total: ' + counter);
++   print('In total: ' + counter.toString());
 </code></pre>
         </section>
 
         <section>
 <pre class="bigger">
-$ d8 prototype.js
-<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1298</span> ms.
-<b>doManyLookups</b> отработал за <span style="color: green; font-weight: bolder;">1119</span> ms.
-<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder;">1188</span> ms.
-<b>lookupAndCache</b> отработал за <span style="color: green; font-weight: bolder; text-decoration: underline;">982</span> ms.
+$ d8 prototype.js | grep took
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1298</span> ms.
+<b>doManyLookups</b> took <span style="color: green; font-weight: bolder;">1119</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder;">1188</span> ms.
+<b>lookupAndCache</b> took <span style="color: green; font-weight: bolder; text-decoration: underline;">982</span> ms.
         </section>
 
         <section>
@@ -1424,7 +1393,7 @@ f();  // => 287ms
 Object.defineProperty(obj, 'a', {
   /* ... */
 });
-print('obj имеет быстрые свойства: ' +
+print('obj has fast properties: ' +
       <span class="golden">%HasFastProperties(obj)</span>);
 </code></pre>
         </section>
@@ -1432,9 +1401,9 @@ print('obj имеет быстрые свойства: ' +
         <section>
           <pre class="smaller2"><code data-trim data-noescape class="javascript">
 $ d8 <span class="golden">--allow-natives-syntax</span>
-obj имеет быстрые свойства: true
+obj has fast properties: true
 f() took 2ms
-obj имеет быстрые свойства: false
+obj has fast properties: false
 f() took 287ms
 </code></pre>
         </section>
@@ -1455,8 +1424,8 @@ Object.defineProperty(obj2, 'a', {
   get: function () { /* ... */ },
   set: function(val) { /* ... */ }
 });
-// Начальный скрытый класс для obj1/obj2 одинаков,
-// а вот после defineProperty они пришли к разным.
+// Initial hudden class for obj1/obj2 is the same,
+// but after defineProperty they have different ones.
 </code></pre>
         </section>
 
@@ -1559,11 +1528,11 @@ h();  // =>   1ms
         </section>
 
         <section>
-          <h1>а сейчас десерт!</h1>
+          <h1>now desert!</h1>
         </section>
 
         <section>
-          <h2>вызов метода <br/>против<br/>вызова функции</h2>
+          <h2>method call<br/>vs.<br/>function call</h2>
         </section>
 
         <section>
@@ -1631,11 +1600,11 @@ $ d8 method-vs-function.js
         </section>
 
         <section>
-          <h2>вызов метода <br/><b class="pinkish">быстрее?</b></h2>
+          <h2>method call<br/><b class="pinkish">is</b> faster?</h2>
         </section>
 
         <section>
-          <h2 style="padding-left: 1em; padding-right: 1em; text-transform: uppercase;">сохраните в секрете то, что вы сейчас увидите</h2>
+          <h2 style="font-family: Gagalin; color: red;">keep secret<br/>what I am going to show you now</h2>
         </section>
 
         <section>
@@ -1646,8 +1615,8 @@ $ d8 method-vs-function.js
  load("../benchmark.js");
 
  Benchmark.prototype.setup = function() {
-+   "Разгони" + "свой" + "Жава" + "Скрипт" +
-+   "этим" + "супер" + "секретным" + "трюком";
++   "Speed" + "your" + "JS" + "with" +
++   "this" + "one" + "weird" + "trick";
 +
     function mk(word) {
          var len = word.length;
@@ -1671,37 +1640,23 @@ $ d8 method-vs-function.js
 </pre>
         </section>
 
-        <section data-wat>
-          <pre class="bigger">
-$ d8 method-vs-function.js
-<table>
-  <tr>
-    <td>Function</td>
-    <td class="y"><div class="x x69 x-green">x 695,708,197 ops/sec &pm;0.38%</div></td>
-  </tr>
-  <tr>
-    <td>Method</td>
-    <td class="y"><div class="x x69 x-green">x 692,496,013 ops/sec &pm;0.29%</div></td>
-  </tr>
-</table>Fastest is Function,Method
-</pre>
+        <section data-background="../webrebels2014/images/slide5.png" data-background-size="contain">
         </section>
-
 
         <section data-background="images/function-0.png" data-background-size="contain">
         </section>
 
         <section>
-          <h2><code>Function</code> не была оптимизирована</h2>
+          <h2><code>Function</code> was never optimized!</h2>
         </section>
 
         <section>
-          <span class="leftish50" style="font-size: 1.2em;">
-          <p>&mdash; эвристики, принимающие решение об оптимизации, основаны в том числе и на количестве инициализированных встроенных кэшей (inline cache);</p>
-          <p>&mdash; вызов функции не делался через IC, в отличие от вызова метода;</p>
-          <p>&mdash; <code>Method</code> содержал достаточно инициализированных IC для срабатывания оптимизаций, а вот <code>Function</code> &mdash; нет!</p>
-          <p>&mdash; Добавленные операторы <code>+</code> увеличили количество инициализированных IC.</p>
-            <h1 class="fragment x-confirmed-2"><span class="x-confirmed-red" style="font-size: .7em; font-weight: bold;">БЛА БЛА БЛА</span></h1>
+          <span class="leftish50" style="font-size: 1.5em;">
+          <p>&mdash; heuristics that decide when to optimize are based (among other things) on the amount of initialized inline caches</p>
+          <p>&mdash; function call does not go through an IC, but method call does</p>
+          <p>&mdash; <code>Method</code> had enough initialized ICs to trigger optimizations, but <code>Function</code> didn't!</p>
+          <p>&mdash; Until fake <code>+</code> ICs were added in the <code>setup</code> section</p>
+            <h1 class="fragment x-confirmed-2"><span class="x-confirmed-red" style="font-size: .7em; font-weight: bold;">yada yada</span></h1>
           </span>
         </section>
 
@@ -1712,11 +1667,11 @@ $ d8 method-vs-function.js
         </section>
 
         <section>
-          <h2>опять замеряем <em class="pinkish">практически</em><br/>пустой цикл!</h2>
+          <h2>measuring <em class="pinkish">almost</em> empty loop again!</h2>
         </section>
 
         <section>
-          <h2>а теперь<br/> наоборот</h2>
+          <h2>can function call be faster than method call?</h2>
         </section>
 
         <section>
@@ -1811,28 +1766,8 @@ $ d8 iteration.js
 </pre>
         </section>
 
-        <section data-wat>
-          <pre class="bigger">
-$ d8 iteration.js
-<table>
-  <tr>
-    <td>WithCheck</td>
-    <td class="y"><div class="x x39 x-red">x 396,792 ops/sec &pm;0.37%</div></td>
-  </tr>
-  <tr>
-    <td>WithoutCheck</td>
-    <td class="y"><div class="x x45 x-green">x 456,653 ops/sec &pm;0.82%</div></td>
-  </tr>
-  <tr>
-    <td>WithHack</td>
-    <td class="y"><div class="x x46 x-green">x 462,698 ops/sec &pm;0.48%</div></td>
-  </tr>
-</table>Fastest is WithoutCheck,WithHack
-</pre>
-        </section>
-
         <section>
-          <h3>разогнали на <b>18%</b> заменив<br> <code>o.f()</code> на <code>(0,o.f)()</code><br/><span class="pinkish">в коде, который<br/> никогда на исполняется</span></h3>
+          <h3><b>18%</b> speedup by replacing<br> <code>o.f()</code>  <br/> with <br/> <code>(0,o.f)()</code><br/><span class="pinkish">in the code that never executes</span></h3>
         </section>
 
         <section data-background="images/call-0.png" data-background-size="contain">
@@ -1851,12 +1786,17 @@ $ d8 iteration.js
         </section>
 
         <section>
-          <h1 class="pinkish">СПАСИБО</h1>
+          <h2>algorithms first</h2>
+          <h2>&micro;benchmarks last</h2>
         </section>
 
         <section>
-          <h1 class="pinkish">ПОСТОЙТЕ</h1>
-          <h3>а как же тот пример с <code>ChaCha20</code>?</h3>
+          <h1 class="pinkish">THANK YOU</h1>
+        </section>
+
+        <section>
+          <h1 class="pinkish">WAIT!</h1>
+          <h3>what about <em>the first</em> example?</h3>
         </section>
 
         <section>
@@ -1884,15 +1824,15 @@ function getBlock(buffer) {
         </section>
 
         <section>
-          <h2>повторяющаяся деоптимизация всегда баг V8</h2>
+          <h2>repetitive deopt is always V8 bug</h2>
         </section>
 
 
         <section>
           <span class="leftish50" style="font-size: 1.8em;">
-            <p>&mdash; инлайн <code>U32TO8_LE</code> ломал <em>safe-uint32</em> анализ</p>
-            <p>&mdash; длинный комментарий в <code>U32TO8_LE</code> отключал инлайн</p>
-            <p>&mdash; есть и вменяемые способы обойти проблему</p>
+            <p>&mdash; inlining <code>U32TO8_LE</code> used to break <em>safe-uint32</em> analysis</p>
+            <p>&mdash; adding long comment into <code>U32TO8_LE</code> disables inlining</p>
+            <p>&mdash; there are more sane workarounds</p>
           </span>
         </section>
 
@@ -1907,22 +1847,23 @@ function getBlock(buffer) {
   }
   for (i = 16; i--;) x[i] += input[i];
   for (i = 16; i--;) U32TO8_LE(buffer, 4 * i, <b class="golden-block">x[i]|0</b>);
-  //                            ОБРЕЗАТЬ ДО INT32 ^^
+  //                immediately truncate to int32 ^^
   input[12]++;
   return buffer;
 }          </code></pre>
         </section>
 
         <section>
-          <h2>разработчики VM<br/> ваши друзья! <br/> (шлите баги)</h2>
+          <span class="leftish50" style="font-size: 2.8em; line-height: 1em;">never assume that a language feature has to be slow
+          </span>
         </section>
 
         <section>
-          <h1 class="pinkish" style="font-family: Phenomena;">СПАСИБО</h1>
-          <h1 class="pinkish" style="font-family: Phenomena;">Q&A</h1>
-          <h3 style="font-family: Phenomena;">[me@mrale.ph | @mraleph]</h3>
+          <h2>talk to VM people<br/> report bugs</h2>
         </section>
 
+        <section data-background-size="contain" data-background="url(images/outro.png) center center no-repeat, linear-gradient(#f57f20 35%, #f79127)">
+        </section>
       </div>
 
       <div id="footer" style="
@@ -1949,6 +1890,7 @@ function getBlock(buffer) {
 				progress: true,
 				history: true,
 				center: true,
+        slideNumber: true,
 
 				theme: 'simple', // available themes are in /css/theme
 				transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
@@ -1959,12 +1901,11 @@ function getBlock(buffer) {
 				// parallaxBackgroundSize: '2100px 900px',
 
         margin: 0.0,
-        width: 1280,
-        height: 720,
-        //width: 1024, // 1950,
-        //height: 768, // 1080,
+        // width: 1950,
+        // height: 1080,
+        width: 1024, // 1950,
+        height: 768, // 1080,
 
-        slideNumber: 'c/t',
 				// Optional libraries used to extend on reveal.js
 				dependencies: [
 					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
@@ -2006,37 +1947,6 @@ function getBlock(buffer) {
 		</script>
 
     <style>
-      .wat-x {
-        position: absolute;
-        left: 0px;
-        top: 0px;
-        right: 0px;
-        bottom: 0px;
-        background-image: url('images/wat.png');
-        background-attachment: fixed;
-        background-position: center right;
-        background-repeat: no-repeat;
-        background-size: auto 60%;
-      }
-
-      #right-column.wat {
-        background-image: url('images/wat.png');
-        background-attachment: fixed;
-        background-position: center right;
-        background-repeat: no-repeat;
-        background-size: auto 60%;
-      }
-
-      #right-column {
-          position: absolute;
-          display: block;
-          bottom: 0px;
-          right: 0px;
-          top: 0px;
-          width: 100%;
-          z-index: 99;
-      }
-
       .x-confirmed-2 {
         position: absolute;
         left: 0px;
@@ -2138,6 +2048,10 @@ function getBlock(buffer) {
         color: red !important;
       }
 
+      .greenish {
+        color: green;
+      }
+
       span.greenish-block {
         background: rgba(0, 255, 0, 0.4);
         border-radius: 10px;
@@ -2174,17 +2088,9 @@ function getBlock(buffer) {
         color: #dc1e1a !important;
       }
 
-      .greenish {
-        color: green !important;
-      }
-
       .ccc {
         display: inline-block !important;
         width: auto !important;
-      }
-
-      .cap {
-        text-transform: uppercase !important;
       }
 
       .borderish {
@@ -2267,6 +2173,24 @@ function getBlock(buffer) {
   width: 100%;
   background: rgba(0, 0, 0, 0.1);
 }
+
+      #right-column.wat {
+        background-image: url('../holyjs2016/images/wat.png');
+        background-attachment: fixed;
+        background-position: center right;
+        background-repeat: no-repeat;
+        background-size: auto 60%;
+      }
+
+      #right-column {
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          top: 0px;
+          width: 100%;
+          z-index: 99;
+      }
     </style>
 
 	</body>
