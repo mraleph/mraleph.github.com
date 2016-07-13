@@ -166,10 +166,10 @@ create: 4629000 [462.9 per iteration] usec, sum: 2056000 [205.6 per iteration] u
 <p>JavaScript program is approximately 10 times slower than original C program. <em>Hmm</em> thinks mr. C. and starts digging.</p>
 <h3>If C is a stone then JavaScript is a fog</h3>
 <p>C is a low-level programming language. People call it a <em>portable assembly</em> sometimes. You just take a piece of memory and say: hey, this smallish sequence of 24 bytes is actually a <code>Point</code> which has one <code>uint32_t</code> field followed by two <code>double fields.</code></p>
-<p><img src="http://s3.mrale.ph/images/point-structure-c.png" /></p>
+<p><img src="http://mrale.ph/s3/images/point-structure-c.png" /></p>
 <p>Small chunk of unused memory between <code>n</code> and <code>x</code> appears to make <code>x</code> and <code>y</code> fields nicely aligned. CPUs &hearts; aligned doubles. On some architectures you can't even read an unaligned one directly from memory into a floating point register (you'll get punished if you try).</p>
 <p>Arrays in C are also nice and tight: you just take a bigger region of memory and assume that it contains a sequence of <code>Point</code>s one after another.</p>
-<p><img src="http://s3.mrale.ph/images/array-of-points-structure-c.png" /></p>
+<p><img src="http://mrale.ph/s3/images/array-of-points-structure-c.png" /></p>
 <p>But in JavaScript things are destined to get hairy. You can't take a flat piece of memory and call it <code>Point</code> with this and that as fields. Instead you have an extremely flexible thing called <code>Object</code>. <code>Object</code> can have <em>properties</em> which can come and go as they wish (almost). You can write constructor:</p>
 
 {% highlight javascript %}
@@ -177,11 +177,11 @@ function Point(n, x, y) { /* ... */ }
 {% endhighlight %}
 
 <p>but nothing actually prevents you from modifying <code>Point</code> instances after they were created. VM that runs JavaScript has to be always ready for virtually anything that can happen with your object (new properties added, old properties deleted, property&nbsp;<em>descriptor&nbsp;</em>modified). Because of this flexibility it can't pack Point objects into 24 bytes and has to go with something like this (example layout used by V8):</p>
-<p><img src="http://s3.mrale.ph/images/point-structure-javascript.png" /></p>
+<p><img src="http://mrale.ph/s3/images/point-structure-javascript.png" /></p>
 <p>V8 actually tries to make the object more <em>struct</em> like. It attempts to figure out how much space should be preallocated directly inside the object for properties by looking at the constructor and/or doing allocation profiling. Some VMs just use a fixed constant or even store all properties outside of an object in a separate array. Another thing to notice is that V8 always boxes numbers that are not 31-bit integers (32-bit on x64). Some VMs (e.g. SpiderMonkey and JSC) don't box doubles but instead use <em>NaN-tagging</em> instead.&nbsp;</p>
 <p>Nevertheless <code>Point</code> object will be 3.3 times as big on x64 version of V8 than it was in <code>C</code> program and it will not be&nbsp;continuously&nbsp;allocated in memory (doubles are accessed via indirection). There are three additional fields: pointer to <em>hidden class</em> (known as <code>Map</code> in V8, <code>Shape</code> in SpiderMonkey, <code>Structure</code> in JavaScriptCore) which captures and describes layout of the object, pointer to <em>out of object properties</em> backing store and pointer to <em>elements</em> backing store. All these fields are required because object can be mutated in an&nbsp;unpredictable&nbsp;ways after it's creation.&nbsp;</p>
 <p>Array of points object looks basically the same:</p>
-<p><img src="http://s3.mrale.ph/images/array-of-points-structure-javascript.png" /></p>
+<p><img src="http://mrale.ph/s3/images/array-of-points-structure-javascript.png" /></p>
 <p>Array is a JavaScript object and thus it also has hidden class, pointer to the properties backing store and pointer to the elements backing store. Backing stores can have different representations. For example VMs usually try to represent sparse arrays as <em>dictionaries</em> and non-sparse arrays should have flat backing stores. In our program array of points is always non-sparse and it gets a flat backing store.&nbsp;</p>
 <p>The mathematics of performance is simple: each point of flexibility and each indirection (arrow on the picture) adds additional runtime cost. Evaluating simply looking expression <code>points[i].x</code> in JavaScript requires answering to an expensive questions: <em>"What is <code>points</code>? How do I get property called <code>i</code> from it? How then I get <code>x</code>?"</em>. Fully statical analysis of the program is too expensive to be used to answer these questions. Instead modern JITs reduce these costs by adapting generated code to the program while it runs via techniques like <em>inline caching</em>&nbsp;and adaptive compilation pipelines.&nbsp;Simply speaking: because in JavaScript an application can't tell compiler <em>"<code>points</code> is an array of <code>Point</code> objects" </em>via types declarations&nbsp;JIT has to <em>eavesdrop</em> to notice that.&nbsp;</p>
 <p>If you want to get good performance you need to speak loud enough for JIT compiler to hear you and adapt to your application. This means: your objects should have stable layouts, property access and call sites better be monomorphic, no funny language features (e.g. with or eval) in sight, using typed arrays where appropriate instead of pure JS arrays etc. In a sense you'll be writing statically typed code in a language that does not support static typing.&nbsp;</p>
@@ -225,8 +225,8 @@ function createArrayOfPoints(n) {
     var points_i32 = points.i32;
     var points_f64 = points.f64;
     for (var i1 = 0, i2 = 1, i = 0; i < n; i++, i1 += 6, i2 += 3) {
-        points_i32[i1]     = /* n */ i; 
-        points_f64[i2]     = /* x */ i * 0.1 + 0.1; 
+        points_i32[i1]     = /* n */ i;
+        points_f64[i2]     = /* x */ i * 0.1 + 0.1;
         points_f64[i2 + 1] = /* y */ i * 0.9 - 0.1;
     }
     return points;
@@ -244,7 +244,7 @@ function sumArrayOfPoints(points, n) {
     var points_f64 = points.f64;
     for (var i1 = 0, i2 = 1, k = 6 * n; i1 < k; i1 = i1 + 6, i2 = i2 + 3) {
         if ((points_i32[i1] & 1) === 0) {
-            x += points_f64[i2]; 
+            x += points_f64[i2];
             y += points_f64[i2 + 1];
         }
     }

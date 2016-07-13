@@ -20,9 +20,9 @@ $V8/shell matmul_v1.js  <strong>11.16s</strong> user 0.15s system 100% cpu 11.26
 <h3>Foes of number representation</h3>
 <p>The only number type JavaScript and Lua provide is double precision floating point and requires 64 bits of memory. Thus VM implementers have a choice either to make <em>every</em> slot (local variables, objects properties, array elements) wide enough to contain a 64-bit double or to store 64-doubles as <em>boxed</em> values.</p>
 <p>V8 goes with the latter approach and <strong>boxes</strong><sup><a href="#boxing" id="boxing-ref" name="boxing-ref"></a>&dagger;</sup>&nbsp;every number that does not fit into 31-bit integer range. Here is for example a backing store of an array <code>[3.14, 1, 2.71, 2]</code> on 32-bit architecture:</p>
-<p><img src="http://s3.mrale.ph/images/v8-array-backing-store.png" /></p>
+<p><img src="http://mrale.ph/s3/images/v8-array-backing-store.png" /></p>
 <p>LuaJIT2 (as well as JSC and SpiderMonkey) on the other side uses a technique called <a href="http://blog.mozilla.com/rob-sayre/2010/08/02/mozillas-new-javascript-value-representation/" target="_blank">NaN-tagging</a>, which allows to store both pointers (or other 32-bit values) and doubles in 64-bit wide slots. Here is how the same array will look like in these VMs:</p>
-<p><img src="http://s3.mrale.ph/images/luajit-array-backing-store.png" /></p>
+<p><img src="http://mrale.ph/s3/images/luajit-array-backing-store.png" /></p>
 <p>V8's approach allows to save heap space when numbers mostly fit into 31-bit integer range but it also incurs overhead of&nbsp;double indirection and extra allocation when application starts working with dense arrays of floating point numbers. Fortunately there is a solution: <a href="https://www.khronos.org/registry/typedarray/specs/latest/" target="_blank">WebGL typed arrays</a>.&nbsp;</p>
 <p><small><a id="boxing" name="boxing"></a>&dagger; - It should be noted here that V8's optimizing backend is able to keep local double values and temporaries on the stack and in xmm registers. Boxing only occurs when the value escapes optimized code (e.g. is stored to a property, passed as an arguments or returned from a function). Non-optimized code always works with boxed numbers. <a href="#boxing-ref">&uarr;</a></small></p>
 <h3>Float64Array</h3>

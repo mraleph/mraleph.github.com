@@ -26,7 +26,7 @@ date: 2014-04-20
 
 ### Talks
 
-* Understanding V8 (me, nodecamp.eu 2011) [\[slides\]](http://s3.mrale.ph/nodecamp.eu/#1)
+* Understanding V8 (me, nodecamp.eu 2011) [\[slides\]](http://mrale.ph/s3/nodecamp.eu/#1)
 * V8 Performance Tuning Tricks ([+Daniel Clifford](https://plus.google.com/111909581069462963574), GDD2011 Berlin) [\[slides\]](https://mkw.st/p/gdd11-berlin-v8-performance-tuning-tricks/#1)
 * Console to Chrome ([+Lilli Thompson](https://plus.google.com/111647958621817995641), GDC 2012) [\[slides\]](http://console-to-chrome.appspot.com/#8) [\[video\]](http://www.youtube.com/watch?v=XAqIpGU8ZZk#t=9m0s)
 * Breaking the JavaScript Speed Barrier with V8 ([+Daniel Clifford](https://plus.google.com/111909581069462963574), Google I/O 2012) [\[slides\]](http://v8-io12.appspot.com/index.html) [\[video\]](http://www.youtube.com/watch?v=UJPdhx5zTaw)
@@ -65,7 +65,7 @@ date: 2014-04-20
 ### Talks
 
 * [David Mandelin](http://twitter.com/dmandelin)'s (SpiderMonkey TL) talk&nbsp;Know Your Engines (Velocity Conf 2011) [\[slides\]](http://people.mozilla.com/~dmandelin/KnowYourEngines_Velocity2011.pdf) [\[video\]](http://www.youtube.com/watch?v=dtSOKLvdAto).
-* I am trying to [explain *inline-caching* used by JavaScript VMs by writing IC *in* JavaScript](http://mrale.ph/blog/2012/06/03/explaining-js-vms-in-js-inline-caches.html), also see my talk "V8 Inside Out" from WebRebels 2012 [\[slides\]](http://s3.mrale.ph/webrebels2012.pdf) [\[video\]](http://vimeo.com/43334972)
+* I am trying to [explain *inline-caching* used by JavaScript VMs by writing IC *in* JavaScript](http://mrale.ph/blog/2012/06/03/explaining-js-vms-in-js-inline-caches.html), also see my talk "V8 Inside Out" from WebRebels 2012 [\[slides\]](http://mrale.ph/s3/webrebels2012.pdf) [\[video\]](http://vimeo.com/43334972)
 
 ### Articles
 
@@ -74,5 +74,5 @@ date: 2014-04-20
 
 ## Miscellaneous
 
-* Can V8 do that?! (me, JSConf 2012) [\[slides\]](http://s3.mrale.ph/jsconf2012.pdf) [[vides]](http://blip.tv/jsconf/jsconf2012-vyacheslav-egorov-6141593)
+* Can V8 do that?! (me, JSConf 2012) [\[slides\]](http://mrale.ph/s3/jsconf2012.pdf) [[vides]](http://blip.tv/jsconf/jsconf2012-vyacheslav-egorov-6141593)
 * [Channel 9: Lars Bak and Steve Lucco: Chakra, V8, JavaScript, Open Source](http://channel9.msdn.com/Shows/Going+Deep/Lars-Bak-and-Steve-Lucco-Chakra-V8-JavaScript-Open-Source)

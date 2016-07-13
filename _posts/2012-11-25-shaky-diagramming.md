@@ -24,7 +24,7 @@ Surprisingly in my life it was largely replaced by a tool that was never intende
 Drawing shaky diagrams
 ----------------------
 
-When I first decided that all diagrams in my posts about V8 should be "shaky" I started to draw them [by hand](http://s3.mrale.ph/images/point-structure-c.png) on my Wacom tablet. But I am actually very-very-very bad at drawing (I use it mostly to relief stress via doodling) and each diagram was consuming far too much time. Finally when my tablet suddenly died I decided to explore a programmatic solution.
+When I first decided that all diagrams in my posts about V8 should be "shaky" I started to draw them [by hand](http://mrale.ph/s3/images/point-structure-c.png) on my Wacom tablet. But I am actually very-very-very bad at drawing (I use it mostly to relief stress via doodling) and each diagram was consuming far too much time. Finally when my tablet suddenly died I decided to explore a programmatic solution.
 
 First of all I realized that I do not want to waste my time writing diagramming GUI. Creating, resizing, undoing, changing colors, moving, redoing... It's a pit full of pain and misery! I just wanted a tool that would take a simple diagram description and give back a picture. How should description look like? I am a compiler guy so it should obviously be a text... Something like this:
 

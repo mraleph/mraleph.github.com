@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+
+<!--
+  Google HTML5 slide template
+
+  Authors: Luke Mahé (code)
+           Marcin Wichary (code and design)
+           
+           Dominic Mazzoni (browser compatibility)
+           Charles Chen (ChromeVox support)
+
+  URL: http://code.google.com/p/html5slides/
+-->
+
+<html>
+  <head>
+    <title>Understanding V8</title>
+
+    <meta charset='utf-8'>
+    <script src='slides.js'></script>
+  </head>
+  
+  <style>
+    /* Your individual styles here, or just use inline styles if that’s
+       what you want. */
+    
+    
+  </style>
+
+  <body style='display: none'>
+
+    <section class='slides layout-regular template-default'>
+      
+      <!-- Your slides (<article>s) go here. Delete or comment out the
+           slides below. -->
+        
+        
+      <article>
+        <center>
+        <h1>
+          Understanding V8
+       </h1>
+        <p>
+          Vyacheslav Egorov
+         <br/><div style="font-size: 20pt; margin-top: 20px;">
+           <a href="mailto:vegorov@chromium.org">vegorov@chromium.org</a>, <a href="http://twitter.com/mraleph">@mraleph</a></div>
+       </p>
+        </center>
+
+        <div style="position: absolute; bottom: 1pt; right: 2pt; padding-right: 2px; font-size: 20pt; line-height: 22pt;">navigate with cursor keys &larr;&rarr; or space bar</div>
+
+        <div style="position: absolute; bottom: 1pt; left: 2pt; padding-right: 2px; font-size: 20pt; line-height: 22pt;">nodecampeu 2011</div>
+      </article>
+
+      <article class="bigger">
+       <h3>Care about performance?</h3>
+       <ul>
+          <li>Write good code</li>
+          <li>Understand your tools</li>
+          <li>Optimize what matters</li>
+        </ul>
+        </div>
+     </article>
+
+     <article class="bigger">
+       <h3>Before you optimize</h3>
+       <ul>
+         <li>Collect metrics</li>
+         <li>Locate bottleneck(s)</li>
+         <li>Reduce to pure JavaScript</li>
+      </ul>
+     </article>
+
+    <article class="bigger">
+      <h2>Example: protocol parser</h2>
+    </article>
+
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+      <table class="thick-border" style="margin-top: 150px;">
+         <tr><td>data length</td><td><span class="green">\u0000</span></td><td>data bytes</td></tr>
+       </table>
+
+       <table class="thick-border" style="margin-top: 50px; text-align: center;">
+         <tr><td>1</td><td>1</td><td><span class="green">\u0000</span></td><td>n</td><td>o</td><td>d</td><td>e</td><td>c</td><td>a</td><td>m</td><td>p</td><td>.</td><td>e</td><td>u</td></tr>
+       </table>
+
+    </article>
+      
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <section>
+        <pre>
+Parser.prototype.parse = function (s) {
+  var l = '';
+  for (var i = 0; i &lt; s.length; i++) {
+    if (s[i] == '\u0000') {
+      l = Number(l);
+      this.emit('data', s.substr(i + 1, l));
+      return this.parse(s.substr(i + 1 + l));
+    } else {
+      l += s[i];
+    }
+  }
+  return s;
+};
+</pre>
+        </section>
+      </article>
+
+      <article class="bigger">
+       <h3>Prepare fake input data</h3>
+       <section>
+        <pre>
+function makeFakePacket() { 
+  var l = randomBetween(MIN_PACKET_LENGTH,
+                        MAX_PACKET_LENGTH);
+  var p = l + '\u0000';
+  for (var i = 0; i &lt; l; ++i) p += ' ';
+  return p;
+}
+
+var fakeInput = '';
+for (var i = 0; i &lt; NOF_PACKETS; i++) {
+  fakeInput += makeFakePacket();
+}
+
+</pre>
+        </section>
+      </article>
+
+     <article class="bigger">
+       <h3>Prepare fake input data</h3>
+       <ul>
+         <li>Best kind of fake data is a real production data.</li>
+         <li>Use random with a fixed seed.</li>
+       </ul>
+    </article>
+
+    <article class="bigger">
+       <h3>Stress it</h3>
+       <section>
+        <pre>
+var p = new Parser();
+
+var start = Date.now();
+for (var j = 0; j &lt; NOF_RUNS; j++) {
+  p.parse(fakeInput);
+}
+var end = Date.now();
+
+var timeSpent = end - start;
+var totalBytes = fakeInput.length * NOF_RUNS;
+
+console.log(timeSpent + ' ms');
+console.log(totalBytes/timeSpent + ' bytes/ms');
+</pre>
+        </section>
+      </article>
+
+    <article class="bigger">
+       <h3>Stress it</h3>
+       <ul>
+         <li>Measure throughput</li>
+         <li>Let it run longer</li>
+       </ul>
+       <pre>
+var MIN_PACKET_LENGTH = 10;
+var MAX_PACKET_LENGTH = 100;
+var NOF_PACKETS = 1000;
+var NOF_RUNS = 10;
+</pre>
+    </article>
+       
+     <article class="bigger">
+       <h3>Stress it</h3>
+       <pre>
+% node parser.js
+806 ms
+711.4267990074442 bytes/ms
+</pre>
+     </article>
+
+    <article class="bigger">
+       <h3>Profile it</h3>
+       <pre>
+% node <span class="red">--prof</span> parser.js
+806 ms
+711.4267990074442 bytes/ms
+</pre>
+<p>Builtin <i>sampling</i> profiler</p>
+<ul><li>Takes sample every 2 ms</li><li>Writes v8.log</li></ul>
+    </article>
+
+
+     <article class="bigger">
+       <h3>Profile it</h3>
+       <pre>
+% node <span class="red">--prof</span> parser.js
+806 ms
+711.4267990074442 bytes/ms
+</pre>
+       <pre>
+% deps/v8/tools/mac-tick-processor
+
+ [GC]:
+   ticks  total  nonlib   name
+    576   79.0%
+</pre>
+     </article>
+       
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <div class="single-idea"><p>GC cost is proportional to the number of long lived objects</p></div>
+     </article>
+
+     <article class="bigger ss1">
+       <h3>&nbsp;</h3>
+       <section>
+        <pre>
+Parser.prototype.parse = function (s) {
+  var l = '';
+  for (var i = 0; i &lt; s.length; i++) {
+    if (s[i] == '\u0000') {
+      l = Number(l);  
+      this.emit('data', s.substr(i + 1, l));
+      <span class="highlight-red ss1">return this.parse(s.substr(i + 1 + l));</span>
+    } else {
+      l += s[i];
+    }
+  }
+  return s;
+};
+</pre>
+        </section>
+      </article>
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <section>
+        <pre>
+Parser.prototype.parse = function (s) {
+  var l = '';
+  for (var i = 0; i &lt; s.length; i++) {
+    if (s[i] == '\u0000') {
+      l = Number(l);
+      this.emit('data', s.substr(i + 1, l));<div class="highlight-green">      s = s.substr(i + 1 + l);
+      i = 0;
+      l = '';</div>    } else {
+      l += s[i];
+    }
+  }
+  return s;
+};
+</pre>
+        </section>
+      </article>
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <pre>
+% node <span class="red">--prof</span> parser.js
+183 ms
+3133.3879781420765 bytes/ms
+</pre>
+       <pre>
+% deps/v8/tools/mac-tick-processor
+
+ [JavaScript]:
+   ticks  total  nonlib   name
+    124   64.2%   87.3%  Stub: SubString
+
+ [GC]:
+   ticks  total  nonlib   name
+      8    4.1%
+</pre>
+     </article>
+
+     <article class="bigger">
+       <h3>String representations</h3>
+       <ul>
+         <li>Sequential strings
+         <img class='centered' style="margin-top: 20px; margin-botton: -10px;" src="images/seqstring.png"/>
+         </li>
+
+         <li>Cons-strings: <code>c = a + b</code>
+         <img class='centered' src="images/consstring.png"/>
+         </li>
+       </ul>
+     </article>
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <div class="single-idea-100"><p>Don't mix indexing and concatenation</p>
+      </div>
+      <pre style="margin-left: 150px; padding-left: 50px; margin-right: 140px;">
+while (smth) {
+  s = s + s.substr(x, y);
+}</pre>
+      <p class="centered">Use arrays instead.</p>
+
+     </article>
+
+       
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <div class="single-idea"><p>Substring cost is proportional to it's length</p></div>
+     </article>
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <section>
+        <pre>
+Parser.prototype.parse = function (s) {
+  var l = '';
+  for (var i = 0; i &lt; s.length; i++) {
+    if (s[i] == '\u0000') {
+      l = Number(l);
+      this.emit('data', s.substr(i + 1, l));<div class="highlight">      s = s.substr(i + 1 + l);
+      i = 0;</div>      l = '';
+    } else {
+      l += s[i];
+    }
+  }
+  return s;
+};
+</pre>
+        </section>
+      </article>
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <section>
+        <pre>
+Parser.prototype.parse = function (s) {
+  var l = ''<span class="highlight-green">, j = 0</span>;
+  for (var i = 0; i &lt; s.length; i++) {
+    if (s[i] == '\u0000') {
+      l = Number(l);
+      this.emit('data', s.substr(i + 1, l));<div class="highlight-green">      i += l;
+      j = i + 1;</div>      l = '';
+    } else {
+      l += s[i];
+    }
+  }<div class="highlight-green">  return s.substr(j);</div>};
+</pre>
+        </section>
+      </article>
+
+      <article class="bigger">
+      <h3>&nbsp;</h3>
+       <pre>
+% node <span class="red">--prof</span> parser.js
+6 ms
+95568.33333333333 bytes/ms</pre>
+       <pre>
+% deps/v8/tools/mac-tick-processor
+[JavaScript]:
+4    9.8%    9.8%  Stub: StringAdd
+</pre>
+     </article>
+
+      <article class="bigger">
+      <h3>NOF_RUNS = 10</h3>
+       <pre>
+% node <span class="red">--prof</span> parser.js
+6 ms
+95568.33333333333 bytes/ms</pre>
+       <pre>
+% deps/v8/tools/mac-tick-processor
+[JavaScript]:
+4    9.8%    9.8%  Stub: StringAdd
+</pre>
+     </article>
+
+
+     <article class="bigger ss1">
+      <h3>NOF_RUNS = 1000</h3>
+       <pre>
+% node <span class="red">--prof</span> parser.js
+194 ms
+295572.1649484536 bytes/ms</pre>
+       <pre>
+% deps/v8/tools/mac-tick-processor
+[JavaScript]:<div class="highlight-green ss1">47  20.4%   20.4%  LazyCompile: *Parser.parse</div>33  14.3%   14.3%  Stub: SubString
+21   9.1%    9.1%  LazyCompile: *substr native
+14   6.1%    6.1%  LazyCompile: ~ToNumber native
+14   6.1%    6.1%  LazyCompile: b native
+12   5.2%    5.2%  Stub: StringAdd
+</pre>
+     </article>
+
+     <article class="bigger">
+       <h3>Code starts unoptimized</h3>
+<div style="margin-top: 50px;">
+<p class="code coldcode">Parser.parse</p>
+<p class="code coldcode">String.substr</p>
+<p class="code coldcode">makeFakePacket</p>
+<p class="code coldcode">randomBetween</p>
+ </div>
+     </article>
+
+     <article class="bigger">
+       <h3>V8 profiles for hotspots</h3>
+<div style="margin-top: 50px;">
+<p class="code warmup">Parser.parse</p>
+<p class="code warmup">String.substr</p>
+<p class="code coldcode">makeFakePacket</p>
+<p class="code coldcode">randomBetween</p>
+ </div>
+     </article>
+
+      <article class="bigger">
+       <h3>Optimizes hot functions</h3>
+<div style="margin-top: 50px;">
+<p class="code hotcode"><span style="margin-left: -26pt;">*Parser.parse</span></p>
+<p class="code hotcode"><span style="margin-left: -24pt;">*String.substr</span></p>
+<p class="code coldcode">makeFakePacket</p>
+<p class="code coldcode">randomBetween</p>
+ </div>
+     </article>
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <p class="single-idea"><code>--trace-opt</code></p><br/>
+ <center><p>log names of optimized functions to stdout</p></center>
+    </article>
+
+   <article class="bigger">
+     <h3>&nbsp;</h3>
+     <p class="single-idea">Not all constructs are supported by optimizing compiler</p>
+   </article>
+
+    <article class="bigger">
+       <h3>&nbsp;</h3>
+       <p class="single-idea"><code>--trace-bailout</code></p><br/>
+ <center><p>log optimizing compiler bailouts</p></center>
+    </article>
+
+    <article class="bigger">
+     <h3>&nbsp;</h3>
+     <p>Optimizations are: <ul><li>speculative</li><li>type-feedback driven</li></ul></p>
+  </article>
+
+   <article class="bigger">
+     <h3>&nbsp;</h3>
+     <p class="single-idea"><code>--trace-deopt</code></p><br/>
+     <center><p>log deoptimizations</p></center>
+    </article>
+
+
+     <article class="bigger ss1">
+      <h3>&nbsp;</h3>
+       <pre>
+% node <span class="red">--prof</span> parser.js
+194 ms
+295572.1649484536 bytes/ms</pre>
+       <pre>
+% deps/v8/tools/mac-tick-processor
+[JavaScript]:
+47  20.4%   20.4%  LazyCompile: *Parser.parse
+33  14.3%   14.3%  Stub: SubString
+21   9.1%    9.1%  LazyCompile: *substr native
+<span class="highlight ss1">14   6.1%    6.1%  LazyCompile: ~ToNumber native</span>
+14   6.1%    6.1%  LazyCompile: b native <div class="highlight ss1">12   5.2%    5.2%  Stub: StringAdd</div>
+</pre>
+     </article>
+
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <section>
+        <pre>
+Parser.prototype.parse = function (s) {
+  var l = '', j = 0;
+  for (var i = 0; i &lt; s.length; i++) {
+    if (s[i] == '\u0000') {<div class="highlight">      l = Number(l);</div>      this.emit('data', s.substr(i + 1, l));
+      i += l;
+      j = i + 1;
+      l = '';
+    } else {<div class="highlight">      l += s[i];</div>    }
+  }
+  return s.substr(j);
+};
+</pre>
+        </section>
+      </article>
+
+     <article class="bigger">
+       <h3>&nbsp;</h3>
+       <section>
+        <pre>
+Parser.prototype.parse = function (s) {<div class="highlight-green">  var l = 0, j = 0, ch0 = "0".charCodeAt(0);</div>  for (var i = 0; i &lt; s.length; i++) {<div class="highlight-green">    var ch = s.charCodeAt(i);
+    if (ch === 0) {</div>      this.emit('data', s.substr(i + 1, l));
+      i += l;
+      j = i + 1;<div class="highlight-green">      l = 0;</div>    } else {<div class="highlight-green">      l = l * 10 + (ch - ch0);</div>    }
+  }
+  return s.substr(j);
+};
+</pre>
+        </section>
+      </article>
+
+      <article class="bigger">
+      <h3>&nbsp;</h3>
+      <pre>
+% node parser.js
+125 ms
+458728 bytes/ms</pre>
+    <div class="build">
+      <div>
+      <center><h4>vs.</h4></center>
+             <pre>
+% node parser.js
+806 ms
+711.4267990074442 bytes/ms
+</pre>
+    </div></div>
+   </article>
+
+    <article class="bigger">
+      <h2>Understanding Numbers</h2>
+    </article>
+
+    <article class="bigger">
+      <h3>Number representations</h3>
+      <ul>
+        <li><b>SM</b>all <b>I</b>ntegers <img class="centered" src="images/smi.png" style="margin-top: 20px;"/></li>
+        <li>HeapNumbers <img class="centered" src="images/heapnumber.png" style="margin-top: 20px;"/></li>
+      </ul>
+    </article>
+
+    <article class="bigger">
+      <h3>&nbsp;</h3>
+      <div class="single-idea">
+        <p>Use WebGL typed arrays</p>
+        <p><code>Float32Array</code></p>
+        <p><code>Float64Array</code></p>
+      </div>
+   </article>
+
+    <article class="bigger">
+      <h2>Understanding Objects</h2>
+    </article>
+
+    <article class="bigger ss2">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+<div class="highlight ss2">function Point(x, y) {</div>  this.x = x;
+  this.y = y;
+}
+&nbsp;<div class="highlight ss1">var p1 = new Point(11, 22);</div>var p2 = new Point(33, 44);
+</pre>
+          </td>
+          <td style="width: 320px;"> &nbsp;
+            <!-- <img src="images/point-1.png"/> -->
+          </td>
+        </tr>
+      </table>
+    </article>
+      
+    <article class="bigger">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+function Point(x, y) {<div class="highlight">  this.x = x;</div>  this.y = y;
+}
+
+var p1 = new Point(11, 22);
+var p2 = new Point(33, 44);
+</pre>
+          </td>
+          <td>
+            <img src="images/point-1.png"/>
+          </td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="bigger">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+function Point(x, y) {
+  this.x = x;<div class="highlight">  this.y = y;</div>}
+
+var p1 = new Point(11, 22);
+var p2 = new Point(33, 44);
+</pre>
+          </td>
+          <td>
+            <img src="images/point-2.png"/>
+          </td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="bigger">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+function Point(x, y) {
+  this.x = x;
+  this.y = y;<div class="highlight">}</div>
+var p1 = new Point(11, 22);
+var p2 = new Point(33, 44);
+</pre>
+          </td>
+          <td>
+            <img src="images/point-3.png"/>
+          </td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="bigger ss1">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+<div class="highlight ss1">function Point(x, y) {</div>  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(11, 22);<div class="highlight ss0">var p2 = new Point(33, 44);</div></pre>
+          </td>
+          <td style="width: 320px;"> &nbsp;
+            <!-- <img src="images/point-3.png"/> -->
+          </td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="bigger">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+function Point(x, y) {<div class="highlight">  this.x = x;</div>  this.y = y;
+}
+
+var p1 = new Point(11, 22);
+var p2 = new Point(33, 44);
+</pre>
+          </td>
+          <td>
+            <img src="images/point-4.png"/>
+          </td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="bigger">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+function Point(x, y) {
+  this.x = x;<div class="highlight">  this.y = y;</div>}
+
+var p1 = new Point(11, 22);
+var p2 = new Point(33, 44);
+</pre>
+          </td>
+          <td>
+            <img src="images/point-5.png"/>
+          </td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="bigger">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+function Point(x, y) {
+  this.x = x;
+  this.y = y;<div class="highlight">}</div>
+var p1 = new Point(11, 22);
+var p2 = new Point(33, 44);
+</pre>
+          </td>
+          <td>
+            <img src="images/point-6.png"/>
+          </td>
+        </tr>
+      </table>
+    </article>
+
+    <article class="bigger">
+     <table class="noborder">
+        <tr>
+          <td>
+            <pre>
+function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+var p1 = new Point(11, 22);
+var p2 = new Point(33, 44);
+p2.z = 55; <div class="highlight">// p1 and p2 now have
+// different hidden classes</div></pre>
+          </td>
+          <td>
+            <img src="images/point-7.png"/>
+          </td>
+        </tr>
+      </table>
+    </article>
+      
+    <article class="bigger">
+           <pre>
+v = obj.x
+</pre>
+     <pre>
+v = Runtime_GetProperty(obj, 'x');
+</pre>
+            <pre>
+function Runtime_GetProperty(obj, f) {
+  var clazz = HiddenClass(obj);
+  return obj[clazz.IndexOfField(f)];
+}
+</pre>
+
+   </article>
+
+   <article class="bigger">
+           <pre>
+v = obj.x
+</pre>
+     <pre>
+if (HiddenClass(obj) == cache.clazz) {
+  v = obj[cache.index];
+} else {
+  v = Runtime_LoadCache_Miss(cache, obj, 'x');
+}
+</pre>
+      <pre>
+function Runtime_LoadCache_Miss(cache, obj, f) {
+  var clazz = HiddenClass(obj);
+  var index = clazz.IndexOfField(f);
+  cache.clazz = clazz;
+  cache.index = index;
+  return obj[index];
+}
+</pre>
+   </article>
+
+   <article class="bigger">
+      <h3>&nbsp;</h3>
+      <p class="single-idea">Monomorphic sites are better than polymorphic</p>
+   </article>
+
+      
+   <article class="bigger">
+      <h3>Dictionary mode</h3>
+      <img class="centered" src="images/dictmode.png"/>
+      <ul>
+        <li>too many properties</li>
+        <li><pre>delete obj.prop
+Object.seal(obj)
+Object.freeze(obj)
+obj.__defineGetter__(...)
+obj.__defineSetter__(...)
+Object.defineProperty(obj, ...)
+obj = { get prop () { }, set prop() { } }
+</pre></li>
+      </ul>
+   </article>
+
+
+    <article class="bigger">
+      <h3>For <i>hot</i> objects:</h3>
+      <ul>
+        <li>Avoid dictionary mode</li>
+        <li>Introduce all properties in the constructor</li>
+     </ul>
+    </article>
+
+    <article class="bigger">
+     <h2><code>arguments</code> object</h2>
+    </article>
+
+    <article class="bigger">
+      <ul>
+        <li>Only some patterns are supported for optimized code
+         <pre>
+<span class="kwd">arguments</span>.length
+<span class="kwd">arguments</span>[i]
+f.apply(obj, <span class="kwd">arguments</span>)
+</pre>
+         </li>
+         <li>Materialization is expensive</li>
+       </ul>
+    </article>
+
+     
+    <article class="bigger">
+     <h2>Variables&amp;Scopes</h2>
+    </article>
+
+    <article class="bigger">
+      <h3>Two types of variables</h3>
+     <pre>
+function f() {
+  var v1;  // real local variable
+  var v2;  // context allocated
+  var v3;  // context allocated
+
+  function g() { use(v2); }
+  function h() { use(v3); }
+}</pre>
+       <img class="centered" src="images/context.png"/>
+    </article>
+
+    <article class="bigger">
+      <h3>&nbsp;</h3>
+      <p class="single-idea-100 centered">Contexts are created eagerly</p>
+      <pre>
+function foo(arg1, arg2, arg3) {
+  /* V8 allocates context, copies arg2 to it */
+
+  if (almostAlwaysFalse()) {
+    return function () { return arg2; }
+  }
+
+  /* Context is not used */
+}</pre>
+    </article>
+       
+    <article class="bigger">
+      <h3>In hot code</h3>
+      <p class="single-idea">Avoid global <code>eval</code></p>
+     <center>Use <code>Function</code> constructor</center>
+    </article>
+
+    <article class="bigger">
+      <h3>In hot code</h3>
+      <p class="single-idea">Avoid <code>with</code></p>
+      <center>and <code>try {} catch (e) {}</code> for now</center>
+    </article>
+
+    <article class="bigger">
+      <h3>In hot code</h3>
+      <p class="single-idea">Avoid <code>const</code></p>
+    </article>
+       
+    <article class="bigger">
+      <h3>&nbsp;</h3>
+      <div class="single-idea"><p>Thank you!</p><p>Questions?</p></div>
+    </article>
+
+    </section>
+
+      <script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-6701581-4']);
+  _gaq.push(['_setDomainName', '.mrale.ph']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+  </body>
+</html>
