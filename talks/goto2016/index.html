@@ -72,7 +72,178 @@
         </section>
 
         <section>
-          <h1 class="pinkish">complexity</h1>
+          <h1 class="pinkish" style="font-family: Gagalin;">complexity</h1>
+        </section>
+
+        <section data-background-size="contain" data-background="images/why-let.png">
+        </section>
+
+        <section>
+          <h2>no choice</h2>
+          <h3>[ask on StackOverflow]</h3>
+        </section>
+
+        <section>
+          <h2>profile</h2>
+          <h3>and/or</h3>
+          <h2>read code</h2>
+        </section>
+
+        <section>
+          <h2>Crankshaft &rArr; IRHydra</h2>
+          <h3>[http://mrale.ph/irhydra/2]</h3>
+        </section>
+
+        <section data-background-size="contain" data-background="images/let-1.png">
+        </section>
+
+        <section data-background-size="contain" data-background="images/let-2.png">
+        </section>
+
+        <section data-background-size="contain" data-background="images/let-3.png">
+        </section>
+
+        <section>
+          <pre>
+# Get the source as described at:
+# https://chromium.googlesource.com/v8/v8.git
+$ fetch v8
+...
+$ cd v8
+$ make x64.debug
+...
+
+          </pre>
+        </section>
+
+        <section>
+          <pre>
+# Get the source as described at:
+# https://chromium.googlesource.com/v8/v8.git
+$ fetch v8
+...
+$ cd v8
+$ make x64.debug
+...
+$ out/x64.debug/d8 <span class="golden">--print-ast</span> test.js
+          </pre>
+        </section>
+
+        <section><pre class="smaller">
+. . FOR at -1
+. . . YIELD COUNT 0
+. . . BODY at -1
+. . . . BLOCK at -1
+. . . . . BLOCK NOCOMPLETIONS at -1
+. . . . . . EXPRESSION STATEMENT at -1
+. . . . . . . INIT at -1
+. . . . . . . . VAR PROXY local[0] (mode = LET) "i"
+. . . . . . . . VAR PROXY local[2] (mode = TEMPORARY) ".for"
+. . . . . . IF at -1
+. . . . . . . CONDITION at -1
+. . . . . . . . EQ at -1
+. . . . . . . . . VAR PROXY local[3] (mode = TEMPORARY) ".for"
+. . . . . . . . . LITERAL 1
+. . . . . . . THEN at -1
+. . . . . . . . EXPRESSION STATEMENT at -1
+. . . . . . . . . ASSIGN at -1
+. . . . . . . . . . VAR PROXY local[3] (mode = TEMPORARY) ".for"
+. . . . . . . . . . LITERAL 0
+. . . . . . . ELSE at 200
+. . . . . . . . EXPRESSION STATEMENT at 200
+. . . . . . . . . POST INC at 200
+. . . . . . . . . . VAR PROXY local[0] (mode = LET) "i"
+. . . . . . EXPRESSION STATEMENT at -1
+. . . . . . . ASSIGN at -1
+. . . . . . . . VAR PROXY local[4] (mode = TEMPORARY) ".for"
+. . . . . . . . LITERAL 1
+. . . . . . IF at 186
+. . . . . . . CONDITION at 186
+. . . . . . . . LT at 186
+. . . . . . . . . VAR PROXY local[0] (mode = LET) "i"
+. . . . . . . . . LITERAL 1e+08
+. . . . . . . THEN at -1
+. . . . . . . . EMPTY at -1
+. . . . . . . ELSE at -1
+. . . . . . . . BREAK at -1
+. . . . . FOR at 168
+. . . . . . YIELD COUNT 0
+. . . . . . COND at -1
+. . . . . . . EQ at -1
+. . . . . . . . VAR PROXY local[4] (mode = TEMPORARY) ".for"
+        </pre></section>
+
+        <section><pre>
+VAR PROXY local[0] (mode = LET) "i"
+VAR PROXY local[2] (mode = TEMPORARY) ".for"
+        </pre></section>
+
+        <section><pre>
+local[0] (mode = LET) "i"
+local[2] (mode = TEMPORARY) <span class="golden">".for"</span>
+        </pre></section>
+
+        <section><pre>
+$ git grep '"\.for"'
+src/ast/ast-value-factory.h:
+      F(dot_for, ".for")                            \
+</pre>        </section>
+
+
+        <section><pre>
+$ git grep dot_for
+src/parsing/parser.cc:  const AstRawString* temp_name = ast_value_factory()->dot_for_string();
+src/parsing/parser.cc:            scope_->NewTemporary(ast_value_factory()->dot_for_string());
+src/parsing/parser.cc:          scope_->NewTemporary(ast_value_factory()->dot_for_string());
+</pre>        </section>
+
+                <section><pre><code class="cpp">
+  // We are given a for statement
+  // of the form
+  //
+  //  labels: for (let/const x = i;
+  //               cond;
+  //               next) body
+  //
+  // and rewrite it as follows.
+        </code></pre></section>
+
+        <section><pre class="smaller"><code class="cpp">
+  // We are given a for statement of the form
+  //
+  //  labels: for (let/const x = i; cond; next) body
+  //
+  // and rewrite it as follows.  Here we write {{ ... }} for init-blocks, ie.,
+  // blocks whose ignore_completion_value_ flag is set.
+  //
+  //  {
+  //    let/const x = i;
+  //    temp_x = x;
+  //    first = 1;
+  //    undefined;
+  //    outer: for (;;) {
+  //      let/const x = temp_x;
+  //      {{ if (first == 1) {
+  //           first = 0;
+  //         } else {
+  //           next;
+  //         }
+  //         flag = 1;
+  //         if (!cond) break;
+  //      }}
+  //      labels: for (; flag == 1; flag = 0, temp_x = x) {
+  //        body
+  //      }
+  //      {{ if (flag == 1)  // Body used break.
+  //           break;
+  //      }}
+  //    }
+  //  }
+        </code></pre></section>
+
+        <section>
+          <h3>internals are <span class="pinkish">important</span></h3>
+          <h3>internals are <span class="pinkish">irrelevant</span></h3>
         </section>
 
         <section>
@@ -1528,8 +1699,119 @@ h();  // =>   1ms
         </section>
 
         <section>
-          <h1>now desert!</h1>
+          <h2 style="font-family: Gagalin;">know fundamentals!</h2>
         </section>
+
+        <section>
+          <h2>we can look into other VMs!</h2>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+$ <b>jsc</b> test.js
+f();  // =>   3ms
+f();  // =>   3ms
+f();  // =>   16ms
+f();  // =>   17ms
+f();  // =>   11ms
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+$ <b>jsc</b> --useConcurrentJIT=false \
+      --showDisassembly=true   \
+      test.js >& code.asm
+
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="bigger"><code data-noescape class="javascript">
+$ <b>jsc</b> --useConcurrentJIT=false \
+      --showDisassembly=true   \
+      test.js >& code.asm
+# there'll be three DFG versions of function f
+</code></pre>
+        </section>
+
+        <section>
+          <pre class="smaller">
+82:&lt;!7:loc14&gt; GetLocal(Untyped:@178, JS|MustGen|UseAsOther, Final, loc6(O&lt;Final&gt;/FlushedCell), machine:loc5, R:Stack(-7), bc#102)  predicting Final
+    0x22d0b7400516: mov -0x30(%rbp), %rax
+84:&lt;!0:-&gt; CheckStructure(Cell:@82, MustGen, [%CS:Object], R:JSCell_structureID, Exits, bc#102)
+    0x22d0b740051a: cmp $0xff, (%rax)
+    0x22d0b7400520: jnz 0x22d0b7400871
+85:&lt; 2:loc13&gt; GetGetterSetterByOffset(KnownCell:@82, KnownCell:@82, JS|UseAsOther, Othercell, id5{a}, 0, inferredType = Top, R:NamedProperties(5), Exits, bc#102)
+    0x22d0b7400526: mov 0x10(%rax), %rsi
+86:&lt; 1:loc9&gt;  GetSetter(KnownCell:@85, JS|UseAsOther, Function, R:GetterSetter_setter, Exits, bc#102)
+    0x22d0b740052a: mov 0x18(%rsi), %rdx
+87:&lt;!0:-&gt; MovHint(Untyped:@82, MustGen, loc22, W:SideState, ClobbersExit, bc#102)
+89:&lt;!0:-&gt; MovHint(Untyped:@81, MustGen, loc21, W:SideState, ClobbersExit, bc#102, ExitInvalid)
+91:&lt;!0:-&gt; ExitOK(MustGen, W:SideState, bc#102)
+92:&lt;!0:-&gt; CheckCell(Cell:@86, Untyped:@82, MustGen, &lt;0x1035cc970, Function&gt;, set#EoFqmc/&lt;nogen&gt;:[0x1035a1de0], Exits, bc#102)
+    0x22d0b740052e: mov $0x1035cc970, %r11
+    0x22d0b7400538: cmp %r11, %rdx
+    0x22d0b740053b: jnz 0x22d0b7400887
+--&gt; set#EoFqmc:<0x103597620, bc#102, SetterCall, known callee: Cell: 0x1035cc970 (%BA:Function), ID: 49, numArgs+this = 2, stackOffset = -28 (loc0 maps to loc28)>
+</pre>
+        </section>
+
+        <section>
+          <pre class="smaller">
+82:&lt;!7:loc14&gt; <b>GetLocal</b>(Untyped:@178, JS|MustGen|UseAsOther, Final, loc6(O&lt;Final&gt;/FlushedCell), machine:loc5, R:Stack(-7), bc#102)  predicting Final
+    0x22d0b7400516: mov -0x30(%rbp), %rax
+84:&lt;!0:-&gt; <b>CheckStructure</b>(Cell:@82, MustGen, [%CS:Object], R:JSCell_structureID, Exits, bc#102)
+    0x22d0b740051a: cmp $0xff, (%rax)
+    0x22d0b7400520: jnz 0x22d0b7400871
+85:&lt; 2:loc13&gt; <b>GetGetterSetterByOffset</b>(KnownCell:@82, KnownCell:@82, JS|UseAsOther, Othercell, id5{a}, 0, inferredType = Top, R:NamedProperties(5), Exits, bc#102)
+    0x22d0b7400526: mov 0x10(%rax), %rsi
+86:&lt; 1:loc9&gt;  <b>GetSetter</b>(KnownCell:@85, JS|UseAsOther, Function, R:GetterSetter_setter, Exits, bc#102)
+    0x22d0b740052a: mov 0x18(%rsi), %rdx
+87:&lt;!0:-&gt; <b>MovHint</b>(Untyped:@82, MustGen, loc22, W:SideState, ClobbersExit, bc#102)
+89:&lt;!0:-&gt; <b>MovHint</b>(Untyped:@81, MustGen, loc21, W:SideState, ClobbersExit, bc#102, ExitInvalid)
+91:&lt;!0:-&gt; <b>ExitOK</b>(MustGen, W:SideState, bc#102)
+92:&lt;!0:-&gt; <b>CheckCell</b>(Cell:@86, Untyped:@82, MustGen, &lt;0x1035cc970, Function&gt;, set#EoFqmc/&lt;nogen&gt;:[0x1035a1de0], Exits, bc#102)
+    0x22d0b740052e: mov $0x1035cc970, %r11
+    0x22d0b7400538: cmp %r11, %rdx
+    0x22d0b740053b: jnz 0x22d0b7400887
+<em>--&gt; set#EoFqmc:<0x103597620, bc#102, SetterCall, known callee: Cell: 0x1035cc970 (%BA:Function), ID: 49, numArgs+this = 2, stackOffset = -28 (loc0 maps to loc28)></em>
+</pre>
+        </section>
+
+        <section>
+          <pre>
+82 <b>GetLocal</b>(@178)
+84 <b>CheckStructure</b>(@82)
+85 <b>GetGetterSetterByOffset</b>(@82)
+86 <b>GetSetter</b>(@85)
+92 <b>CheckCell</b>(Cell:@86, ...)
+<em>--&gt; set#EoFqmc:<... known callee ...></em>
+</pre>
+        </section>
+
+        <section>
+          <pre>
+80 <b>CheckStructure</b>(@78)
+81 <b>GetGetterSetterByOffset</b>(@78)
+82 <b>GetSetter</b>(@81)
+88 <b>Call</b>(@82)
+</pre>
+        </section>
+
+        <section>
+          <pre>
+80 <b>CheckStructure</b>(@78)
+81 <b>GetGetterSetterByOffset</b>(@78)
+82 <b>GetSetter</b>(@81)
+<span style="color: red;">88 <b>Call</b>(@82)</span>
+</pre>
+        </section>
+
+        <section>
+          <h2 style="font-family: Gagalin;">now desert</h2>
+        </section>
+
 
         <section>
           <h2>method call<br/>vs.<br/>function call</h2>
