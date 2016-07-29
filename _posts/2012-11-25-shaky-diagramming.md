@@ -114,7 +114,7 @@ Happy End
 
 It took me maybe an hour to hack bits and pieces of this together and after that I was just drawing diagrams and writing actually important stuff. Browser kinda saves the day again...
 
-You can play with the tool [here](https://moe-js.googlecode.com/git/talks/jsconfeu2012/tools/shaky/deploy/shaky.html).
+You can play with the tool [here](https://cdn.rawgit.com/mraleph/moe-js/master/talks/jsconfeu2012/tools/shaky/deploy/shaky.html).
 
 <script type="text/x-mathjax-config">
   MathJax.Hub.Config({
