@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .source-path {
   color: black;
   background-color: white;
@@ -29,4 +30,4 @@
   -moz-osx-font-smoothing: grayscale; }
 
 .fa-angle-double-right:before {
-  content: "\f101"; }
+  content: ""; }
