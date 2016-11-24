@@ -1,5 +1,7 @@
+@import url(/fonts/gofont/gofont.css);
+
 body {
-  font-family: 'Fira Sans', sans-serif;
+  font-family: 'Go', 'Fira Sans', sans-serif;
   font-size: 15px;
   font-weight: 300;
 }

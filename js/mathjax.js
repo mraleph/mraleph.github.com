@@ -2,8 +2,9 @@
   var CONFIG = "MathJax.Hub.Config({"
              + "  tex2jax: {"
              + "    inlineMath: [['$','$'], ['\\\\(','\\\\)']],"
-             + "    skipTags: ['script','noscript','style','textarea']"
-             + "  }"
+             + "    skipTags: ['script','noscript','style','textarea'], displayAlign: 'center'"
+             + "  },"
+             + "  displayAlign: 'center'"
              + "});";
 
   var config = document.createElement("script");
@@ -13,6 +14,6 @@
 
   var script = document.createElement("script");
   script.type = "text/javascript";
-  script.src = "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+  script.src = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML";
   document.body.appendChild(script);
 })();

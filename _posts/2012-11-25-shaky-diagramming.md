@@ -116,14 +116,5 @@ It took me maybe an hour to hack bits and pieces of this together and after that
 
 You can play with the tool [here](https://cdn.rawgit.com/mraleph/moe-js/master/talks/jsconfeu2012/tools/shaky/deploy/shaky.html).
 
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [['$','$'], ['\\(','\\)']],
-      skipTags: ["script","noscript","style","textarea"]
-    }
-  });
-</script>
-<script type="text/javascript"
-  src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+<script type="text/javascript" src="/js/mathjax.js">
 </script>
