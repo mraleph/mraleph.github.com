@@ -560,14 +560,17 @@ we will see the following performance numbers:
 # Naive tokenizer that just uses global regexps with lastIndex.
 $ node tokenize-global.js
 processed 2020001 tokens in 987ms
+
 # Tokenizer that is using a global regexps with an irrefutable pattern
 # to prevent searching for regexp match forward.
 $ node tokenize-global-irrefutable.js
 processed 2020001 tokens in 471ms
+
 # Tokenizer that uses anchored regexps and substring to slice
 # away the processed part of the string.
 $ node tokenize-substring.js
 processed 2020001 tokens in 393ms
+
 # Tokenizer that uses sticky regexps.
 $ node tokenize-sticky.js
 processed 2020001 tokens in 295ms
