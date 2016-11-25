@@ -1,4 +1,4 @@
-div.highlight {
+.highlight {
     margin-top: 15px;
     margin-bottom: 10px;
     border-top: 1px solid #ccc;
@@ -6,7 +6,7 @@ div.highlight {
     background-color: #f8f8f8;
 }
 
-div.highlight pre {
+.highlight pre {
     background-color: transparent;
     margin: 0;
     padding: 10px;
