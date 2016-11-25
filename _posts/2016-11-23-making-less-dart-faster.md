@@ -785,5 +785,5 @@ So overall performance advice can be summarized as follows:
 - Strongly consider writing your lexer by hand instead of using regular expressions.
 - The less work your program is doing the faster it is. The less abstraction layers are involved the simpler it is to establish how much work your program is actually doing and decrease the amount.
 
-<script type="text/javascript" src="/js/mathjax.js">
+<script async defer type="text/javascript" src="/js/mathjax.js">
 </script>
