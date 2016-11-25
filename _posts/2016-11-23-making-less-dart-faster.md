@@ -679,7 +679,7 @@ $ node tokenize-manual.js
 processed 2020001 tokens in 50ms
 </pre>
 
-The main thing this demonstrates - is that _you program can get much faster if its doing less work_. For example our manual tokenizer simply glides through the string without allocating any substring objects for tokens. However if we add `var val = l.val;` inside the benchmark loop to force this meaningless allocation we will still see performance that is much better than our RegExp based parsers:
+The main thing this demonstrates - is that _you program can get much faster if it's doing less work_. For example our manual tokenizer simply glides through the string without allocating any substring objects for tokens. However if we add `var val = l.val;` inside the benchmark loop to force this meaningless allocation we will still see performance that is much better than our RegExp based parsers:
 
 <pre>
 $ node tokenize-manual.js
