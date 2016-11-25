@@ -6,6 +6,11 @@
     background-color: #f8f8f8;
 }
 
+figure.highlight {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
 .highlight pre {
     background-color: transparent;
     margin: 0;
