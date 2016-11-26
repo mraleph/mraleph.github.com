@@ -330,7 +330,7 @@ var obj = process(gigantic10GbString);
 Counterintuitively `obj` above retains the whole 10Gb input string instead of a small 20 character token - because this token is internally represented as a `SlicedString` that points back to the source string. This might seem like a contrived example but leaks like this do tend to happen in the real world: for example `three.js` [had to work-around](https://github.com/mrdoob/three.js/issues/9679) this issue. Eagerness of a runtime to fall over itself and make your code faster with clever hidden optimizations has an ugly side too. [Issue 2869](https://bugs.chromium.org/p/v8/issues/detail?id=2869) tracks progress of fixing this on the V8 side, but nothing has really happened since 2013, probably because the only simple and robust solution is to remove sliced strings altogether. Interestingly that's precisely what Java did - they used to implement `String.substring` in \\(O(1)\\) time by reusing parent `String`'s `char[]` storage for the substring object but that lead to [memory leaks](http://bugs.java.com/view_bug.do?bug_id=4513622) and [was eventually removed in 2012](http://marc.info/?l=openjdk-core-libs-dev&m=135796361239057&w=4). V8 history with string slices is even more curious: originally V8 [had them](https://github.com/v8/v8/blob/43d26ecc3563a46f62a0224030667c8f8f3f6ceb/src/objects.h#L2927-L2931), then [removed](https://codereview.chromium.org/385004) them in 2009, then [added it back](https://codereview.chromium.org/7477045
 ) in 2011.
 
-This all is somewhat bad news for [the original Dart SDK bug](https://github.com/dart-lang/sdk/issues/27810) which prompted this trip down the memory lane. Indeed Dart VM is unlikely to implement substring optimization through sliced-strings. That why I decided to probe: why exactly they are measuring substring performance?
+This all is somewhat bad news for [the original Dart SDK bug](https://github.com/dart-lang/sdk/issues/27810) which prompted this trip down the memory lane. Indeed Dart VM is unlikely to implement substring optimization through sliced-strings. That's why I decided to probe: why exactly they are measuring substring performance?
 
 ### Part II: Enter `less_dart`.
 
@@ -539,7 +539,7 @@ Match matchAsPrefix(String string, [int start = 0]) {
 }
 {% endhighlight %}
 
-Obviously the solution was to fix VM buy implementing `RegExp.matchAsPrefix` in the same way V8 implements _sticky_ flag - which is rather simple because Dart VM is using essentially the same [regexp engine](http://news.dartlang.org/2015/02/irregexp-dart-vms-new-regexp.html) as one in V8 called [Irregexp](https://blog.chromium.org/2009/02/irregexp-google-chromes-new-regexp.html).
+Obviously the solution was to fix VM by implementing `RegExp.matchAsPrefix` in the same way V8 implements _sticky_ flag - which is rather simple because Dart VM is using essentially the same [regexp engine](http://news.dartlang.org/2015/02/irregexp-dart-vms-new-regexp.html) as one in V8 called [Irregexp](https://blog.chromium.org/2009/02/irregexp-google-chromes-new-regexp.html).
 
 <small>[Maybe we should have called Dart VM port IrIrRegexp because instead of translating RegExp specific intermediate representation (IR) down to the machine code Dart VM translates it further into our machine independent IR and let the generic compiler pipeline take care of it. This allowed us to incorporate Irregexp into Dart VM without porting any machine specific regexp related backend code.]</small>
 
