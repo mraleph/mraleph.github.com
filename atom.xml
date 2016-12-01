@@ -25,7 +25,7 @@ layout: nil
       <name>Vyacheslav Egorov</name>
       <uri>http://mrale.ph</uri>
     </author>
-    <content type="html"><a xmlns="http://www.w3.org/1999/xhtml" href="http://mrale.ph{{ post.url }}">read it here</a></content>
+    <content type="html">&lt;a href="http://mrale.ph{{ post.url }}"&gt;read it here&lt;/a&gt;</content>
   </entry>
   {% endfor %}
 </feed>
