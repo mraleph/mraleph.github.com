@@ -8,7 +8,7 @@ layout: nil
   <link href="http://mrale.ph"/>
   <link type="application/atom+xml" rel="self" href="http://mrale.ph/atom.xml"/>
   <updated>{{ site.time | date_to_xmlschema }}</updated>
-  <id>http://mrale.ph</id>
+  <id>http://mrale.ph/</id>
   <author>
     <name>Vyacheslav Egorov</name>
     <email>me@mrale.ph</email>
@@ -25,7 +25,7 @@ layout: nil
       <name>Vyacheslav Egorov</name>
       <uri>http://mrale.ph</uri>
     </author>
-    <content type="html">{{ post.content | xml_escape }}</content>
+    <content type="html"><a href="http://mrale.ph{{ post.url }}">read it here</a></content>
   </entry>
   {% endfor %}
 </feed>
