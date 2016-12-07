@@ -17,7 +17,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 browser = webdriver.Chrome()
 browser.set_window_size(1280,720 + (720 - 646))
-browser.get('http://localhost:8000/talks/vmss16/')
+browser.get('http://localhost:8000/talks/muc2016/')
 
 print browser.execute_script("return document.documentElement.clientWidth")
 print browser.execute_script("return document.documentElement.clientHeight")
