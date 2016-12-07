@@ -1,0 +1,1361 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>How we don't do things</title>
+
+		<meta name="description" content="How we don't do things">
+		<meta name="author" content="Vyacheslav Egorov">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="https://code.cdn.mozilla.net/fonts/fira.css">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/simple.css" id="theme">
+
+    <style type="text/css">
+      .complete-in-him {
+        font-family: 'KG Complete in Him' !important;
+        font-size: 1.7em !important;
+      }
+
+      .life-is-messy {
+        font-family: 'KG Life is Messy' !important;
+        font-size: .7em !important;
+      }
+
+      .font-life-is-messy {
+        font-family: 'KG Life is Messy' !important;
+      }
+    </style>
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="css/googlecode.css">
+
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<![endif]-->
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-6701581-4', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+        <section data-background-color="#263238">
+          <h2 style="color: white; font-family: 'KG Life is Messy'; text-transform: uppercase;">how we don't do things</h2>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white; font-family: 'KG Life is Messy'; text-transform: uppercase;">how we do things<br/><div style="font-size: .6em; font-family: 'KG Complete in Him';">[but <em>really</em> should not]</div></h2>
+
+        </section>
+
+        <section data-background="images/me-vs-them.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section>
+          <div style="text-align: left;">
+          <h2 style="background: #288; color: white; padding-left: .3em;">Excelsior JET</h2>
+          <h2 style="background: #3F89EC; color: white; padding-left: .3em;">V8</h2>
+          <h2 style="background: linear-gradient(45deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%); color: white; padding-left: .3em;">Dart VM</h2>
+          <h2 style="background: #4162bf; color: white; padding-left: .3em;">Lua<span style="color: #ffb380;">JIT</span></h2>
+          </div>
+        </section>
+
+        <section data-background-color="#288">
+          <div style="text-align: left;">
+          <h2 style="background: #288; color: white; padding-left: .3em;">Excelsior JET
+            <p style="font-size: .4em;">[<span class="complete-in-him">Java</span> VM written in <span class="complete-in-him">Oberon-2/Modula-2</span>]</p>
+            <p class="fragment" style="font-size: .4em;">[This days moved to <span class="complete-in-him">Scala</span>]</p>
+          </h2>
+          </div>
+        </section>
+
+        <section data-background-color="#3F89EC">
+          <div style="text-align: left;">
+            <h2 style="background: #3F89EC; color: white; padding-left: .3em;">V8
+              <p style="font-size: .4em;">[<span class="complete-in-him">JavaScript</span> VM written in <span class="complete-in-him">C++</span>]</p>
+              <p class="fragment" style="font-size: .4em;">[Some of that <span class="complete-in-him">C++</span> is <span class="complete-in-him">assembly</span> is disguise]</p>
+            </h2>
+          </div>
+        </section>
+
+        <section data-background="linear-gradient(45deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%)">
+          <div style="text-align: left;">
+          <h2 style="color: white; padding-left: .3em;">Dart VM
+              <p style="font-size: .4em;">[<span class="complete-in-him">Dart</span> VM written in <span class="complete-in-him">C++</span>]</p>
+              <p class="fragment" style="font-size: .4em;">[Some of that <span class="complete-in-him">C++</span> is <span class="complete-in-him">assembly</span> is disguise]</p>
+          </h2>
+          </div>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <div style="text-align: left;">
+          <h2 style="background: #4162bf; color: white; padding-left: .3em;">Lua<span style="color: #ffb380;">JIT</span>
+              <p style="font-size: .4em;">[<span class="complete-in-him">Lua</span> VM written in <span class="complete-in-him">C, Lua & assembly</span>]</p>
+              <p class="fragment" style="font-size: .4em;">[has a <span style="font-size: 1em;">tracing</span> JIT]</p>
+          </h2>
+          </div>
+        </section>
+
+        <section data-background-color="#4162bf">
+          <div style="text-align: left;">
+          <h2 style="background: #4162bf; color: white; padding-left: .3em;">Lua<span style="color: #ffb380;">JIT</span>
+              <p style="font-size: .4em;">[<span class="complete-in-him">Lua</span> VM written in <span class="complete-in-him">C, Lua & assembly</span>]</p>
+              <p style="font-size: .4em;">[has a <span style="font-family: 'Janda Happy Day'; font-size: .8em;">tracing</span> JIT]</p>
+          </h2>
+          </div>
+        </section>
+
+        <section data-background-color="#263238">
+          <h1 style="color: white; font-family: 'KG Life is Messy'">USERS</h1>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;">&laquo;Focus on the <span class="life-is-messy">user</span> and all else will follow.&raquo;</h2>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;">benchmarks are not our users</h2>
+        </section>
+
+        <section data-background="images/substring.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="dart">
+benchmark(String s) {
+  while (s.length > 1) {
+    s = s.substring(1);
+  }
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+matchAt(String s, RegExp re, int index) =>
+  re.firstMatch(<span class="golden">s.substring(index)</span>);
+          </pre></code>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+matchAt(String s, RegExp re, int index) =>
+  <span class="golden">re.matchAsPrefix</span>(s, index);
+          </pre></code>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;">holistic</h2>
+          <h3 style="color: #BDBDBD;">/hōˈlistik/</h3>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;">users are artists</h2>
+        </section>
+
+        <section data-footer="Coração Independente Vermelho by Joana Vasconcelos" data-background="images/slide-artists-0.jpg" data-background-size="contain"  data-background-color="black">
+        </section>
+
+        <section data-footer="Coração Independente Vermelho by Joana Vasconcelos" data-background="images/slide-artists-1.jpg" data-background-size="contain"  data-background-color="black">
+        </section>
+
+        <section data-background-color="#065150">
+          <img src="images/flow-hero-logo.png" style="border: none; background: none; box-shadow: none;">
+          <h4 style="color: white;">A SCIENTIFIC COMPUTING FRAMEWORK FOR LUAJIT</h4>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+for j = 1, N do
+  for i = 1, M do
+    t[{i, j}] = 2 * i + j
+  end
+end
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+for j = 1, N do
+  for i = 1, M do
+    t[i][j] = 2 * i + j
+  end
+end
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="lua">
+-- counterintuitively it is actually slower
+-- than the t[{i, j}] code.
+for j = 1, N do
+  for i = 1, M do
+    t[i][j] = 2 * i + j
+  end
+end
+          </code></pre>
+        </section>
+
+       <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .
+
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  ._
+
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .__
+
+
+</pre>
+        </section>
+
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .___
+
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>
+      \_
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>
+      \__
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>
+      \___
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>
+      \____
+
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     _
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     __
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     ___
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     ____
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>
+  .___<span class='deopt'>/</span>     _____
+      \____/
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>          _
+  .___<span class='deopt'>/</span>     _____/
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>          __
+  .___<span class='deopt'>/</span>     _____/
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+       <span class='deopt'>_</span>          ___
+  .___<span class='deopt'>/</span>     _____/
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+                      _
+       <span class='deopt'>_</span>          ___/
+  .___<span class='deopt'>/</span>     _____/   <span class='deopt'>\_</span>
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+                      __
+       <span class='deopt'>_</span>          ___/
+  .___<span class='deopt'>/</span>     _____/   <span class='deopt'>\_</span>
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+                      ___
+       <span class='deopt'>_</span>          ___/
+  .___<span class='deopt'>/</span>     _____/   <span class='deopt'>\_</span>
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+                      ___.
+       <span class='deopt'>_</span>          ___/
+  .___<span class='deopt'>/</span>     _____/   <span class='deopt'>\_</span>
+      \____/     <span class='deopt'>\_</span>
+           <span class='deopt'>\_</span>
+</pre>
+        </section>
+
+        <section>
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important;">
+
+
+  .______________________.
+      <span class="deopt2">\_</span>      <span class="deopt2">\_</span>   <span class="deopt2">\_</span>  <span class="deopt2">\_</span>
+
+</pre>
+        </section>
+
+        <section  data-background-color="#065150">
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important; color: white;">
+
+
+  .
+
+
+</pre>
+        </section>
+
+        <section  data-background-color="#065150">
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important; color: white;">
+
+
+  ._
+
+
+</pre>
+        </section>
+
+        <section  data-background-color="#065150">
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important; color: white;">
+
+
+  .__
+
+
+</pre>
+        </section>
+
+
+        <section  data-background-color="#065150">
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important; color: white;">
+
+
+  .___&#9760;
+
+
+</pre>
+        </section>
+
+        <section  data-background-color="#065150">
+<pre style="line-height: .9em; font-weight: 900; font-size: 2em !important; color: white;">
+
+
+  .___&#9760; (trace abort)
+
+
+</pre>
+        </section>
+
+        <section>
+          <h3>build a trace visualizer</h3>
+          <h3>&nbsp;</h3>
+        </section>
+
+        <section>
+          <h3><s>build a trace visualizer</s></h3>
+          <h3>&nbsp;</h3>
+        </section>
+
+        <section>
+          <h3><s>build a trace visualizer</s></h3>
+          <h3>build a profiler!</h3>
+        </section>
+
+        <section>
+          <h2>deopt cargo cult</h2>
+          <h4>[deoptimizations are bad]</h4>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;">users don't know why fast is fast</h2>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;">users don't know what matters</h2>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;" class="font-life-is-messy">users are not our benchmarks</h2>
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;">users need tools</h2>
+        </section>
+
+        <section data-background="images/ladder-1.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section data-background="images/ladder-2.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section data-background-color="#263238">
+          <h2 style="color: white;" class="font-life-is-messy">TRAPPED BY C++</h2>
+        </section>
+
+        <section data-background="images/two-worlds.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+class HeapNumber: public HeapObject {
+ public:
+  // [value]: number value.
+  inline double value() const;
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+double HeapNumber::value() const {
+  return READ_DOUBLE_FIELD(this, kValueOffset);
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+double HeapNumber::value() const {
+  return ReadDoubleValue(
+      FIELD_ADDR_CONST(this, kValueOffset));
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+double HeapNumber::value() const {
+  return ReadDoubleValue(
+      (reinterpret_cast<const byte*>(this)
+       + kValueOffset
+       - kHeapObjectTag));
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+double HeapNumber::value() const {
+  return ReadUnalignedValue&lt;double&gt;(
+      (reinterpret_cast&lt;const byte*&gt;](this)
+       + kValueOffset
+       - kHeapObjectTag));
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+double HeapNumber::value() const {
+  const void* p =
+    reinterpret_cast&lt;const byte*&gt;(this)
+       + kValueOffset
+       - kHeapObjectTag);
+#if !(V8_TARGET_ARCH_MIPS ||
+      V8_TARGET_ARCH_MIPS64 ||
+      V8_TARGET_ARCH_ARM)
+  return *reinterpret_cast&lt;const double*&gt;(p);
+#else
+  V r;
+  memmove(&r, p, sizeof(V));
+  return r;
+#endif
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <h3>(mis)represent objects as C++ objects</h3>
+          <h3>use <code>reinterpret_cast</code> for profit</h3>
+        </section>
+
+        <section data-background="images/undefined-behavior.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section>
+          <h3><code>((Object*)0)-&gt;IsSmi()</code></h3>
+        </section>
+
+        <section>
+          <h3>what about GC?</h3>
+        </section>
+
+        <section>
+          <h3><code>T*</code> &rArr; <code>Handle&lt;T&gt;</code></h3>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+class HandleBase {
+ protected:
+  Object** location_;
+};
+
+template &lt;typename T&gt;
+class Handle : public HandleBase {
+ public:
+  V8_INLINE T* operator-&gt;() const {
+    return *reinterpret_cast&lt;T**&gt;(location_);
+  }
+};
+          </pre></code>
+        </section>
+
+        <section data-background="images/two-worlds-2.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section data-background="images/two-worlds-3.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+Handle&lt;Foo&gt; foo;
+foo-&gt;doSomethingElse(doSomething())
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+Handle&lt;Foo&gt; foo;
+Foo* foo_ = foo.location_;
+foo_->doSomethingElse(doSomething());
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+Handle&lt;Foo&gt; foo;
+Foo* foo_ = foo.location_;
+foo_->doSomethingElse(<span class="golden">doSomething()</span>);
+          </pre></code>
+        </section>
+
+        <section>
+          <h2>subtle bugs</h2>
+        </section>
+
+        <section>
+          <h2>unprotected <code>this</code></h2>
+        </section>
+
+        <section>
+          <h2>no virtual behavior</h2>
+        </section>
+
+        <section>
+          <h3><code>RawT*</code> &rArr; <code>T</code></h3>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+class RawDouble : public RawNumber {
+  ALIGN8 double value_;
+};
+
+class Double : public Number {
+ public:
+  double value() const { return raw_->ptr()->value_; }
+
+  virtual const char* ToCString() const;
+
+  static Double& Handle(RawDouble* raw);
+ private:
+  RawDouble* raw_;
+};
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+Object& obj = Object::Handle();
+obj = Something();
+printf("obj = %s\n", obj.ToCString());
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+Object& obj = Object::Handle();
+obj = Something();  // RawDouble?
+printf("obj = %s\n", obj.ToCString());
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+DART_FORCE_INLINE void Object::SetRaw(RawObject* value) {
+  raw_ = value;
+  if ((reinterpret_cast<uword>(value) & kSmiTagMask) == kSmiTag) {
+    set_vtable(Smi::handle_vtable_);
+    return;
+  }
+  intptr_t cid = value->GetClassId();
+  if (cid >= kNumPredefinedCids) {
+    cid = kInstanceCid;
+  }
+  set_vtable(builtin_vtables_[cid]);
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+DART_FORCE_INLINE void Object::SetRaw(RawObject* value) {
+  raw_ = value;
+  if ((reinterpret_cast<uword>(value) & kSmiTagMask) == kSmiTag) {
+    <span class="golden">set_vtable</span>(Smi::handle_vtable_);
+    return;
+  }
+  intptr_t cid = value->GetClassId();
+  if (cid >= kNumPredefinedCids) {
+    cid = kInstanceCid;
+  }
+  <span class="golden">set_vtable</span>(builtin_vtables_[cid]);
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <h2>solves <em>some</em> issues</h2>
+        </section>
+
+        <section data-background-color="#263238">
+          <h3 style="color: white">entering <span class="life-is-messy">runtime</span> is expensive</h3>
+          <h3 style="color: white">using <span class="life-is-messy">runtime</span> is expensive</h3>
+        </section>
+
+        <section>
+          <h3>so people write <em>stubs</em> and <em>intrinsics</em></h3>
+        </section>
+
+        <section>
+          <pre class="smaller"><code data-trim data-noescape class="cpp">
+// Access growable object array at specified index.
+// On stack: growable array (+2), index (+1), return-address (+0).
+void Intrinsifier::GrowableArrayGetIndexed(Assembler* assembler) {
+  Label fall_through;
+  __ movl(EBX, Address(ESP, + 1 * kWordSize));  // Index.
+  __ movl(EAX, Address(ESP, + 2 * kWordSize));  // GrowableArray.
+  __ testl(EBX, Immediate(kSmiTagMask));
+  __ j(NOT_ZERO, &fall_through, Assembler::kNearJump);  // Non-smi index.
+  // Range check using _length field.
+  __ cmpl(EBX, FieldAddress(EAX, GrowableObjectArray::length_offset()));
+  // Runtime throws exception.
+  __ j(ABOVE_EQUAL, &fall_through, Assembler::kNearJump);
+  __ movl(EAX, FieldAddress(EAX, GrowableObjectArray::data_offset()));  // data.
+
+  // Note that EBX is Smi, i.e, times 2.
+  ASSERT(kSmiTagShift == 1);
+  __ movl(EAX, FieldAddress(EAX, EBX, TIMES_2, Array::data_offset()));
+  __ ret();
+  __ Bind(&fall_through);
+}</pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller"><code data-trim data-noescape class="cpp">
+bool Intrinsifier::Build_GrowableArrayGetIndexed(FlowGraph* flow_graph) {
+  GraphEntryInstr* graph_entry = flow_graph->graph_entry();
+  TargetEntryInstr* normal_entry = graph_entry->normal_entry();
+  BlockBuilder builder(flow_graph, normal_entry);
+
+  Definition* index = builder.AddParameter(1);
+  Definition* growable_array = builder.AddParameter(2);
+
+  PrepareIndexedOp(
+      &builder, growable_array, index, GrowableObjectArray::length_offset());
+
+  Definition* backing_store = builder.AddDefinition(
+      new LoadFieldInstr(new Value(growable_array),
+                         GrowableObjectArray::data_offset(),
+                         Type::ZoneHandle(),
+                         builder.TokenPos()));
+  Definition* result = builder.AddDefinition(
+      new LoadIndexedInstr(new Value(backing_store),
+                           new Value(index),
+                           Instance::ElementSizeFor(kArrayCid),  // index scale
+                           kArrayCid,
+                           Isolate::kNoDeoptId,
+                           builder.TokenPos()));
+  builder.AddIntrinsicReturn(new Value(result));
+  return true;
+}</pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+DEFINE_NATIVE_ENTRY(GrowableList_getIndexed, 2) {
+  const GrowableObjectArray& array =
+      GrowableObjectArray::CheckedHandle(
+          arguments->NativeArgAt(0));
+  GET_NON_NULL_NATIVE_ARGUMENT(Smi, index,
+                               arguments->NativeArgAt(1));
+  if ((index.Value() < 0) ||
+      (index.Value() >= array.Length())) {
+    Exceptions::ThrowRangeError("index", index, 0,
+                                array.Length() - 1);
+  }
+  const Instance& obj = Instance::CheckedHandle(
+      array.At(index.Value()));
+  return obj.raw();
+}</pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="cpp">
+Object* GrowableList_getIndexed(GrowableObjectArray* array,
+                                intptr_t index) {
+  if ((index < 0) || (index >= array->length())) {
+    Exceptions::ThrowRangeError(
+        "index", index, 0, array->length() - 1);
+  }
+  return array->At(index);
+}</pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-trim data-noescape class="dart">
+foo({a: 1, b: 2, c: 3, d: 4, e: 5, f: 6}) {
+  return a + f;
+}</pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller3"><code data-trim data-noescape class="cpp">
+// Generate code handling each optional parameter in alphabetical order.
+__ movq(RBX, FieldAddress(R10, ArgumentsDescriptor::count_offset()));
+__ movq(RCX,
+        FieldAddress(R10, ArgumentsDescriptor::positional_count_offset()));
+__ SmiUntag(RCX);
+// Let RBX point to the first passed argument, i.e. to
+// fp[kParamEndSlotFromFp + num_args]; num_args (RBX) is Smi.
+__ leaq(RBX, Address(RBP, RBX, TIMES_4, kParamEndSlotFromFp * kWordSize));
+// Let RDI point to the entry of the first named argument.
+__ leaq(RDI,
+        FieldAddress(R10, ArgumentsDescriptor::first_named_entry_offset()));
+for (int i = 0; i &lt; num_opt_named_params; i++) {
+  Label load_default_value, assign_optional_parameter;
+  const int param_pos = opt_param_position[i];
+  // Check if this named parameter was passed in.
+  // Load RAX with the name of the argument.
+  __ movq(RAX, Address(RDI, ArgumentsDescriptor::name_offset()));
+  ASSERT(opt_param[i]-&gt;name().IsSymbol());
+  __ CompareObject(RAX, opt_param[i]-&gt;name());
+  __ j(NOT_EQUAL, &load_default_value, Assembler::kNearJump);
+  // Load RAX with passed-in argument at provided arg_pos, i.e. at
+  // fp[kParamEndSlotFromFp + num_args - arg_pos].
+  __ movq(RAX, Address(RDI, ArgumentsDescriptor::position_offset()));
+  // RAX is arg_pos as Smi.
+  // Point to next named entry.
+  __ AddImmediate(RDI, Immediate(ArgumentsDescriptor::named_entry_size()));
+  __ negq(RAX);
+  Address argument_addr(RBX, RAX, TIMES_4, 0);  // RAX is a negative Smi.
+  __ movq(RAX, argument_addr);
+  __ jmp(&assign_optional_parameter, Assembler::kNearJump);
+  __ Bind(&load_default_value);
+  // Load RAX with default argument.
+  const Instance& value = parsed_function().DefaultParameterValueAt(
+      param_pos - num_fixed_params);
+  __ LoadObject(RAX, value);
+  __ Bind(&assign_optional_parameter);
+  // Assign RAX to fp[kFirstLocalSlotFromFp - param_pos].
+  // We do not use the final allocation index of the variable here, i.e.
+  // scope-&gt;VariableAt(i)->index(), because captured variables still need
+  // to be copied to the context that is not yet allocated.
+  const intptr_t computed_param_pos = kFirstLocalSlotFromFp - param_pos;
+  const Address param_addr(RBP, computed_param_pos * kWordSize);
+  __ movq(param_addr, RAX);
+}</pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller3"><code data-trim data-noescape class="cpp">
+// Generate code handling each optional parameter in alphabetical order.
+__ movq(RBX, FieldAddress(R10, ArgumentsDescriptor::count_offset()));
+<span class="golden-block">__ movq(RCX,
+        FieldAddress(R10, ArgumentsDescriptor::positional_count_offset()));
+__ SmiUntag(RCX);</span>
+// Let RBX point to the first passed argument, i.e. to
+// fp[kParamEndSlotFromFp + num_args]; num_args (RBX) is Smi.
+__ leaq(RBX, Address(RBP, RBX, TIMES_4, kParamEndSlotFromFp * kWordSize));
+// Let RDI point to the entry of the first named argument.
+__ leaq(RDI,
+        FieldAddress(R10, ArgumentsDescriptor::first_named_entry_offset()));
+for (int i = 0; i &lt; num_opt_named_params; i++) {
+  Label load_default_value, assign_optional_parameter;
+  const int param_pos = opt_param_position[i];
+  // Check if this named parameter was passed in.
+  // Load RAX with the name of the argument.
+  __ movq(RAX, Address(RDI, ArgumentsDescriptor::name_offset()));
+  ASSERT(opt_param[i]-&gt;name().IsSymbol());
+  __ CompareObject(RAX, opt_param[i]-&gt;name());
+  __ j(NOT_EQUAL, &load_default_value, Assembler::kNearJump);
+  // Load RAX with passed-in argument at provided arg_pos, i.e. at
+  // fp[kParamEndSlotFromFp + num_args - arg_pos].
+  __ movq(RAX, Address(RDI, ArgumentsDescriptor::position_offset()));
+  // RAX is arg_pos as Smi.
+  // Point to next named entry.
+  __ AddImmediate(RDI, Immediate(ArgumentsDescriptor::named_entry_size()));
+  __ negq(RAX);
+  Address argument_addr(RBX, RAX, TIMES_4, 0);  // RAX is a negative Smi.
+  __ movq(RAX, argument_addr);
+  __ jmp(&assign_optional_parameter, Assembler::kNearJump);
+  __ Bind(&load_default_value);
+  // Load RAX with default argument.
+  const Instance& value = parsed_function().DefaultParameterValueAt(
+      param_pos - num_fixed_params);
+  __ LoadObject(RAX, value);
+  __ Bind(&assign_optional_parameter);
+  // Assign RAX to fp[kFirstLocalSlotFromFp - param_pos].
+  // We do not use the final allocation index of the variable here, i.e.
+  // scope-&gt;VariableAt(i)->index(), because captured variables still need
+  // to be copied to the context that is not yet allocated.
+  const intptr_t computed_param_pos = kFirstLocalSlotFromFp - param_pos;
+  const Address param_addr(RBP, computed_param_pos * kWordSize);
+  __ movq(param_addr, RAX);
+}</pre></code>
+        </section>
+
+        <section data-background-color="#263238">
+          <h1 class="font-life-is-messy" style="color: white;">WHYYYY?</h1>
+        </section>
+
+        <section>
+          <pre class="smaller3"><code data-trim data-noescape class="cpp">
+intptr_t bar(const intptr_t* names, intptr_t argc, ...) {
+<span class="golden-block">  static const intptr_t kArgC = 6;
+  static const intptr_t EXPECTED[kArgC] = {1, 2, 3, 4, 5, 6};
+  static const intptr_t DEFAULT[kArgC] = {1, 2, 3, 4, 5, 6};</span>
+
+  intptr_t args[kArgC];
+
+  const intptr_t *arg = names;
+  const intptr_t *last = names + argc;
+
+  va_list vl;
+  va_start(vl, argc);
+<span class="golden-block">  for (intptr_t i = 0; i &lt; kArgC && arg != last; i++) {</span>
+    if (*arg == EXPECTED[i]) {
+      args[i] = va_arg(vl, intptr_t);
+      arg++;
+    } else {
+      args[i] = DEFAULT[i];
+    }
+<span class="golden-block">  }</span>
+  va_end(vl);
+
+  return args[0] + args[5];
+}</pre></code>
+        </section>
+
+        <section>
+          <h2>different kind of stub</h2>
+          <h3>e.g. fast path of property lookups</h3>
+        </section>
+
+        <section>
+          <h2>hand derived</h2>
+          <h3>based on the knowledge that <br/><code>F(a) === F(b) &rArr; G(a) === G(b)</code></h3>
+        </section>
+
+        <section>
+          <h2>can be derived by tracing runtime</h2>
+        </section>
+
+        <section>
+          <h2>can we do this statically?</h2>
+        </section>
+
+        <section data-background="images/ladder-2.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section data-background="images/two-worlds-4.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section data-background-color="#263238">
+           <div style="color: white; font-family: 'KG Complete In Him'; font-size: 2em; line-height: 1.2em;">&laquo;In the end, we are self-perceiving, self-inventing, locked-in mirages that are little miracles of self-reference.&raquo;<br/>
+— Douglas Hofstadter</div>
+        </section>
+
+      </div>
+
+      <div id="footer" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          font-size: .4em; text-align: center; color: white;
+          padding: 4px; z-index: 99;
+      "></div>
+		</div>
+
+		<script src="js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+        slideNumber: true,
+
+				theme: 'simple', // available themes are in /css/theme
+				transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+				backgroundTransition: 'none',
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+        margin: 0.0,
+        width: 1280,
+        height: 720,
+
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'js/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				]
+			});
+
+      function updateFooter(slide) {
+        var footer = document.getElementById("footer");
+        footer.innerHTML = "";
+
+        var text = slide.getAttribute("data-footer") || "";
+
+        if (text !== "") {
+          if (text.substring(0, 4) === 'http') {
+            var anchor = document.createElement("a");
+            anchor.href = anchor.innerText = text;
+            footer.appendChild(anchor);
+          } else {
+            footer.innerText = text;
+          }
+        }
+      }
+
+      Reveal.addEventListener('ready', function(event) { updateFooter(event.currentSlide); });
+      Reveal.addEventListener('slidechanged', function(event) { updateFooter(event.currentSlide); });
+
+      (function () {
+        var style = document.createElement("style");
+        document.head.appendChild(style);
+
+        var percents = [].slice.call(document.querySelectorAll(".x")).forEach(function (el) {
+          var classes = el.classList.toString();
+          var p = classes.match(/\bx(\d+)\b/)[1];
+
+          style.sheet.addRule(".x" + p + "::after", "width: " + p + "%;")
+        });
+      })();
+		</script>
+
+    <style>
+      .x-confirmed-2 {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+
+      }
+
+      .x-confirmed {
+        font-weight: bold;
+        border: 10px solid green !important;
+        color: green;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+      .x-confirmed-red {
+        font-weight: bold;
+        border: 10px solid #dc1e1a !important;
+        color: #dc1e1a;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+
+      pre.bigger {
+        font-size: 1.4em !important;
+      }
+
+      pre:not(.smaller) {
+        font-size: 1.4em !important;
+      }
+
+      pre.smaller2 {
+        font-size: 1.1em !important;
+      }
+
+      pre.smaller3 {
+        font-size: .7em !important;
+      }
+
+      pre.bigger15 {
+        font-size: 1.75em !important;
+      }
+
+      pre.bigger2 {
+        font-size: 2em !important;
+      }
+
+      pre.bigger3 {
+        font-size: 3em !important;
+      }
+
+      pre.mediumer {
+        font-size: 1.2em !important;
+      }
+
+      .B h1 {
+        font-size: 6em;
+      }
+
+      .B h2 {
+        font-size: 4em;
+      }
+
+      .B h3 {
+        font-size: 2em;
+      }
+
+      .B ul {
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      section:not(.S) h1 {
+        font-size: 6em;
+      }
+
+      section:not(.S) h2 {
+        font-size: 4em;
+      }
+
+      section:not(.S) h3 {
+        font-size: 2em;
+      }
+
+      section:not(.S) ul {
+        font-size: 3em;
+        line-height: 1em;
+      }
+
+      /*
+      .B p {
+        font-size: 1.5em;
+      }
+      */
+
+      span.green {
+        font-weight: bold !important;
+        color: green;
+      }
+
+      span.red {
+        font-weight: bold !important;
+        color: red !important;
+      }
+
+      .mat-red {
+        color: #F44336 !important;
+      }
+
+      .mat-red-bold {
+        color: #F44336 !important;
+        font-weight: bold;
+      }
+
+      span.mat-green {
+        color: #4CAF50;
+      }
+
+      span.mat-green-bold {
+        color: #4CAF50 !important;
+        font-weight: bold;
+      }
+
+      pre.highlight-bold b {
+        color: #E65100;
+      }
+
+      span.greenish-block {
+        background: rgba(0, 255, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.fade-away {
+        opacity: 0.1;
+      }
+
+      span.anti-fade {
+        font-weight: bold;
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      .yellow {
+        color: #f57f17;
+        font-weight: bold !important;
+      }
+
+      .dr, .dr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+      }
+
+      .udr, .udr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+        text-decoration: underline;
+      }
+
+      .pinkish {
+        color: #dc1e1a !important;
+      }
+
+      .ccc {
+        display: inline-block !important;
+        width: auto !important;
+      }
+
+      .borderish {
+        border: 1px dashed;
+      }
+
+      span.leftish {
+        text-align: left;
+        display: inline-block;
+      }
+
+      span.leftish50 {
+        text-align: left;
+        display: inline-block;
+        max-width: 70%;
+
+      }
+
+      .golden-block {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.golden {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      span.redish {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      .redish-block {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+
+          .y {
+  position: relative;
+}
+
+.x {
+  position: relative;
+  z-index: 100;
+  color: black;
+}
+
+.x::after {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+}
+
+.x-red::after {
+  background: rgba(215, 25, 28 , 1.0);
+}
+
+.x-green::after {
+  background: rgba(145, 207, 96, 1.0);
+}
+
+.x-gold::after {
+  background: rgba(253,174,97, 1.0);
+}
+
+.x::before {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+span.deopt {
+  opacity: .3;
+}
+
+span.deopt2 {
+  color: red;
+}
+
+span.deopt3 {
+  color: green;
+}
+    </style>
+
+	</body>
+</html>
