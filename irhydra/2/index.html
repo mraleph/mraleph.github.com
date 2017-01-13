@@ -3726,7 +3726,8 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 
 <polymer-element name="source-path">
   <template>
-    <style>.source-path {
+    <style>@charset "UTF-8";
+.source-path {
   color: black;
   background-color: white;
   font-family: 'RobotoDraft';
@@ -3757,7 +3758,7 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   -moz-osx-font-smoothing: grayscale; }
 
 .fa-angle-double-right:before {
-  content: "\f101"; }
+  content: ""; }
 </style>
     <span class="source-path">
       <template if="{{!path.isEmpty}}">
