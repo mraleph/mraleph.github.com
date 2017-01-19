@@ -162,3 +162,7 @@ code {
 pre code {
   white-space: pre;
 }
+
+p {
+  line-height: 1.5em;
+}
