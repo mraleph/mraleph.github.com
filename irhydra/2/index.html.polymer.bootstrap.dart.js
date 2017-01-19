@@ -11513,7 +11513,7 @@ gkk:[function(){var z,y
 z=R.dK.prototype.gkk.call(this)
 y=this.r.an(z)
 return y!=null?y.b[1]:J.i4(z)},null,null,1,0,1,"currentLine"],
-gbs:[function(){return P.L(["^(B\\d+)\\[",new G.Cl(this),"goto[^\\s]*\\s+(\\d+)$",new G.Cm(this),"if (\\w+)[^\\(]*(\\(.*\\)).+goto[^\\s]*\\s+.(\\d+), (\\d+).$",new G.Cn(this),"^(v\\d+) <- (\\w+)[^\\(]*(\\(.*\\)) *(\\[-?\\d+, -?\\d+\\])?",new G.Co(this),"^(v\\d+), (v\\d+) <- (\\w+)[^\\(]*(\\(.*\\)) *(\\[-?\\d+, -?\\d+\\])?",new G.Cp(this),"^(\\w+)(?::\\d+)?(\\(.*\\))",new G.Cq(this),"^(ParallelMove) (.*)",new G.Cr(this)])},null,null,1,0,1,"patterns"],
+gbs:[function(){return P.L(["^(B\\d+)\\[",new G.Cl(this),"goto[^\\s]*\\s+B?(\\d+)$",new G.Cm(this),"if (\\w+)[^\\(]*(\\(.*\\)).+goto[^\\s]*\\s+.(\\d+), (\\d+).$",new G.Cn(this),"^(v\\d+) <- (\\w+)[^\\(]*(\\(.*\\)) *(\\[-?\\d+, -?\\d+\\])?",new G.Co(this),"^(v\\d+), (v\\d+) <- (\\w+)[^\\(]*(\\(.*\\)) *(\\[-?\\d+, -?\\d+\\])?",new G.Cp(this),"^(\\w+)(?::\\d+)?(\\(.*\\))",new G.Cq(this),"^(ParallelMove) (.*)",new G.Cr(this)])},null,null,1,0,1,"patterns"],
 rs:function(a){this.f=R.hV(P.L(["B\\d+\\b",new G.Cj(),"[tv]\\d+\\b",new G.Ck()]),null)},
 q:{
 Ci:[function(a){var z,y,x,w
