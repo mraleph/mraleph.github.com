@@ -250,7 +250,14 @@ Klass.prototype = {
 var ROOT_KLASS = new Klass("fast");
 
 function Table() {
-  // All tables start from the fast empty root hidden class.
+  // All tables start from the fast empty root hidden class and form a single tree.
+  // In V8 hidden classes actually form a forest - there are multiple root classes, 
+  // e.g. one for each constructor. This is partiallydue to the fact that hidden classes 
+  // in V8 encapsulate constructor specific information, e.g. __proto__ link is actually
+  // stored in the hidden class and not in the object itself so classes with different
+  // prototypes must have different hidden classes even if they have the same structure.
+  // However having multiple root classes also allows to evolve the trees for different
+  // classes separately. 
   this.klass = ROOT_KLASS;
   this.properties = [];  // Array of named properties: 'x','y',...
   this.elements = [];  // Array of indexed properties: 0, 1, ...
