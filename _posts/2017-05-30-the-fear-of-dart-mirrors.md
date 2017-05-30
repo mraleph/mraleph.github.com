@@ -667,7 +667,7 @@ new property.
 The way I implemented this in the prototype is very straightforward - I simply
 record properties in order for the first object with the given `TypeDesc` and
 then attempt to follow the recorded *trail*. This approach works well for our
-sample JSON but might be to naive for the real world full or optional
+sample JSON but might be too naive for the real world full or optional
 properties.
 
 ```dart
