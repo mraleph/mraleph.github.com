@@ -524,7 +524,7 @@ Another small optimization that could be done in the `dartson` code is caching
 class initiators and moving away from:
 
 ```dart
-// code from _valueConverter handling convertion from Map
+// code from _valueConverter handling conversion from Map
 // to object.
 return (key, value) {
   var obj = _initiateClass(valueType);
@@ -571,7 +571,7 @@ to fill an actual object from it. Can we parse string directly into an object?
 If we look closely at Dart VM sources for its [JSON parser](https://github.com/dart-lang/sdk/blob/master/runtime/lib/convert_patch.dart)
 we will discover that it is split into two pieces: [the actual parser](https://github.com/dart-lang/sdk/blob/9a64339646014527f0fdd8e0f5b6a7466fd375b6/runtime/lib/convert_patch.dart#L258-L266)
 which walks the input (a single `String` or a sequence of chunks arriving
-asynchronously) and sends events like `beginObject`, `beginArray` to [the listener](https://github.com/dart-lang/sdk/blob/9a64339646014527f0fdd8e0f5b6a7466fd375b6/runtime/lib/convert_patch.dart#L92-L98) which constructs the objects. Unfortunately neither `_ChunkedJsonParser` nor listener interface `_JsonListener` are hidden within `dart:convert` and user code can't use them.
+asynchronously) and sends events like `beginObject`, `beginArray` to [the listener](https://github.com/dart-lang/sdk/blob/9a64339646014527f0fdd8e0f5b6a7466fd375b6/runtime/lib/convert_patch.dart#L92-L98) which constructs the objects. Unfortunately both `_ChunkedJsonParser` and listener interface `_JsonListener` are hidden within `dart:convert` and user code can't use them.
 
 At least before we apply this small patch:
 
@@ -660,7 +660,7 @@ it lazily I do it eagerly and cache the result.
 One interesting observation that can be made by looking at JSON is that
 properties for objects of the same type are usually arriving in the same order.
 
-This means that could take a page from me V8's playbook and adapt to this order
+This means that we could take a page from V8's playbook and adapt to this order
 dynamically to avoid doing dictionary lookup in `TypeDesc.properties` for each
 new property.
 
