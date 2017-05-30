@@ -942,19 +942,35 @@ However `source_gen` based solution:
 
 The main reason for it being slower is that we still allocated intermediate
 results: instead of going directly `String` to object, we first invoke
-`dart:convert.JSON.parse` to produce a forest of `Map` and `List` objects, which we then
-convert into actual "typed" objects.
+`dart:convert.JSON.decode` to produce a forest of `Map` and `List` objects,
+which we then convert into actual "typed" objects.
 
 If we look under the hood of [`dart:convert` implementation](https://github.com/dart-lang/sdk/blob/8619cb63878d5be7ad714f1eb5867cc828d0d1e9/sdk/lib/_internal/js_runtime/lib/convert_patch.dart#L13-L46)
-provided by `dart2js`, then we discover that things are even more convoluted:
-because native `JSON.parse` returns a JS object which is not compatible with
-Dart's `Map` we need to [wrap it up](https://github.com/dart-lang/sdk/blob/8619cb63878d5be7ad714f1eb5867cc828d0d1e9/sdk/lib/_internal/js_runtime/lib/convert_patch.dart#L126)
-so that it will start behaving like a proper `Map`.
+provided by `dart2js`, then we discover that things are even more convoluted because native `JSON.parse` returns a JS object which is not compatible with
+Dart's `Map` we need to turn it into something that has an interface compatible
+with `Map`:
 
-All these indirections and data marshaling between three worlds (JavaScript
+* If we parse JSON without a *reviver* then we simply wrap JS object
+returned from native `JSON.parse` into [`_JsonMap`](https://github.com/dart-lang/sdk/blob/8619cb63878d5be7ad714f1eb5867cc828d0d1e9/sdk/lib/_internal/js_runtime/lib/convert_patch.dart#L126)
+class which implements `Map<String, dynamic>`. This wrapper acts like a proper
+Dart `Map` and makes sure to lazily wrap or convert any nested objects when
+user accesses them via `Map.operator[]` for the first time - preventing escape of "raw" JS objects
+into the Dart world which does not know how to deal with them. Nested objects (at least those that are not arrays) are converted in the same lazy fashion by wrapping them into `_JsonMap`.
+* If we parse JSON
+with a reviver then we [eagerly convert](https://github.com/dart-lang/sdk/blob/8619cb63878d5be7ad714f1eb5867cc828d0d1e9/sdk/lib/_internal/js_runtime/lib/convert_patch.dart#L48-L95) the output of `JSON.parse` into Dart's
+`Map`s and `List`s.
+
+All these indirections and lazy data marshaling between three worlds (JavaScript
 &rArr; Dart `Map` &rArr; Dart class instances) comes at a cost and to be honest
-it is unclear if there are really easy ways to improve it. One thing though
-is clear - `dart2js` could probably have come with a first class
+it is unclear if there are really easy ways to improve it. The overheads of lazy
+marshalling can be shaved away by passing an empty reviver into `JSON.decode`
+which makes `new Data.fromJson(JSON.decode(str, reviver: _empty))` up to 10% faster than
+`new Data.fromJson(JSON.decode(str))`, but multiple copying still remains a
+problem.
+
+<small>[Thanks to <a href="https://news.ycombinator.com/item?id=14447097">Brian Slesinsky</a> for pointing out a trick with empty reviver]</small>
+
+One thing though is clear - `dart2js` could probably have come with a first class
 support for JSON, in a form of special annotations similar `@JsonSerializable`.
 Then it could implement support for JSON serialization/deserialization with
 minimal copying (e.g. by lazily patching prototypes of objects returned by
