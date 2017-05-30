@@ -31,7 +31,7 @@ sup {
 }
 
 .post-title div {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Go', sans-serif;
   font-size: 2em;
   margin-top: 0.83em;
   margin-bottom: 5px;
@@ -54,7 +54,7 @@ a:hover {
 }
 
 h1, h2, h3, h4 {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Go';
 }
 
 code, pre {
