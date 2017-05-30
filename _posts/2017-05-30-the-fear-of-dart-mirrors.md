@@ -202,7 +202,7 @@ V8's JSON parser is [written in C++](https://chromium.googlesource.com/v8/v8.git
 between Dart's `JSON.decode(...)` and V8 `JSON.parse(...)` does not look _that_
 bad when you realize this.
 
-Another intersting thing here is to try and benchmark some other language that
+Another interesting thing here is to try and benchmark some other language that
 uses reflection to deserialize JSON: Maximilian tried Go's `encoding/json`
 package:
 
