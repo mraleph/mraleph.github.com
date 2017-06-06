@@ -17,8 +17,17 @@
   <link rel="stylesheet" href="/css/blog.css" type="text/css">
   <link rel="stylesheet" href="/css/pygments.css" type="text/css">
 
-  <link href="https://fonts.googleapis.com/css?family=Fira+Mono" as="style" onload="this.rel='stylesheet'">
-  <link rel="preload" href="/fonts/gofont/gofont.css" as="style" onload="this.rel='stylesheet'">
+  <script>
+    (function(d) {
+      var config = {
+        kitId: 'mmw2btn',
+        scriptTimeout: 3000,
+        async: true
+      },
+      h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+    })(document);
+  </script>
+
   <noscript>
     <link rel="stylesheet" href="/fonts/gofont/gofont.css">
     <link href="https://fonts.googleapis.com/css?family=Fira+Mono" rel="stylesheet">

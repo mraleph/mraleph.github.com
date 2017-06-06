@@ -3,9 +3,7 @@
 */
 
 body {
-  font-family: 'Go', sans-serif;
-  font-size: 15px;
-  font-weight: 300;
+  font-family: 'myriad-pro', sans-serif;
 }
 
 sup {
@@ -31,7 +29,7 @@ sup {
 }
 
 .post-title div {
-  font-family: 'Go', sans-serif;
+  font-family: 'myriad-pro', sans-serif;
   font-size: 2em;
   margin-top: 0.83em;
   margin-bottom: 5px;
@@ -58,7 +56,7 @@ h1, h2, h3, h4 {
 }
 
 code, pre {
-  font-family: 'Fira Mono', monospace;
+  font-family: 'fira-mono', 'Fira Mono', monospace;
 }
 
 @media (max-width: 1000px) {
@@ -157,12 +155,13 @@ img.centered {
 
 code {
   white-space: nowrap;
+  font-size: .9em;
 }
 
 pre code {
   white-space: pre;
 }
 
-p {
+p, li {
   line-height: 1.5em;
 }
