@@ -2,16 +2,23 @@
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <link rel="stylesheet" href="https://code.cdn.mozilla.net/fonts/fira.css">
-  <link href="http://fonts.googleapis.com/css?family=Oswald:400,700" rel="stylesheet" type="text/css">
-
+  <script>
+    (function(d) {
+      var config = {
+        kitId: 'mmw2btn',
+        scriptTimeout: 3000,
+        async: true
+      },
+      h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+    })(document);
+  </script>
   <title>My Talks</title>
   <link rel="stylesheet" href="/css/main.css" type="text/css">
 
 <style type="text/css">
 body {
   background: whitesmoke;
-  font-family: 'Fira Sans', sans-serif;
+  font-family: 'myriad-pro', sans-serif;
   margin-top: 2em;
 }
 
@@ -46,9 +53,10 @@ body {
 }
 
 .talks article .title {
-  font-family: 'Oswald', sans-serif;
+  font-family: 'adobe-garamond-pro', sans-serif;
   font-size: 1.5em;
   font-weight: bold;
+  font-feature-settings: "liga" 0;
 }
 
 .talks article .links {

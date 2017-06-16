@@ -29,12 +29,13 @@ sup {
 }
 
 .post-title div {
-  font-family: 'myriad-pro', sans-serif;
+  font-family: 'adobe-garamond-pro', serif;
   font-size: 2em;
   margin-top: 0.83em;
   margin-bottom: 5px;
   font-weight: bold;
   letter-spacing: 0.05em;
+  font-feature-settings: "liga" 0;
 }
 
 .post-title time {
