@@ -6,33 +6,10 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link href="/atom.xml" rel="alternate" title="atom feed" type="application/atom+xml">
-<link href='http://fonts.googleapis.com/css?family=Gloria+Hallelujah' rel='stylesheet' type='text/css'>
 <title>mraleph</title>
+<link href="//cloud.typenetwork.com/projects/1860/fontface.css/" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="/css/main.css" type="text/css">
 
-<style type="text/css">
-body {
-  background: whitesmoke;
-  font-family: 'Gloria Hallelujah', monospace, cursive;
-  margin-top: 2em;
-}
-
-.box {
-  width: 18em;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-.whitebox {
-  background: white;
-  border: 1px solid #ccc;
-  box-shadow: 2px 2px 8px #aaa;
-  border-radius: 5px;
-}
-
-
-</style>
 
   <script type="text/javascript">
     var _gaq = _gaq || [];
@@ -47,10 +24,10 @@ body {
   </script>
 </head>
 <body>
-  <div class="box" style="text-align: justify; width: 40em; padding: 5px; background: whitesmoke; border: none;">
+  <div class="box">
     <p style="font-size: 16pt;">My posts:</p>
     {% for post in site.posts %}
-      <article style="font-family: 'Gloria Hallelujah', monospace, cursive;">
+      <article>
         <time datetime="{{ page.date }}" style="color: grey;">{{ post.date | date:'%d %b %Y' | downcase }}</time> <a href="{{ post.url }}">{{ post.title }}</a>
       </article>
     {% endfor %}

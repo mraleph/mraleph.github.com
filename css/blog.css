@@ -1,9 +1,10 @@
-/*
-@import url(/fonts/gofont/gofont.css);
-*/
+body, h1, h2, h3, h4, code, pre {
+  font-family: 'Input Mono Reg', 'Input Mono', 'Source Code Pro', 'Fira Mono', monospace;
+}
 
 body {
-  font-family: 'myriad-pro', sans-serif;
+  padding: 0px;
+  margin: 0px;
 }
 
 sup {
@@ -12,16 +13,74 @@ sup {
   top: -0.15em;
 }
 
-@media (min-width: 1000px) {
-  body {
-    font-size: 20px;
-  }
+.post-title {
+  text-align: center;
+}
 
-  .post-body, .post-title, .post-comments {
-    width: 50em;
+@media (max-width: 999px) {
+  .post-body > * {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .post-body > * {
+    width: 800px;
     margin-left: auto;
     margin-right: auto;
   }
+
+  .post-body > span.mjx-chtml {
+    width: 800px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .post-body figure, .post-body div.highlighter-rouge {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .post-body figure pre, .post-body div.highlighter-rouge pre {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 2em;
+  }
+
+  div.highlighter-rouge {
+    background: #fdf6e3;
+    border-top: 1px solid #eee8d5;
+    border-bottom: 1px solid #eee8d5;
+  }
+
+  div.highlighter-rouge pre.highlight {
+    border: 0px;
+  }
+
+  .post-title > div {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+h2, h3, h4, h5 {
+  position: relative;
+}
+
+h2::after, h3::after, h4::after, h5::after {
+  content: '---';
+  position: absolute;
+  bottom: -.5em;
+  left: 0;
+  height: 1em;
+}
+
+.console {
+  background-color: #002b36; color: white;
 }
 
 .post-comments {
@@ -29,7 +88,7 @@ sup {
 }
 
 .post-title div {
-  font-family: 'adobe-garamond-pro', serif;
+  font-family: 'Input Mono Reg', monospace;
   font-size: 2em;
   margin-top: 0.83em;
   margin-bottom: 5px;
@@ -40,7 +99,6 @@ sup {
 
 .post-title time {
   color: grey;
-  font-size: 10pt;
 }
 
 a {
@@ -50,14 +108,6 @@ a {
 
 a:hover {
   text-decoration: underline;
-}
-
-h1, h2, h3, h4 {
-  font-family: 'Go';
-}
-
-code, pre {
-  font-family: 'fira-mono', 'Fira Mono', monospace;
 }
 
 @media (max-width: 1000px) {
@@ -154,9 +204,9 @@ img.centered {
   }
 }
 
-code {
+p code {
   white-space: nowrap;
-  font-size: .9em;
+  color: #586e75;
 }
 
 pre code {
@@ -165,4 +215,5 @@ pre code {
 
 p, li {
   line-height: 1.5em;
+  text-align: justify;
 }

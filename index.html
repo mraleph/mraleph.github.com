@@ -17,65 +17,8 @@
 </script>
 <title>Vyacheslav Egorov</title>
 <link href="/atom.xml" rel="alternate" title="atom feed" type="application/atom+xml">
+<link href="//cloud.typenetwork.com/projects/1860/fontface.css/" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="css/main.css" type="text/css">
-
-<style type="text/css">
-body {
-  background: whitesmoke;
-  font-family: "adobe-garamond-pro", serif;
-  margin-top: 2em;
-  font-feature-settings: "liga" 0;
-}
-
-.box {
-  /* width: 22em; */
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-.whitebox {
-  background: white;
-  border: 1px solid #ccc;
-  box-shadow: 2px 2px 8px #aaa;
-  border-radius: 5px;
-}
-
-.favicons img {
-  width: 16px;
-  height: 16px;
-}
-
-.posts {
-  text-align: justify;
-  padding: 5px;
-  background: whitesmoke;
-  border: none;
-}
-
-article time {
-  font-family: 'fira-mono', monospace;
-  font-size: .8em;
-}
-
-article .title {
-  font-weight: bold;
-  letter-spacing: .05em;
-}
-
-.name {
-  font-size: 40pt;
-  font-weight: bold;
-  letter-spacing: .07em;
-}
-
-@media (min-width: 700px) {
-  .posts {
-    width: 40em;
-  }
-}
-</style>
-
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -88,11 +31,11 @@ article .title {
   </script>
 </head>
 <body>
-  <div class="box">
+  <div class="box center-box">
     <div class="name">
       <span style="color: #CC0000;">mr</span>aleph
     </div>
-    <div style="margin-bottom: 1em; font-family: myriad-pro;">
+    <div style="margin-bottom: 1em;">
       a compiler engineer that loves giving <a href="/talks">talks</a>.
     </div>
     <div style="font-size: smaller; display: inline-block;" class="favicons">
@@ -113,7 +56,7 @@ article .title {
     </article>
     {% for post in site.posts %}
       <article>
-        <time datetime="{{ page.date }}" style="color: grey;">{{ post.date | date:'%d %b %Y' | downcase }}</time> <a class="title" href="{{ post.url }}">{{ post.title }}</a>
+        <a class="title" href="{{ post.url }}">&#9654; {{ post.title }}</a>
       </article>
     {% endfor %}
   </div>

@@ -1,51 +1,14 @@
-input {
-    margin: 2px;
-    width: 220px;
-    border: 1px solid #999;
-    font-size: 1em;
-}
-
 html {
   height: 100%;
 }
 
-.icon {
-  background-color: #c00;
-}
-
 body {
-  font-family: Helvetica, "Century Gothic","Trebuchet MS","Arial Narrow",Arial,sans-serif;
+  font-family: 'Input Mono Reg', 'Input Mono', Menlo, 'Fira Mono', 'Source Code Pro', monospace;
   margin: 0;
   padding: 0;
   height: 100%;
-}
-
-#prehead {
-  height: 5px;
-}
-
-#head {
-  text-align: left;
-}
-
-#container {
-  width:  760px;
-  text-align: right;
-  margin: 0 auto;
-  position: relative;
-  background: #fff;
-  padding: 0px 10px 0px 10px;
-  min-height: 100%;
-}
-
-.menu {
-    text-align: center;
-    margin-bottom: 50px;
-}
-
-
-#center {
-    text-align: justify;
+  background: whitesmoke;
+  margin-top: 2em;
 }
 
 a {
@@ -57,78 +20,77 @@ a:hover {
   text-decoration:  underline;
 }
 
-p, blockquote, li {
-  font-size:  14px;
-  line-height:  18px;
-  text-align:  left;
-  padding-left:  10px;
-  padding-right:  10px;
+.box {
+  width: 40em;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-blockquote {
-  margin-left:  20px;
-  margin-right:  0px;
+.center-box {
+  text-align: center;
 }
 
-ul {
-    list-style-type:square;
-}
-
-h1.title {
-    color: black;
-    font-weight:  normal;
-    font-size:  40px;
-    letter-spacing:  0.1em;
-    margin-top: 0px;
-    margin-bottom: 0px;
-}
-
-h2.subtitle {
-    margin-top: 0px;
-}
-
-h3 {
-  font-weight:  normal;
-  border:  0px;
-  font-weight:  bold;
-  font-size:  16px;
-}
-
-.caps {
-  letter-spacing:  0.1em;
-  font-size:  12px;
-}
-
-pre {
-    text-align: left;
-}
-
-li {
-  margin-top: 3px;
-}
-
-@media (max-width: 1000px) {
-  pre {
-    overflow: auto;
-  }
-}
-
-.CodeMirror-wrapping {
+.whitebox {
   background: white;
-  padding: 5px;
-  border:1px solid #888;
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 8px #aaa;
+  border-radius: 5px;
 }
 
-/* google-prettify */
+.favicons img {
+  width: 16px;
+  height: 16px;
+}
 
-.str,.atv{color:#080}
-.kwd,.tag{color:#008}
-.com{color:#800}
-.typ,.atn,.dec{color:#606}
-.lit{color:#066}
-.pun{color:#660}
-.pln{color:#000}
-pre.prettyprint {
-  padding: 5px;
-  border-left:1px solid #888
+.icon {
+  background-color: #c00;
+}
+
+article {
+  margin-top: .5em;
+}
+
+.talks article {
+  padding: 0.5em;
+  border-radius: 5px;
+  background: white;
+}
+
+.talks article .conf {
+  color: grey;
+  margin-bottom: 0.4em;
+}
+
+.talks article .title {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.talks article .links {
+  margin-bottom: 0.4em;
+  margin-top: 0.4em;
+}
+
+article p {
+  font-size: inherit;
+  line-height: inherit;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+article .title {
+  font-weight: bold;
+  letter-spacing: .05em;
+}
+
+.name {
+  font-size: 40pt;
+  font-weight: bold;
+  letter-spacing: .07em;
+}
+
+@media (min-width: 700px) {
+  .posts {
+    width: 40em;
+  }
 }

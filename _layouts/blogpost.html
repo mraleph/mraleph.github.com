@@ -16,6 +16,7 @@
 
   <link rel="stylesheet" href="/css/blog.css" type="text/css">
   <link rel="stylesheet" href="/css/pygments.css" type="text/css">
+  <link href="//cloud.typenetwork.com/projects/1860/fontface.css/" rel="stylesheet" type="text/css">
 
   <script>
     (function(d) {
@@ -52,7 +53,7 @@
 <body>
   <div class="post-title">
     <div> {{ page.title }} </div>
-    <time datetime="{{ page.date }}">{{ page.date | date:'%d %b %Y' | downcase }}</time> <small>by <a rel="author" href="http://mrale.ph">Vyacheslav Egorov</a></small>
+    <a rel="author" href="http://mrale.ph">Vyacheslav Egorov</a> on <time datetime="{{ page.date }}">{{ page.date | date:'%d %b %Y' | downcase }}</time>
   </div>
 
   <div class="post-body">

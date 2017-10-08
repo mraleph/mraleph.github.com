@@ -175,22 +175,22 @@ then?
 It turns out `dartson` is really-really slow. When Maximilian took a 9Mb data
 file containing the data he needed to work with he saw the following:
 
-<pre>
+<figure class="console"><pre>
 $ dart decode-benchmark.dart --with-dartson
 loaded data.json: 9389696 bytes
 DSON.decode(...) took: <b style="color:red;">2654ms</b>
 $ d8 decode-benchmark.js
 loaded data.json: 9389696 bytes
 JSON.parse(...) took: <b style="color: green;">118ms</b>
-</pre>
+</pre></figure>
 
 These numbers don't look that great. Lets do a few more measurements:
 
-<pre>
+<figure class="console"><pre>
 $ dart decode-benchmark.dart --with-json
 loaded data.json: 9389696 bytes
 JSON.decode(...) took: <b style="color:orange;">236ms</b>
-</pre>
+</pre></figure>
 
 So just decoding JSON string into unstructured forest of `Map`s and `List`s is
 10x faster than using `dartson`? That is rather disheartening and `dart:mirrors`
@@ -226,11 +226,11 @@ var data Data
 err := json.Unmarshal(data, &data)
 {% endhighlight %}
 
-<pre>
+<figure class="console"><pre>
 $ go run decode-benchmark.go
 loaded data.json: 9389696 bytes
 json.Unmarshal(...) took: <b style="color:orange;">279ms</b>
-</pre>
+</pre></figure>
 
 So in Go deserializing JSON into a structure takes rougly the same time as in
 Dart it takes to deserialize JSON into an unstructured `Map`s even though
@@ -249,12 +249,12 @@ anything else...
 As always one of the easiest ways to investigate performance of Dart code is to
 use Observatory:
 
-<pre>
+<figure class="console"><pre>
 $ dart <b>--observe</b> decode-benchmark.dart --dartson
 Observatory listening on http://127.0.0.1:8181/
 loaded data.json: 9389696 bytes
 ...
-</pre>
+</pre></figure>
 
 Looking at the CPU profile page in the observatory reveals disturbing picture:
 
@@ -285,11 +285,11 @@ This is obviously a lot of wasted time because string interpolation is performed
 even when logging is disabled. Thus the first step towards more performant
 deserialization would be to completely remove all this logging:
 
-<pre>
+<figure class="console"><pre>
 $ dart decode-benchmark.dart --with-dartson
 loaded data.json: 9389696 bytes
 DSON.decode(...) took: <b style="color:orange;">1542ms</b>
-</pre>
+</pre></figure>
 
 Voilà! We just made JSON deserialization with `dartson` **42%** faster by
 changing something that has nothing to do with either mirrors or JSON. If we
@@ -463,11 +463,11 @@ ValueConverter _valueConverter(TypeMirror valueType) {
 
 With this optimizations `dartson` reaches new performance heights:
 
-<pre>
+<figure class="console"><pre>
 $ dart decode-benchmark.dart --with-dartson
 loaded data.json: 9389696 bytes
 DSON.decode(...) took: <b style="color:orange;">488ms</b>
-</pre>
+</pre></figure>
 
 This is **82%** faster than its original performance - with this we are finally
 starting to approach numbers we are seeing from Go.
@@ -551,11 +551,11 @@ return (key, value) {
 It is again exactly the same pattern we applied before so I will not bother you
 with implementation details.
 
-<pre>
+<figure class="console"><pre>
 $ dart decode-benchmark.dart --with-dartson
 loaded data.json: 9389696 bytes
 DSON.decode(...) took: <b style="color:green;">304ms</b>
-</pre>
+</pre></figure>
 
 We have now made dartson **89%** faster than its original performance!
 Furthermore it turns out that warmed up performance of this code is actually

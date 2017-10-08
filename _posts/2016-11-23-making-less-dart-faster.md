@@ -32,7 +32,7 @@ test(s) {
 
 Results are rather bad for Dart version:
 
-<pre>
+<figure class="console"><pre>
 $ dart substring.dart
 benchmarking with string of length 25000
 substring(Dart): <b style="color: red;">244ms</b>
@@ -47,7 +47,7 @@ benchmarking with string of length 50000
 substring(js): <b style="color: green;">2.308ms</b>
 benchmarking with string of length 100000
 substring(js): <b style="color: green;">2.633ms</b>
-</pre>
+</pre></figure>
 
 Depending on your background you might also be surprised by a _non-linear growth_ in Dart run times: increasing input string size by a factor of \\(2\\) (\\(25000\\) to \\(50000\\)) increases running time by a factor of \\(4\\) (\\(244\\) to \\(949\\) milliseconds).
 
@@ -298,7 +298,7 @@ test(s) {
 }
 {% endhighlight %}
 
-<pre>
+<figure class="console"><pre>
 $ dart substring.dart
 benchmarking with string of length 25000
 substring(Dart): 3ms
@@ -306,7 +306,7 @@ benchmarking with string of length 50000
 substring(Dart): 3ms
 benchmarking with string of length 100000
 substring(Dart): 1ms
-</pre>
+</pre></figure>
 
 This is what JavaScript version is approximately doing and it explains why we don't observe quadratic complexity on the microbenchmark: roughly speaking substring operations take constant amount of time (assuming that input string is flat and disregarding memory management overhead) and thus instead of
 
@@ -556,7 +556,7 @@ A very important thing to realize here is that while regular expressions are cer
 If we take our previous attempts at tokenizing with regexps and benchmark them on a simple string like `("aaaaa aaaa ".repeat(50) + "10 ").repeat(10000)` then
 we will see the following performance numbers:
 
-<pre>
+<figure class="console"><pre>
 # Naive tokenizer that just uses global regexps with lastIndex.
 $ node tokenize-global.js
 processed 2020001 tokens in 987ms
@@ -574,7 +574,7 @@ processed 2020001 tokens in 393ms
 # Tokenizer that uses sticky regexps.
 $ node tokenize-sticky.js
 processed 2020001 tokens in 295ms
-</pre>
+</pre></figure>
 
 Can you go any faster? Lets erase abstraction barriers and go full manual:
 
@@ -674,17 +674,17 @@ function benchmark() {
 
 reveals the following result:
 
-<pre>
+<figure class="console"><pre>
 $ node tokenize-manual.js
 processed 2020001 tokens in 50ms
-</pre>
+</pre></figure>
 
 The main thing this demonstrates - is that _you program can get much faster if it's doing less work_. For example our manual tokenizer simply glides through the string without allocating any substring objects for tokens. However if we add `var val = l.val;` inside the benchmark loop to force this meaningless allocation we will still see performance that is much better than our RegExp based parsers:
 
-<pre>
+<figure class="console"><pre>
 $ node tokenize-manual.js
 processed 2020001 tokens in 98ms
-</pre>
+</pre></figure>
 
 For the sake of completeness here is the same kind of lexer benchmark in Dart:
 
@@ -777,10 +777,10 @@ benchmark() {
 
 Dart VM does respectable job of this code:
 
-<pre>
+<figure class="console"><pre>
 $ dart tokenize.dart
 processed 2020001 tokens in 67ms
-</pre>
+</pre></figure>
 
 So overall performance advice can be summarized as follows:
 
