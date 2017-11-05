@@ -1,5 +1,7 @@
+@import url("../fonts/iosevka/iosevka.css");
+
 body, h1, h2, h3, h4, code, pre {
-  font-family: 'Input Mono Reg', 'Input Mono', 'Source Code Pro', 'Fira Mono', monospace;
+  font-family: 'Iosevka Custom', 'Input Mono', 'Source Code Pro', 'Fira Mono', monospace;
 }
 
 body {
@@ -88,7 +90,7 @@ h2::after, h3::after, h4::after, h5::after {
 }
 
 .post-title div {
-  font-family: 'Input Mono Reg', monospace;
+  font-family: 'Iosevka Custom', 'Input Mono', monospace;
   font-size: 2em;
   margin-top: 0.83em;
   margin-bottom: 5px;

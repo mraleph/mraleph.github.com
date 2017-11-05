@@ -1,9 +1,11 @@
+@import url("../fonts/iosevka/iosevka.css");
+
 html {
   height: 100%;
 }
 
 body {
-  font-family: 'Input Mono Reg', 'Input Mono', Menlo, 'Fira Mono', 'Source Code Pro', monospace;
+  font-family: 'Iosevka Custom', 'Input Mono', Menlo, 'Fira Mono', 'Source Code Pro', monospace;
   margin: 0;
   padding: 0;
   height: 100%;
