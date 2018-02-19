@@ -58,7 +58,7 @@ sup {
     border-bottom: 1px solid #eee8d5;
   }
 
-  div.highlighter-rouge pre.highlight {
+  div.highlighter-rouge .highlight {
     border: 0px;
   }
 
@@ -81,7 +81,7 @@ h2::after, h3::after, h4::after, h5::after {
   height: 1em;
 }
 
-.console {
+.console, .language-console {
   background-color: #002b36; color: white;
 }
 
@@ -123,7 +123,7 @@ a:hover {
   }
 }
 
-img.centered {
+img.centered, .post-body > p > img:only-child {
   margin-left: auto;
   margin-right: auto;
   display: block;
@@ -218,4 +218,8 @@ pre code {
 p, li {
   line-height: 1.5em;
   text-align: justify;
+}
+
+li {
+  list-style-type: square;
 }

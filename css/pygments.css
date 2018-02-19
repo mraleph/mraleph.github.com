@@ -19,6 +19,23 @@ figure.highlight {
     overflow: auto;
 }
 
+@media (min-width: 1000px) {
+  div.highlighter-rouge {
+    background: #fdf6e3;
+    border-top: 1px solid #eee8d5;
+    border-bottom: 1px solid #eee8d5;
+  }
+
+  .highlighter-rouge.language-console {
+    background-color: #002b36; color: white;
+  }
+}
+
+.language-console .highlight {
+  background-color: #002b36;
+  color: #b58900;
+}
+
 /*
  * GitHub style for Pygments syntax highlighter, for use with Jekyll
  * Courtesy of GitHub.com
@@ -93,3 +110,13 @@ figure.highlight {
 .highlight .vg { color: #268bd2 } /* Name.Variable.Global */
 .highlight .vi { color: #268bd2 } /* Name.Variable.Instance */
 .highlight .il { color: #2aa198 } /* Literal.Number.Integer.Long */
+
+.language-console .nt {
+  color: #b58900;
+}
+
+.language-console .w,
+.language-console .go,
+.language-console .gp {
+    color: white !important;
+}
