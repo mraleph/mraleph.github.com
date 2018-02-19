@@ -916,7 +916,7 @@ string `charCodeAt`.
 
 ## Parsing Improvements
 
-In light of these lets remove caching of parsed segments from `source-maps`
+In light of these lets remove caching of parsed segments from `source-map`
 parsing code and measure the effect.
 
 ![Parse and Sort times](/images/2018-02-03/parse-sort-1.png)
@@ -1164,7 +1164,7 @@ performance.
 
 <small markdown="1">[An interesting observation to be made here is that
 if we expect `generatedMappings` to be almost always sorted after parsing
-(the mappings file used for `source-maps` benchmark actually has this property)
+(the mappings file used for `source-map` benchmark actually has this property)
 then it would more efficient to simply check whether `generatedMappings`
 is sorted before trying to sort it.]</small>
 
@@ -1321,6 +1321,11 @@ take care of those objects, but in my experiments SpiderMonkey could not deal
 with them well enough, that is why I opted for much more verbose and error
 prone code.
 
+<small markdown="1">[This sort of *almost* manual memory management might seem
+rather foreign in JS. That's why I think it might be worth mentioning here that
+"oxidized" `source-map` actually [requires users to manually manage](https://github.com/mozilla/source-map#sourcemapconsumerprototypedestroy)
+its lifetime to ensure that WASM resources are freed]</small>
+
 Rerunning benchmark confirms that alleviating GC pressure yields a nice
 improvement
 
@@ -1355,7 +1360,7 @@ the yet another small improvement.
 
 ![After reworking allocation](/images/2018-02-03/parse-sort-6-total.png)
 
-<small markdown="1">[This improvement is predicated on rewriting `source-maps` to
+<small markdown="1">[This improvement is predicated on rewriting `source-map` to
 parse mappings directly from typed arrays, instead of using JavaScript string
 and parsing it with `JSON.decode`. I did not do such rewrite but I don't
 anticipate any issues.]</small>
@@ -1408,6 +1413,32 @@ Finally a comparison of V8 from Jan 19th to V8 from Feb 19th with and without
 [untrusted code mitigations](https://github.com/v8/v8/wiki/Untrusted-code-mitigations).
 
 ![After reworking allocation](/images/2018-02-03/parse-sort-v8-vs-v8-total.png)
+
+# Comparing to Oxidized `source-map` Version
+
+Following the publication of this post on February 19th, I got few requests
+to compare `source-map` with my tweaks against mainline oxidized `source-map`
+that uses Rust and WASM.
+
+Quick look at Rust source code for [`parse_mappings`](https://github.com/fitzgen/source-map-mappings/blob/master/src/lib.rs#L499-L566)
+revealed that Rust version does not collect or sort original mappings eagerly,
+only equivalent of `generatedMappings` is produced and sorted. To match this behavior
+I adjusted my JS version by commenting out sorting of `originalMappings[i]` arrays.
+
+Here are benchmarks for just parsing (which also includes sorting `generatedMappings`)
+and for parsing and then iterating over all `generatedMappings`.
+
+![Parse only times](/images/2018-02-03/parse-only-rust-wasm-vs-js.png)
+
+![Parse and iterate times](/images/2018-02-03/parse-iterate-rust-wasm-vs-js.png)
+
+Note that comparison is slightly misleading because Rust version does not
+optimize sorting of `generatedMappings` in the same way as my JS version does.
+
+Thus I am not gonna declare that *&laquo;we reached complete parity with
+Rust+WASM version&raquo;*. However at this level of performance differences
+it might makes sense to reevaluate if it is worth the complexity to use
+Rust in this module.
 
 # Learnings
 

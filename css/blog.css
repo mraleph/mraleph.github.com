@@ -13,7 +13,11 @@ h1, h2, h3, h4, h5 {
 
 code, pre {
   font-family: 'Iosevka Custom', 'Input Mono', 'Source Code Pro', 'Fira Mono', monospace;
-  font-size: 1.1rem;
+  font-size: .9em;
+}
+
+small code, small pre {
+  font-size: .9em;
 }
 
 body {
