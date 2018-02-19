@@ -1407,7 +1407,7 @@ lazily whenever we actually need to search one of them.
 Finally a comparison of V8 from Jan 19th to V8 from Feb 19th with and without
 [untrusted code mitigations](https://github.com/v8/v8/wiki/Untrusted-code-mitigations).
 
-![After reworking allocation](/images/2018-02-03/parse-sort-final-total.png)
+![After reworking allocation](/images/2018-02-03/parse-sort-v8-vs-v8-total.png)
 
 # Learnings
 
