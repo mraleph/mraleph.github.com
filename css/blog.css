@@ -1,7 +1,19 @@
 @import url("../fonts/iosevka/iosevka.css");
+@import url('https://fonts.googleapis.com/css?family=Alegreya|Alegreya+Sans');
 
-body, h1, h2, h3, h4, code, pre {
+body {
+  font-family: 'Alegreya', 'Bembo', Garamond, serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.01em;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Alegreya Sans', 'Lato', sans-serif;
+}
+
+code, pre {
   font-family: 'Iosevka Custom', 'Input Mono', 'Source Code Pro', 'Fira Mono', monospace;
+  font-size: 1.1rem;
 }
 
 body {
@@ -90,8 +102,8 @@ h2::after, h3::after, h4::after, h5::after {
 }
 
 .post-title div {
-  font-family: 'Iosevka Custom', 'Input Mono', monospace;
-  font-size: 2em;
+  font-family: 'Alegreya Sans', 'Lato', sans-serif;
+  font-size: 2.5rem;
   margin-top: 0.83em;
   margin-bottom: 5px;
   font-weight: bold;
@@ -208,7 +220,6 @@ img.centered, .post-body > p > img:only-child {
 
 p code {
   white-space: nowrap;
-  color: #586e75;
 }
 
 pre code {
