@@ -6,8 +6,8 @@ date: 2018-02-03
 
 Few weeks ago I noticed a blog post ["Oxidizing Source Maps with Rust and WebAssembly"](https://hacks.mozilla.org/2018/01/oxidizing-source-maps-with-rust-and-webassembly/)
 making rounds on Twitter - talking about performance benefits of replacing
-plain JavaScript in the core of `source-map` library with a Rust compiled to
-WebAssembly.
+plain JavaScript in the core of `source-map` library with a Rust version
+compiled to WebAssembly.
 
 This post piqued my interest, not because I am a huge on either Rust or WASM,
 but rather because I am always curious about language features and
@@ -22,9 +22,11 @@ investigation, which I am documenting here almost verbatim.
 
 # Getting the Code
 
-For my investigations I was using an *almost* default x64.release build of the V8 at commit [69abb960c97606df99408e6869d66e014aa0fb51](https://chromium.googlesource.com/v8/v8/+/69abb960c97606df99408e6869d66e014aa0fb51) from January 20th.
-My only deparature from default configuration is that I enable disassembler via GN flags to
-be able to dive down to generated machine code if needed.
+For my investigations I was using an *almost* default x64.release build of the
+V8 at commit [69abb960c97606df99408e6869d66e014aa0fb51](https://chromium.googlesource.com/v8/v8/+/69abb960c97606df99408e6869d66e014aa0fb51)
+from January 20th. My only departure from the default configuration is that I
+enable disassembler via GN flags to be able to dive down to generated machine
+code if needed.
 
 ```console
 ╭─ ~/src/v8/v8 ‹master›
@@ -41,11 +43,9 @@ Then I got a checkouts of [`source-map`](https://github.com/mozilla/source-map) 
 * [commit 51cf770](https://github.com/mozilla/source-map/commit/51cf7708dd70d067dfe04ce36d546f3262b48da3)
 which was the most recent commit, when I did my investigation;
 
-TODO: add note about commit [commit 264fcb4](https://github.com/mozilla/source-map/commit/264fcb4331d75e1b6a41f75fd6c601af61870536) which was the last commit before Rust/WASM stuff landing;
-
 # Profiling the Pure-JavaScript Version
 
-Running benchmark in the pure-JS version was rather simple:
+Running benchmark in the pure-JS version was simple:
 
 ```console
 ╭─ ~/src/source-map/bench ‹ c97d38b›
@@ -59,7 +59,7 @@ console.timeEnd: iteration, 4644.619000
 [Stats samples: 5, total: 23868 ms, mean: 4773.6 ms, stddev: 161.22112144505135 ms]
 ```
 
-The first thing that I did was to disabled the serialization part of the
+The first thing that I did was to disable the serialization part of the
 benchmark:
 
 ```
@@ -122,17 +122,18 @@ Overhead  Symbol
    0.56%  v8::internal::IncrementalMarking::RecordWriteSlow
 ```
 
-Just like original post has stated the benchmark indeed is heavy on sort: `doQuickSort`
-appaers at the top of the profile and also few times down the list (most likely
-it was optimized several times).
+Indeed, just like the ["Oxidizing Source Maps ..."](https://hacks.mozilla.org/2018/01/oxidizing-source-maps-with-rust-and-webassembly/) post has stated the benchmark
+is rather heavy on sort: `doQuickSort` appears at the top of the profile and
+also several times down the list (which means that it was optimized/deoptimized
+few times).
 
 # Optimizing Sorting - Argument Adaptation
 
-There are also some suspicious overheads,
+One thing that jumps out in the profiler are suspicious entries,
 namely `Builtin:ArgumentsAdaptorTrampoline` and `Builtin:CallFunction_ReceiverIsNullOrUndefined`
-which seem to be part of V8 implementation. If we ask `perf report` to expand
-call chains then we will notice that these functions are also mostly invoked
-from the sorting code:
+which seem to be part of the V8 implementation. If we ask `perf report` to expand
+call chains leading to them then we will notice that these functions are also
+mostly invoked from the sorting code:
 
 ```console
 - Builtin:ArgumentsAdaptorTrampoline
@@ -150,10 +151,11 @@ from the sorting code:
 ```
 
 It is time to look at the code. Quicksort implementation itself lives in [`lib/quite-sort.js`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/quick-sort.js) and
-it is invoked from parsing code in [`lib/source-map-consumer.js`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/source-map-consumer.js#L564-L568). Comparison functions used for sorting are [`compareByGeneratedPositionsDeflated`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/util.js#L334-L343) and [`compareByOriginalPositions`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/util.js#L296-L304).
+it is invoked from parsing code in [`lib/source-map-consumer.js`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/source-map-consumer.js#L564-L568).
+Comparison functions used for sorting are [`compareByGeneratedPositionsDeflated`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/util.js#L334-L343) and [`compareByOriginalPositions`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/util.js#L296-L304).
 
-Looking at the definition of the comparison function and how they are invoked
-from quick sort implementation reveals that the invocation site has mismatching
+Looking at the definitions of these comparison functions and how they are invoked
+from quick-sort implementation reveals that the invocation site has mismatching
 arity:
 
 ```js
@@ -195,8 +197,8 @@ index ade5bb2..2d39b28 100644
               }
 ```
 
-[Note: I am doing edits directly in `dist/source-map.js` because I did not
-want to spend time figuring out the build process]
+<small markdown="1">[Note: I am doing edits directly in `dist/source-map.js` because I did not
+want to spend time figuring out the build process]</small>
 
 ```console
 ╭─ ~/src/source-map/bench ‹perf-work› [Fix comparator invocation arity]
@@ -211,13 +213,13 @@ console.timeEnd: iteration, 4140.963000
 [Stats samples: 6, total: 24737 ms, mean: 4122.833333333333 ms, stddev: 132.18789657150916 ms]
 ```
 
-So just by fixing the arity mismatch we improved benchmark mean from 4774 ms
-to 4123 ms (by 14%). If we profile the benchmark again we will discover that
-`ArgumentsAdaptorTrampoline` has completely disappeared from it. What was that
-about?
+Just by fixing the arity mismatch we improved benchmark mean on V8 by 14% from
+4774 ms to 4123 ms. If we profile the benchmark again we will discover that
+`ArgumentsAdaptorTrampoline` has completely disappeared from it. Why was it
+there in the first place?
 
-It turns out that `ArgumentsAdaptorTrampoline` is V8 mechanism for coping with
-JavaScript's variadic calling convention: e.g. you can call function that
+It turns out that `ArgumentsAdaptorTrampoline` is V8's mechanism for coping with
+JavaScript's variadic calling convention: you can call function that
 has 3 parameters with 2 arguments - in which case the third parameter will be
 filled with `undefined`. V8 does this by creating a new frame on the stack,
 copying arguments down and then invoking the target function:
@@ -225,14 +227,14 @@ copying arguments down and then invoking the target function:
 ![Argument adaptation](/images/2018-02-03/argument-adaptation.png)
 
 <small markdown="1">
-[If you have never heard about *execution stack*, checkout out [Wikipedia](https://en.wikipedia.org/wiki/Call_stack) and Franziska Hinkelmann [blog post](https://fhinkel.rocks/2017/10/30/Confused-about-Stack-and-Heap/).]
+[If you have never heard about *execution stack*, checkout out [Wikipedia](https://en.wikipedia.org/wiki/Call_stack) and Franziska Hinkelmann's [blog post](https://fhinkel.rocks/2017/10/30/Confused-about-Stack-and-Heap/).]
 </small>
 
-While such costs might be negligable for cold code, in the sort code `comparator`
-was invocated millions of times which made overheads of arguments adaptation
-quite pronounced.
+While such costs might be negligible for cold code, in this code `comparator`
+was invoked millions of times during benchmark run which magnified overheads of
+arguments adaptation.
 
-An attentive reader would also notice that we are now explicitly passing boolean
+An attentive reader might also notice that we are now explicitly passing boolean
 value `false` where previously an implicit `undefined` was used. This does
 seem to contribute a bit to the performance improvement. If we replace `false`
 with `void 0` we would get slightly worse numbers:
@@ -266,9 +268,8 @@ console.timeEnd: iteration, 4209.427000
 [Stats samples: 6, total: 25610 ms, mean: 4268.333333333333 ms, stddev: 106.38947316346669 ms]
 ```
 
-For what it is worth argument adapation overhead seems to be highly V8 specific.
-When I benchmark my change against SpiderMonkey (which is now easy to install
-thanks to Mathias Bynens [jsvu](https://github.com/GoogleChromeLabs/jsvu) tool),
+For what it is worth argument adaptation overhead seems to be highly V8 specific.
+When I benchmark my change against SpiderMonkey,
 I don't see any significant performance improvement from matching the arity:
 
 ```console
@@ -282,19 +283,21 @@ Parsing source map
 [Stats samples: 8, total: 25397 ms, mean: 3174.625 ms, stddev: 360.4636187025859 ms]
 ```
 
-<small>[Also SpiderMonkey seems to be doing the whole thing faster.]</small>
+<small markdown="1">[SpiderMonkey shell is now very easy to install thanks to
+Mathias Bynens'es [jsvu](https://github.com/GoogleChromeLabs/jsvu) tool.]</small>
 
-Lets get back to the sorting code. If we profile the benchmark again we will
-notice that while `ArgumentsAdaptorTrampoline` is gone for good from the profile
+Let us get back to the sorting code. If we profile the benchmark again we will
+notice that `ArgumentsAdaptorTrampoline` is gone for good from the profile, but
 `CallFunction_ReceiverIsNullOrUndefined` is still there. This is not surprising
 given that we are still calling the `comparator`.
 
 # Optimizing Sorting - Monomorphisation
 
-What usually performs better than calling the function? The obvious option is
-to try to get the comparator inlined into the `doQuickSort`. However the fact
-that `doQuickSort` is called with different `comparator` functions stands on
-the way of inlining.
+What usually performs better than calling the function? Not calling it!
+
+The obvious option here is to try and get the comparator inlined into the
+`doQuickSort`. However the fact that `doQuickSort` is called with different
+`comparator` functions stands in the way of inlining.
 
 To work around this we can try to monomorphise `doQuickSort` by cloning it. Here
 is how we do it.
@@ -364,7 +367,7 @@ console.timeEnd: iteration, 3036.211000
 [Stats samples: 8, total: 25423 ms, mean: 3177.875 ms, stddev: 181.87633161024556 ms]
 ```
 
-We can see that the mean time went from 4268 ms to 3177 ms (25% improvent).
+We can see that the mean time went from 4268 ms to 3177 ms (25% improvement).
 
 Profiling reveals the following picture:
 
@@ -392,10 +395,11 @@ Profiling reveals the following picture:
     0.39% Builtin:KeyedLoadIC
 ```
 
-Stuff related to invoking `comparator` is not completely out of the profile.
+Overheads related to invoking `comparator` have now completely disappeared
+from the profile.
 
-At this point I became interested in how much time we spend actually parsing
-mappings vs. sorting them. I went into the parsing code and added few
+At this point I became interested in how much time we spend *parsing*
+mappings vs. *sorting* them. I went into the parsing code and added few
 `Date.now()` invocations:
 
 <small markdown="1">[I wanted to sprinkle `performance.now()` but SpiderMonkey
@@ -458,7 +462,7 @@ benchmark iteration run:
 
 ![Parse and Sort times](/images/2018-02-03/parse-sort-0.png)
 
-In V8 we seem to be spending roughly as much time parsing mappings as then
+In V8 we seem to be spending roughly as much time parsing mappings as
 sorting them. In SpiderMonkey parsing is considerably faster - while sorting
 is slower. This prompted me to start looking at the parsing code.
 
@@ -490,7 +494,7 @@ Overhead  Symbol
    0.41%  Builtin:RecordWrite
 ```
 
-Removing our JavaScript code leaves us with the following:
+Removing the JavaScript code we recognize leaves us with the following:
 
 ```console
 Overhead  Symbol
@@ -512,7 +516,7 @@ Overhead  Symbol
 ```
 
 When I started looking at call chains for individual entries I discovered that
-many of them go through `KeyedLoadIC_Megamorphic` into
+many of them pass through `KeyedLoadIC_Megamorphic` into
 `SourceMapConsumer_parseMappings`.
 
 ```console
@@ -543,8 +547,8 @@ many of them go through `KeyedLoadIC_Megamorphic` into
       + 1.66% v8::internal::StringTable::LookupString
 ```
 
-This sort of call stacks indicated to me that code is performing a lot of keyed
-lookups of form `obj[key]` where `key` is dynamically built string. When I
+This sort of call stacks indicated to me that the code is performing a lot of
+keyed lookups of form `obj[key]` where `key` is dynamically built string. When I
 looked at the parsing I discovered [the following code](https://github.com/mozilla/source-map/blob/693728299cf87d1482e4c37ae90f5bce8edf899f/lib/source-map-consumer.js#L496-L529):
 
 ```js
@@ -578,22 +582,23 @@ if (segment) {
 }
 ```
 
-This code is responsible for decoding Base64 VLQ encoded sequences, e.g. string
+This code is responsible for decoding Base64 VLQ encoded sequences, e.g. a string
 `A` would be decoded as `[0]` and `UAAAA` gets decoded as `[10,0,0,0,0]`. I
 suggest checking [this blog post](https://blogs.msdn.microsoft.com/davidni/2016/03/14/source-maps-under-the-hood-vlq-base64-and-yoda/) about
 source maps internals if you would like to understand the encoding itself
 better.
 
-Instead of decoding each sequence independently, the code attempts to cache
+Instead of decoding each sequence independently this code attempts to cache
 decoded segments: it scans forward until a separator (`,` or `;`) is found,
 then extracts substring from the current position to the separator and
 checks if we have previous decoded such segment by looking up the extracted
 substring in a cache - if we hit the cache we return cached segment, otherwise
 we parse and cache the segment in the cache.
 
-Caching (aka memoization) is very powerful optimization technique - however it
-only makes sense when maintaining the cache itself and looking up cached
-results is cheaper than performing computation itself again.
+Caching (aka [memoization](https://en.wikipedia.org/wiki/Memoization)) is a very
+powerful optimization technique - however it only makes sense when maintaining
+the cache itself and looking up cached results is cheaper than performing
+computation itself again.
 
 ## Abstract Analysis
 
@@ -612,7 +617,7 @@ Segments are limited to 5 elements.
 1. To look up a cached value we traverse all the characters of the segment
    once to find its end;
 2. We extract the substring, which requires allocation and potentially
-   copying depending on how strings are implemented in a concrete JS VM;
+   copying depending on how strings are implemented in a JS VM;
 3. We use this string as a key in a dictionary, which:
     1. first requires VM to compute hash for this string (traversing it again
        and performing various bitwise operations on individual characters),
@@ -632,10 +637,10 @@ Profile seems to confirm this too: `KeyedLoadIC_Megamorphic` is a stub used
 by V8 to implement keyed lookups like `cachedSegments[str]` in the code above.
 
 Based on these observations I set out to do few experiments. First I checked how
-big `cachedSegments` is at the end of the parsing. The smaller it is the more
-effecient caching would be as an optimization.
+big `cachedSegments` cache is at the end of the parsing. The smaller it is the
+more efficient caching would be.
 
-Turns out is was not that small:
+Turns out that it grows quite big:
 
 ```console
 Object.keys(cachedSegments).length = 155478
@@ -702,8 +707,8 @@ function nextTick() { return new Promise((resolve) => setTimeout(resolve)); }
 There are three different ways to decode Base64 VLQ segments that I tried
 against each other.
 
-The first one `decodeCached` is exactly the same as default
-implementation used by `source-map` - which I already provided above:
+The first one `decodeCached` is exactly the same as the default
+implementation used by `source-map` - which I already listed above:
 
 ```js
 function decodeCached(aStr) {
@@ -754,8 +759,8 @@ function decodeCached(aStr) {
 }
 ```
 
-The next competitor is `decodeNoCaching`. It's essentially `decodeCached` but
-without the cache. Each segment it decoded independently. I also replaced
+The next competitor is `decodeNoCaching`. It is essentially `decodeCached` but
+without the cache. Each segment is decoded independently. I also replaced
 `Array` with `Int32Array` for `segment` storage.
 
 ```js
@@ -793,17 +798,18 @@ function decodeNoCaching(aStr) {
 
 Finally the third variant `decodeNoCachingNoString` tries to avoid
 dealing with JavaScript strings altogether by converting the string into
-utf8 encoded `Uint8Array`. This optimization is inspired by the fact that
-due to the sheer complexity of the hierarchy of different string
-representations JS VMs sometimes fail to (or can't) optimize `charCodeAt` down
-to a single memory load.
+utf8 encoded `Uint8Array`. This optimization is inspired by the fact that JS VMs
+are more likely to optimize an array load down to a single memory access. Optimizing
+`String.prototype.charCodeAt` to the same extent is harder due to the sheer
+complexity of the hierarchy of different string representations that JS VMs
+utilize.
 
-I benchmark both a version that encodes string into utf8 as part of the
-iteration and a version that uses preencoded string. This version tries to
-estimate how much you can gain if you are able to skip *typed array* to *string*
-to *typed array* roundtrip e.g. if you load your source map directly as an
-array buffer it might be better to parse it dirrectly from that buffer instead
-of converting it to string first.
+I benchmarked both a version that encodes string into utf8 as part of the
+iteration and a version that uses preencoded string. With this latter "optimistic"
+version I am trying to estimate how much we could gain if we were able to skip
+*typed array &rArr; string &rArr; typed array* round trip. Which would be
+possible if we loaded the source map directly as an array buffer and parsed it
+directly from that buffer instead of converting it to string first.
 
 ```js
 let encoder = new TextEncoder();
@@ -844,7 +850,7 @@ function decodeNoCachingNoStringPreEncoded(arr) {
 }
 ```
 
-And here are the results I got by running my microbenchmark in Chrome Dev
+Here are the results I've gotten by running my microbenchmark in Chrome Dev
 `66.0.3343.3` (V8 `6.6.189`) and Firefox Nightly `60.0a1 (2018-02-11)`:
 
 ![Different Decodes](/images/2018-02-03/different-decodes.png)
@@ -852,42 +858,44 @@ And here are the results I got by running my microbenchmark in Chrome Dev
 There are few things to notice here:
 
 * the version that uses caching is slower than anything else on both V8 and SpiderMonkey.
-Its performance degrades steeply as number of cache entries growth - while performance of
-non-caching versions does not depend on that;
+Its performance degrades steeply as number of cache entries grows - while
+performance of non-caching versions does not depend on that;
 * on SpiderMonkey it pays off to convert string into typed array as part of
 parsing, while on V8 character access is fast enough - so it only pays off
-to use array if you can move string-to-array convertion out of benchmark
+to use array if you can move string-to-array conversion out of the benchmark
 (e.g. you load your data into typed arrays to begin with);
 
-I was curious if V8 team did any active work recently to improve `charCodeAt`
-performance - because I remembered rather vividly that for example Crankshaft
-never made an effort to specialize `charCodeAt` for a particular string
+I was curious if V8 team did any work recently to improve `charCodeAt`
+performance - as I remembered rather vividly that Crankshaft never made an
+effort to specialize `charCodeAt` for a particular string
 representation at a call-site and instead expanded `charCodeAt` into a large
-chunk of code handling many different string representations, which made loading
+chunk of code handling many different string representations, making loading
 characters from strings slower than loading elements from typed arrays.
 
-I trawled V8 issue tracker and found few issues like:
+I trawled V8 issue tracker and found few active issues like these:
 
 * [Issue 6391: StringCharCodeAt slower than Crankshaft](https://bugs.chromium.org/p/v8/issues/detail?id=6391);
 * [Issue 7092: High overhead of String.prototype.charCodeAt in typescript test](https://bugs.chromium.org/p/v8/issues/detail?id=7092);
 * [Issue 7326: Performance degradation when looping across character codes of a string](https://bugs.chromium.org/p/v8/issues/detail?id=7326);
 
-All of them actively being worked on, some updates linking to commits from late
-January 2018 and onward. Out of curiousity I decided to rerun my microbenchmark
+Some of the comments on these issues reference commits from late January 2018
+and onward, which indicated to me that performance of `charCodeAt` is being
+actively worked on. Out of curiosity I decided to rerun my microbenchmark
 in Chrome Beta and compare against Chrome Dev
 
 ![Different Decodes](/images/2018-02-03/different-decodes-v8s.png)
 
-This comparison indeed shows that all those commits by the V8 team were
+This comparison does in fact confirm that all those commits by the V8 team were
 not for nothing: performance of `charCodeAt` improved drastically from
 version `6.5.254.21` to `6.6.189`. Comparing "no cache" and "using array" lines
-we can see that in an older V8 `charCodeAt` behaved so much worse that it made
-total sense to put an additional overhead and convert the string into `Uint8Array`
-just to access it faster. This does not pay off anymore.
+we can see that on an older V8 `charCodeAt` behaved so much worse that it made
+sense to convert the string into `Uint8Array` just to access it faster. However
+the overhead of doing this conversion inside the parse does not pay off anymore
+in a newer V8.
 
-However it still pays off to use an array as long as you don't have to pay the
-convertion cost. Why is that? To figure that out I run the following code in
-tip-of-the tree V8:
+However it still pays off to use an array instead of a string as long as you
+don't have to pay the conversion cost. Why is that? To figure that out I run
+the following code in tip-of-the tree V8:
 
 ```js
 function foo(str, i) {
@@ -908,7 +916,7 @@ foo(str, 0);
 ╰─$ out.gn/x64.release/d8 --allow-natives-syntax --print-opt-code --code-comments x.js
 ```
 
-The command produced a rather [gigantic assembly listing](https://gist.github.com/mraleph/a1f36a67676a8dfef0af081f27f3eb6a)
+The command produced a [gigantic assembly listing](https://gist.github.com/mraleph/a1f36a67676a8dfef0af081f27f3eb6a)
 confirming my suspicion that V8 still does not specialize `charCodeAt` for a
 particular string representation. This lowering seems to come from [this code](https://github.com/v8/v8/blob/de7a3174282a48fab9c167155ffc8ff20c37214d/src/compiler/effect-control-linearizer.cc#L2687-L2826)
 in V8 sources, which resolves the mystery of why array access is faster than
@@ -916,8 +924,8 @@ string `charCodeAt`.
 
 ## Parsing Improvements
 
-In light of these lets remove caching of parsed segments from `source-map`
-parsing code and measure the effect.
+In light of these discoveries lets remove caching of parsed segments from
+`source-map` parsing code and measure the effect.
 
 ![Parse and Sort times](/images/2018-02-03/parse-sort-1.png)
 
@@ -927,15 +935,16 @@ improves parsing times considerably.
 
 # Optimizing Sorting - Algorithmic Improvements
 
-Now that we improved parsing time lets take a look at sorting again.
+Now that we improved parsing performance lets take a look at the sorting again.
 
-There are two arrays that are being sorted: `originalMappings` array is being sorted
-using `compareByOriginalPositions` comparator and `generatedMappings` array is being
-sorted using `compareByGeneratedPositionsDeflated` comparator.
+There are two arrays that are being sorted:
+
+1. `originalMappings` array is being sorted using `compareByOriginalPositions` comparator;
+2. `generatedMappings` array is being sorted using `compareByGeneratedPositionsDeflated` comparator.
 
 ## Optimizing `originalMappings` Sorting
 
-I took at look at `compareByOriginalPositions` first.
+I took a look at `compareByOriginalPositions` first.
 
 ```js
 function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
@@ -971,11 +980,13 @@ function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
 Here I noticed that mappings are being ordered by `source` component first and
 then by all other components. `source` specifies which source file the mapping
 originally came from. An obvious idea here is that instead of using a flat
-gigantic `originalMappings` array that mixes together mappings from different
+gigantic `originalMappings` array, which mixes together mappings from different
 source files, we can turn `originalMappings` into array of arrays:
-`originalMappings[i]` being an array of mappings from source file with index `i`.
+`originalMappings[i]` would be an array of all mappings from source file with index `i`.
 This way we can sort mappings into different `originalMappings[i]` arrays based
 on their source as we parse them and then sort individual smaller arrays.
+
+<small markdown="1">[This is essentially a [Bucket Sort](https://en.wikipedia.org/wiki/Bucket_sort)]</small>
 
 Here is what we do in parsing loop:
 
@@ -1017,10 +1028,13 @@ constructed each `originalMappings[i]` array.
 ![Parse and Sort times](/images/2018-02-03/parse-sort-2.png)
 
 This algorithmic change improves sorting times on both V8 and SpiderMonkey and
-additionally improves parsing times on V8. Parse time improvement is likely due
-to the reduction of cost associated with managing `originalMappings` array:
-growing gigantic `originalMappings` array is more expensive than growing
-multiple smaller mappings arrays.
+additionally improves parsing times on V8.
+
+<small markdown="1">[Parse time improvement is likely due
+to the reduction of costs associated with managing `originalMappings` array:
+growing a single gigantic `originalMappings` array is more expensive than
+growing multiple smaller `originalMappings[i]` arrays individually. However
+this is just my guess, which is not confirmed by any rigorous analysis.]</small>
 
 ## Optimizing `generatedMappings` Sorting
 
@@ -1059,10 +1073,10 @@ function compareByGeneratedPositionsDeflated(mappingA, mappingB, onlyCompareGene
 ```
 
 Here we first compare mappings by `generatedLine`. There are likely considerably
-more generated lines than original source files so it might not make sense
+more generated lines than original source files so it does not make sense
 to split `generatedMappings` into multiple individual arrays.
 
-However when I look at the parsing code I notice the following:
+However when I looked at the parsing code I noticed the following:
 
 ```js
 while (index < length) {
@@ -1080,8 +1094,8 @@ while (index < length) {
 }
 ```
 
-These are the only occurrences of `generatedLine` in this code. This means that
-`generatedLine` is growing monotonically - which implies that
+These are the only occurrences of `generatedLine` in this code, which means that
+`generatedLine` is growing monotonically - implying that
 `generatedMappings` array is already ordered by `generatedLine` and it does
 not make sense to sort the array as whole. Instead we can sort each individual
 smaller subarray. We change the code like this:
@@ -1109,9 +1123,15 @@ while (index < length) {
 sortGenerated(generatedMappings, subarrayStart);
 ```
 
-Instead of using `quickSort` for sorting smaller subarrays, I decided to opt in
-for using insertion sort (similar to a hybrid strategy that some VMs use for
-`Array.prototype.sort`)
+Instead of using `quickSort` for sorting smaller subarrays, I also decided to
+use [insertion sort](https://en.wikipedia.org/wiki/Insertion_sort), similar to
+a hybrid strategy that some VMs use for `Array.prototype.sort`.
+
+<small markdown="1">[Note: insertion sort is also faster than
+quick sort if input array is already sorted... and it turns out that
+mappings used for the benchmark *are* in fact sorted. If we expect `generatedMappings`
+to be almost always sorted after parsing then it would be even more efficient to
+simply check whether `generatedMappings` is sorted before trying to sort it.]</small>
 
 ```js
 const compareGenerated = util.compareByGeneratedPositionsDeflatedNoLine;
@@ -1162,31 +1182,25 @@ cumulative timings (parsing and sorting together)
 Now it becomes obvious that we considerably improved overall mappings parsing
 performance.
 
-<small markdown="1">[An interesting observation to be made here is that
-if we expect `generatedMappings` to be almost always sorted after parsing
-(the mappings file used for `source-map` benchmark actually has this property)
-then it would more efficient to simply check whether `generatedMappings`
-is sorted before trying to sort it.]</small>
-
-Is there are anything else we could do to improve performance?
+Is there anything else we could do to improve performance?
 
 It turns out yes: we can pull out a page from asm.js / WASM own playbook
 without going full-Rust on our JavaScript code base.
 
 # Optimizing Parsing - Reducing GC Pressure
 
-We are allocating hundreds of thousands `Mapping` objects, which puts
-considerable pressure on GC - in reality we don't really need those objects
+We are allocating hundreds of thousands of `Mapping` objects, which puts
+considerable pressure on the GC - however we don't really need these objects
 to be objects - we can pack them into a typed array. Here is how I did it.
 
 <small markdown="1">[Few years ago I was really excited about
 [Typed Objects](https://github.com/nikomatsakis/typed-objects-explainer) proposal
 which would allow JavaScript programmers to define structs and arrays of structs and
-all other amazing things that would come quite handy here. Unfortunately champions
+all other amazing things that would come extremely handy here. Unfortunately champions
 working on that proposal moved away to work on other things leaving us
 with a choice to write these things either manually or in C++ &#x1f61e;]</small>
 
-First of all, I changed `Mapping` from a normal object into a wrapper that
+First, I changed `Mapping` from a normal object into a wrapper that
 points into a gigantic typed array that would contain all our mappings.
 
 ```js
@@ -1316,10 +1330,12 @@ exports.compareByOriginalPositionsNoSource =
 ```
 
 As you can see readability does suffer quite a bit. Ideally I would prefer to
-allocate temporary `Mapping` objects and rely on allocation sinking to
-take care of those objects, but in my experiments SpiderMonkey could not deal
-with them well enough, that is why I opted for much more verbose and error
-prone code.
+allocate a temporary `Mapping` object whenever I need to work with its fields.
+However such code style would lean heavily on VMs ability to eliminate
+allocations of these temporary wrappers via *allocation sinking*, *scalar replacement*
+or other similar optimizations. Unfortunately in my experiments SpiderMonkey
+could not deal with such code well enough and thus I opted for much more verbose
+and error prone code.
 
 <small markdown="1">[This sort of *almost* manual memory management might seem
 rather foreign in JS. That's why I think it might be worth mentioning here that
@@ -1338,15 +1354,16 @@ Interestingly enough on SpiderMonkey this approach improves both parsing
 
 ## SpiderMonkey Performance Cliff
 
-As I way playing with this code I also discovered a confusing performance
+As I was playing with this code I also discovered a confusing performance
 cliff in SpiderMonkey: when I increased the size of preallocated memory
-buffer to 64MB to gauge reallocation costs, benchmark showed a sudden
-slow down after 7th iteration.
+buffer from 4MB to 64MB to gauge reallocation costs, benchmark showed a sudden
+drop in performance after 7th iteration.
 
 ![After reworking allocation](/images/2018-02-03/parse-sort-5-total.png)
 
 This looked like some sort of polymorphism to me, but I could not immediately
-figure out how changing the size of an array can result in polymorphic behavior.
+figure out how changing the size of an array can result in a polymorphic
+behavior.
 
 Puzzled I reached out to a SpiderMonkey hacker [Jan de Mooij](https://twitter.com/jandemooij) who
 very [quickly identified](https://bugzilla.mozilla.org/show_bug.cgi?id=1437471)
@@ -1355,8 +1372,8 @@ it from SpiderMonkey so that nobody hits this confusing cliff again.
 
 # Optimizing Parsing - Using `Uint8Array` Instead of a String.
 
-Finally if we start using `Uint8Array` instead of string for parsing we get
-the yet another small improvement.
+Finally if we start using `Uint8Array` instead of a string for parsing we get
+yet another small improvement.
 
 ![After reworking allocation](/images/2018-02-03/parse-sort-6-total.png)
 
@@ -1396,18 +1413,18 @@ $ sm bench-shell-bindings.js
 This is a factor of 4 improvement!
 
 It might be also worth noting that we are still sorting all `originalMappings`
-arrays eagerly even though this is not really needed. There are two operations
-that use `originalMappings`:
+arrays eagerly even though this is not really needed. There are only two
+operations that use `originalMappings`:
 
-* `allGeneratedPositionsFor` that returns all generated positions for the
+* `allGeneratedPositionsFor` which returns all generated positions for the
 given line in the original source;
 * `eachMapping(..., ORIGINAL_ORDER)` which iterates over all mappings in
 their original order.
 
 If we assume that `allGeneratedPositionsFor` is the most common operation and
-that only a handful of `originalMappings[i]` arrays would be queried we can
-vastly improve parsing time by sorting `originalMappings[i]` arrays
-lazily whenever we actually need to search one of them.
+that we are only going to search within a handful of `originalMappings[i]`
+arrays then we can vastly improve parsing time by sorting `originalMappings[i]`
+arrays lazily whenever we actually need to search one of them.
 
 Finally a comparison of V8 from Jan 19th to V8 from Feb 19th with and without
 [untrusted code mitigations](https://github.com/v8/v8/wiki/Untrusted-code-mitigations).
@@ -1425,20 +1442,20 @@ revealed that Rust version does not collect or sort original mappings eagerly,
 only equivalent of `generatedMappings` is produced and sorted. To match this behavior
 I adjusted my JS version by commenting out sorting of `originalMappings[i]` arrays.
 
-Here are benchmarks for just parsing (which also includes sorting `generatedMappings`)
+Here are benchmark results for just parsing (which also includes sorting `generatedMappings`)
 and for parsing and then iterating over all `generatedMappings`.
 
 ![Parse only times](/images/2018-02-03/parse-only-rust-wasm-vs-js.png)
 
 ![Parse and iterate times](/images/2018-02-03/parse-iterate-rust-wasm-vs-js.png)
 
-Note that comparison is slightly misleading because Rust version does not
-optimize sorting of `generatedMappings` in the same way as my JS version does.
+**Note that the comparison is slightly misleading because Rust version does not
+optimize sorting of `generatedMappings` in the same way as my JS version does.**
 
-Thus I am not gonna declare that *&laquo;we reached complete parity with
-Rust+WASM version&raquo;*. However at this level of performance differences
-it might makes sense to reevaluate if it is worth the complexity to use
-Rust in this module.
+Thus I am not gonna declare here that *&laquo;we have successfully reached
+parity with the Rust+WASM version&raquo;*. However at this level of performance
+differences it might make sense to reevaluate if it is even worth the complexity
+to use Rust in `source-map`.
 
 # Learnings
 
@@ -1453,7 +1470,7 @@ runtime. For this particular reason don't shy away from using low-level
 profiling tools like `perf` - "friendly" tools might not be telling you the
 whole story because they hide lower level.
 
-Difference performance problems require different approach to profiling and
+Different performance problems require different approaches to profiling and
 visualizing collected profiles. Make sure to familiarize yourself with a wide
 spectrum of available tools.
 
@@ -1463,7 +1480,7 @@ Being able to reason about your code in terms of abstract complexity is
 an important skill. Is it better to quick-sort one array with 100K elements or
 quick-sort 3333 30-element subarrays?
 
-A bit of mathematics can guide us (\\(100000 \log 100000\\) is 3 times larger than
+A bit of handwavy mathematics can guide us (\\(100000 \log 100000\\) is 3 times larger than
 \\(3333 \times 30 \log 30\\)) - and the larger your data is the more important
 it usually is to be able to do a tiny bit of mathematics.
 
@@ -1494,36 +1511,78 @@ it remains to be seen if we ever get there.
 
 ### Clever Optimizations Must be Diagnosable
 
-If you runtime has any sort of clever optimizations built in you need to also
-provide a straightforward tool to diagnose when these optimization fail and
+If your runtime has any sort of built-in clever optimizations then you need to
+provide a straightforward tool to diagnose when these optimizations fail and
 deliver an actionable feedback to the developer.
 
-In context of languages like JavaScript this at minimum means that tools like
-profiler should also provide you a way to inspect individual operations to
-figure out whether VM specializes them well and it it does not - what is
-the reason for that.
+In the context of languages like JavaScript this at minimum means that tools
+like profiler should also provide you with a way to inspect individual
+operations to figure out whether VM specializes them well and it it does not -
+what is the reason for that.
 
 This sort of introspection should not require building custom versions of
-the VM with magic flags and then treading should megabytes of undocumented
+the VM with magic flags and then treading through megabytes of undocumented
 debug output. This sort of tools should be right there, when you open your
 DevTools window.
 
 ### Language and Optimizations Must Be Friends
 
-Attempt to foresee where the language lacks features that make it hard to
-write well performing code. Are your users on the market for a way to layout
-and manage memory manually? I am sure they are. If your language is even
-remotely popular users would eventually succeed in writing code that performs
-poorly. Weight the cost of adding language features that fix performance
-problems against solving the same performance problems by other means (e.g.
-by more sophisticated optimizations or by asking users to rewrite their code
-in Rust).
+Finally as a language designer you should attempt to foresee where the language
+lacks features which make it easier to write well performing code. Are your
+users on the market for a way to layout and manage memory manually? I am sure
+they are. If your language is even remotely popular users would eventually
+succeed in writing code that performs poorly. Weight the cost of adding
+language features that fix performance problems against solving the same
+performance problems by other means (e.g. by more sophisticated optimizations or
+by asking users to rewrite their code in Rust).
 
-This works the other way around to: if your language has features make sure
+This works the other way around too: if your language has features make sure
 that they perform reasonably well and their performance is both well understood
 by users and can be easily diagnosed. Invest in making your whole language
-optimized, instead of having a well performing code and surrounded by
+optimized, instead of having a well performing core surrounded by
 poorly performing long tail of rarely used features.
+
+# Afterword
+
+Most optimizations we discovered in this post fall into three different groups:
+
+1. algorithmic improvements;
+2. workarounds for implementation independent, but potentially language dependent issues;
+3. workarounds for V8 specific issues.
+
+No matter which language you write in you still need to think about algorithms.
+It is easier to notice when you are using worse algorithms in inherently "slower"
+languages, but just reimplementing the same algorithms in a "faster" language
+does not solve the problem even though it might alleviate the symptoms. Large
+part of the post is dedicated to optimizations from this group:
+
+* sorting improvements achieved by sorting subsequences rather than the whole array;
+* discussions of caching benefits or lack of them there-off.
+
+The second group is represented by the monomorphisation trick. Performance suffering
+due to polymorphism is not a V8 specific issue. Neither it is a JS specific issue.
+You can apply monomorphisation across implementations and even languages. Some
+languages (Rust, actually) apply it in some form for you under the hood.
+
+The last and most controversial group is represented by argument adaptation stuff.
+
+Finally an optimization I did to mappings representation (packing individual
+objects into a single typed array) is an optimization that spans all three groups.
+It's about understanding limitations and costs of a GCed system as whole. It's also
+about understanding strength of existing JS VMs and utilizing it for our advantage.
+
+So... **Why did I choose the title?** That's because I think that the third group
+represents all issues which should and would be fixed over time. Other groups
+represent universal knowledge that spans across implementations and languages.
+
+Obviously each developer and each team are free to choose between spending `N`
+rigorous hours profiling and reading and thinking about their JavaScript code,
+or to spend `M` hours rewriting their stuff in a language `X`.
+
+However: (a) everybody needs to be fully aware that the choice even exists; and
+(b) language designers and implementors should work together on making this
+choice less and less obvious - which means working on language features and
+tools and reducing the need in "group &#8470;" optimizations.
 
 <script type="text/javascript" src="/js/mathjax.js">
 </script>
