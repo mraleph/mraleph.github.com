@@ -150,7 +150,7 @@ mostly invoked from the sorting code:
   +  1.49% *SourceMapConsumer_parseMappings ../dist/source-map.js:1894
 ```
 
-It is time to look at the code. Quicksort implementation itself lives in [`lib/quite-sort.js`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/quick-sort.js) and
+It is time to look at the code. Quicksort implementation itself lives in [`lib/quick-sort.js`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/quick-sort.js) and
 it is invoked from parsing code in [`lib/source-map-consumer.js`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/source-map-consumer.js#L564-L568).
 Comparison functions used for sorting are [`compareByGeneratedPositionsDeflated`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/util.js#L334-L343) and [`compareByOriginalPositions`](https://github.com/mozilla/source-map/blob/c97d38b70de088d87b051f81b95c138a74032a43/lib/util.js#L296-L304).
 
@@ -1582,7 +1582,7 @@ or to spend `M` hours rewriting their stuff in a language `X`.
 However: (a) everybody needs to be fully aware that the choice even exists; and
 (b) language designers and implementors should work together on making this
 choice less and less obvious - which means working on language features and
-tools and reducing the need in "group &#8470;" optimizations.
+tools and reducing the need in "group &#8470;3" optimizations.
 
 <script type="text/javascript" src="/js/mathjax.js">
 </script>
