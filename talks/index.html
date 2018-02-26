@@ -31,6 +31,51 @@
     </article>
 
     <article>
+      <div class="conf">Google PhD Student Summit on Compiler &amp; Programming Technology 2017</div>
+      <span class="title">From JIT to AOT (...and back again)</span>
+      <div class="links">
+        <!--
+          <a href="">[slides]</a>
+          <a href="">[video]</a>
+        -->
+      </div>
+      <div>
+        <p>When Dart was originally designed its designers assume that it will primarily execute in a VM with a JIT.</p>
+        <p>However these days Dart is actually primarily deployed in environments that require it to be compiled ahead of time to native code (mobile) or JavaScript (browser).</p>
+        <p>This talk covers Dart VM journey from JITing Dart to AOT compiling it and the lessons we learned on the way.</p>
+      </div>
+    </article>
+
+    <article>
+      <div class="conf">Google PhD Student Summit on Compiler &amp; Programming Technology 2016</div>
+      <span class="title">How we don't do things</span>
+      <div class="links">
+        <a href="/talks/muc2016/slides.pdf">[slides]</a>
+        <!--
+          <a href="">[video]</a>
+        -->
+      </div>
+      <div>
+        <p>Compiler conferences are always full with engineers and researchers happy to share how they <b>do</b> things.</p><p>This talk is a refreshing departure from the trend. I will take a look at my time working on V8, Dart VM and LuaJIT at Google and share with you how we <b>did not do</b> things and why that matters. </p>
+      </div>
+    </article>
+
+
+    <article>
+      <div class="conf">HolyJS 2016</div>
+      <span class="title">Производительность JavaScript через подзорную трубу</span>
+      <div class="links">
+        <a href="/talks/holyjs2016">[slides]</a>
+        <a href="https://www.youtube.com/watch?v=HPFARivHJRY">[video]</a>
+      </div>
+      <div>
+        <p>Каждый день инженеры-компиляторщики по всему миру увлеченно стучат по своим клавиатурам разгоняя исполнение JavaScript в совершенно различных браузерах и даже на сервере.</p>
+        <p>Общественность, программирующая на JavaScript, однако же, часто отстает в своем понимании от стремительного прогресса, происходящего во внутренностях JS движков.</p>
+        <p>Этот доклад старается покрыть отставание и продемонстрировать, что знание этих самых внутренностей важно не только для написания быстрого JavaScript кода, но и просто для того, чтобы достоверно измерить разницу между "быстрым" и "медленным". </p>
+      </div>
+    </article>
+
+    <article>
       <div class="conf">Virtual Machines Summer School 2016 </div>
       <span class="title">What I learned from LuaJIT</span>
       <div class="links">
@@ -40,6 +85,21 @@
       <div>
         <p>This talk summarizes my experience from digging into LuaJIT 2.x sources while working as a compiler engineer for Google DeepMind.</p>
         <p>This is not a deep insight into LuaJIT inner design, but rather a collection of choices made by original LuaJIT implementor which I find interesting and educational.</p>
+      </div>
+    </article>
+
+    <article>
+      <div class="conf">GOTO Amsterdam 2016</div>
+      <span class="title">JavaScript Performance Through the Spyglass</span>
+      <div class="links">
+        <a href="/talks/goto2016">[slides]</a>
+        <a href="https://www.youtube.com/watch?v=r76ZjdzFExg">[video]</a>
+      </div>
+      <div>
+        <p>JavaScript performance remains an area of focus for all major browser vendors.</p>
+        <p>Each day VM-engineers across the globe pump their expertise into JavaScript engines powering client and server-side code alike.</p>
+        <p>However our understanding of JavaScript engine internals does not always keep up with those internals.</p>
+        <p>This talk tries to rectify this lag and demonstrate that knowledge of implementation details is crucial not only to writing fast JavaScript code but even to simply measuring the difference between fast and slow.</p>
       </div>
     </article>
 
@@ -55,6 +115,20 @@
         <p>And yet from time to time we still find ourselves wondering whether '===' is faster than '=='.</p>
         <p>What is the right way to approach this question? Is this the question you should be asking to begin with?</p>
         <p>We will take a look at some microbenchmarks written by JS developers and discover a violent clash between XIX century approach to benchmarking and XXI century virtual machines.</p>
+      </div>
+    </article>
+
+    <article>
+      <div class="conf">JFokus 2015 - VM Tech Summit</div>
+      <span class="title">Patterns of VM Design</span>
+      <div class="links">
+        <a href="/talks/jfokus2015">[slides]</a>
+        <a href="https://www.youtube.com/watch?v=KHS1nC9h_qA">[video]</a>
+      </div>
+      <div>
+        <p>The popularity of dynamically typed programming languages has been skyrocketing in the past years. This success can be partially attributed to the advances in VM engineering enabling efficient execution of those languages.</p>
+        <p>Just like boilerplate of any enterprise application can be decomposed into infamous patterns of object oriented design, efficient virtual machines running dynamically typed languages seem to consist of reimplementations of common patterns of "VM design". These patterns often tread the thin line between efficiency, development time and maintainability.</p>
+        <p>This talk discusses the trade offs we encountered while building virtual machines for JavaScript and Dart programming languages.</p>
       </div>
     </article>
 

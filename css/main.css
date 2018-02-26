@@ -1,11 +1,11 @@
-@import url("../fonts/iosevka/iosevka.css");
+@import url('https://fonts.googleapis.com/css?family=Alegreya:400,400i|Alegreya+Sans');
 
 html {
   height: 100%;
 }
 
 body {
-  font-family: 'Iosevka Custom', 'Input Mono', Menlo, 'Fira Mono', 'Source Code Pro', monospace;
+  font-family: 'Alegreya Sans', 'Input Mono', Menlo, 'Fira Mono', 'Source Code Pro', monospace;
   margin: 0;
   padding: 0;
   height: 100%;
@@ -56,6 +56,7 @@ article {
   padding: 0.5em;
   border-radius: 5px;
   background: white;
+  font-family: 'Alegreya', serif;
 }
 
 .talks article .conf {
@@ -66,6 +67,7 @@ article {
 .talks article .title {
   font-size: 1.5em;
   font-weight: bold;
+  font-family: 'Alegreya Sans', sans;
 }
 
 .talks article .links {
@@ -89,6 +91,7 @@ article .title {
   font-size: 40pt;
   font-weight: bold;
   letter-spacing: .07em;
+  font-family: 'Alegreya', serif;
 }
 
 @media (min-width: 700px) {
