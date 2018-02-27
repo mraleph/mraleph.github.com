@@ -1457,6 +1457,17 @@ parity with the Rust+WASM version&raquo;*. However at this level of performance
 differences it might make sense to reevaluate if it is even worth the complexity
 to use Rust in `source-map`.
 
+## Update (Feb 27th 2018)
+
+Nick Fitzgerald, the author of `source-map`, [has updated](http://fitzgeraldnick.com/2018/02/26/speed-without-wizardry.html) Rust+WASM version with
+algorithmic improvements described in this article. Here is an amended
+performance graph for *parse and iterate* benchmark:
+
+![Parse and iterate times](/images/2018-02-03/parse-iterate-rust-wasm-vs-js-2.png)
+
+As you can see WASM+Rust version is now around 15% faster on SpiderMonkey and
+approximately the same speed on V8.
+
 # Learnings
 
 ## For a JavaScript Developer
