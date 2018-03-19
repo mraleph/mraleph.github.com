@@ -11,7 +11,7 @@
 */
 
 // var PERMANENT_URL_PREFIX = 'http://localhost:8000/';
-var PERMANENT_URL_PREFIX = 'http://mrale.ph/s3/nodecamp.eu/';
+var PERMANENT_URL_PREFIX = 'https://mrale.ph/s3/nodecamp.eu/';
 
 var SLIDE_CLASSES = ['far-past', 'past', 'current', 'next', 'far-next'];
 
@@ -579,7 +579,7 @@ function addFontStyle() {
   var el = document.createElement('link');
   el.rel = 'stylesheet';
   el.type = 'text/css';
-  el.href = 'http://fonts.googleapis.com/css?family=' +
+  el.href = 'https://fonts.googleapis.com/css?family=' +
             'Open+Sans:regular,semibold,italic,italicsemibold|Droid+Sans+Mono';
 
   document.body.appendChild(el);
