@@ -8,7 +8,7 @@ var RevealMath = window.RevealMath || (function(){
 	var options = Reveal.getConfig().math || {};
 	options.mathjax =  (document.location.href.indexOf('localhost') >= 0) ?
 	    '/js/MathJax-2.4-latest/MathJax.js' :
-	    'http://cdn.mathjax.org/mathjax/2.4-latest/MathJax.js';
+	    '//cdn.mathjax.org/mathjax/2.4-latest/MathJax.js';
 	options.config = options.config || 'TeX-AMS_HTML-full';
 
 	loadScript( options.mathjax + '?config=' + options.config, function() {
