@@ -62,7 +62,7 @@
 </li>
 </ul>
 <p>However the main difference between these lies in when and how VM converts Dart source code to executable code. The runtime environment that facilitates the execution remains the same.</p>
-<p><img alt="Isolates" src="/images/isolates.png" /></p>
+<p><img alt="Isolates" src="images/isolates.png" /></p>
 <p>Any Dart code within the VM is running within some <em>isolate</em>, which can be best described as an isolated Dart universe with its own memory (<em>heap</em>) and <em>usually</em> with its own thread of control (<em>mutator thread</em>). There can be many isolates executing Dart code concurrently, but they cannot share any state directly and can only communicate by message passing through <em>ports</em> (not to be confused with network ports!).</p>
 <p>The relationship between OS threads and isolates is a bit blurry and highly dependent on how VM is embedded into an application. Only the following is guaranteed:</p>
 <ul>
