@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h2><span class="section-number"></span> AOT Snapshot Size Profiling</h2>
+<p>The VM supports profiling the size of AOT snapshots by leveraging the object-graph based file format introduced by V8.</p>
+<h3><span class="section-number">1</span> Recording a profile</h3>
+<p>To generate a snapshot profile, simply pass the <code>--write-v8-snapshot-profile-to=&lt;filename&gt;</code> flag to <code>gen_snapshot</code>.
+The profile will be written in JSON format to the requested file.
+Make sure to use the ".heapsnaphsot" extension for the file to open it in Chrome DevTools.</p>
+<h3><span class="section-number">2</span> Examining a profile in Chrome</h3>
+<p>Open Chrome DevTools, navigate to the "Memory" tab, right-click on the "Profiles" panel, click Load..." and select the snapshot profile file.
+See https://developers.google.com/web/tools/chrome-devtools/memory-problems/heap-snapshots for details on how to use the tool.</p>
+<h3><span class="section-number">3</span> Examining a profile programmatically</h3>
+<p>A Dart library to parse the snapshot profile format is provided in <code>pkg/vm/lib/v8_snaphsot_profile.dart</code>.
+The <code>dart2js_info</code> package has some useful code for calculating retainers and other graph statistics.</p>
+    </div>
+  </body>
+</html>

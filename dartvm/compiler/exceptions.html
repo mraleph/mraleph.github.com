@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h2><span class="section-number"></span> Exceptions Implementation</h2>
+<p>This page describes how exceptions throwing and catching is implemented in the
+VM.</p>
+<h3><span class="section-number">1</span> Intermediate Language</h3>
+<p>Dart VM's IL <strong>does not</strong> explicitly represent exceptional control flow in its
+flow graph, there are <strong>no</strong> explicit exceptional edges connecting potentially
+throwing instructions (e.g. calls) with corresponding catch blocks. Instead this
+connection is defined at the block level: all exceptions that occur in any block
+with the given <code>try_index</code> will be caught by <code>CatchBlockEntry</code> with the equal
+<code>catch_try_index</code>.</p>
+<p><img alt="Catch Block Entry" src="images/catch-block-entry-0.png" /></p>
+<p>For optimized code this means that data flow associated with exceptional control
+flow is also represented implicitly: due to the absence of explicit exceptional
+edges the data flow can't be represented using explicit phi-functions. Instead
+in optimized code each <code>CatchBlockEntry</code> is treated almost as if it was an
+independent entry into the function: for each variable <code>v</code> <code>CatchBlockEntry</code>
+will contain a <code>Parameter(...)</code> instruction restoring variable state at catch
+entry from a fixed location on the stack. When an exception is thrown runtime
+system takes care of populating these stack slots with right values - current
+state of corresponding local variables. It's easy to see a parallel between
+these <code>Parameter(...)</code> instructions and <code>Phi(...)</code> instructions that would be
+used if exception control flow would be explicit.</p>
+<p><img alt="Catch Block Entry" src="images/catch-block-entry-1.png" /></p>
+<p>How does runtime system populate stack slots corresponding to these
+<code>Parameter(...)</code> instructions? During compilation necessary information is
+available in <em>deoptimization environment</em> attached to the instruction. This
+environment encodes the state of local variables in terms of SSA values i.e. if
+we need to reconstruct unoptimized frame which SSA value should be stored into
+the given local variable (see <a href="compiler-pipeline-overview.md#optimized-il">Optimized
+IL</a> for
+an overview). However the way we use these information for exception handling is
+slightly different in JIT and AOT modes.</p>
+<h4><span class="section-number">1.1</span> AOT mode</h4>
+<p>AOT mode does not support deoptimization and thus AOT compiler does not
+associate any deoptimization metadata with generated code. Instead
+deoptimization environments associated with instructions that can throw are
+converted into <code>CatchEntryMoves</code> metadata during code generation and resulting
+metadata is stored <code>RawCode::catch_entry_moves_maps_</code> in a compressed form.</p>
+<p><code>CatchEntryMoves</code> is essentially a sequence of moves which runtime needs to
+perform to create the state that catch entry expects. There are three types of
+moves:</p>
+<ul>
+<li><code>*(FP + Dst) &lt;- ObjectPool[PoolIndex]</code> - a move of a constant from an object
+pool;</li>
+<li><code>*(FP + Dst) &lt;- *(FP + Src)</code> - a move of a tagged value;</li>
+<li><code>*(FP + Dst) &lt;- Box&lt;Rep&gt;(*(FP + Src))</code> - a boxing operation for an untagged
+value;</li>
+</ul>
+<p>When an exception is caught runtime decompresses the metadata associated with the
+call site which has thrown an exception and uses it to prepare the state of the
+stack for the catch block entry. See
+<code>ExceptionHandlerFinder::{ReadCompressedCatchEntryMoves, ExecuteCatchEntryMoves}</code>.</p>
+<p>NOTE: See <a href="https://docs.google.com/a/google.com/document/d/1_vX8VkvHVA1Om7jjONiWLA325k_JmSZuvVClet-x-xM/edit?usp=sharing">this
+design/motivation</a>
+document for <code>CatchEntryMoves</code> metadata</p>
+<h4><span class="section-number">1.2</span> JIT mode</h4>
+<p>JIT mode heavily relies on deoptimization and all call instructions have (lazy)
+deoptimization environments associated with them. These environments are
+converted to <a href="deoptimization.md#in-optimized-code">deoptimization
+instructions</a>
+during code generation and stored on the <code>Code</code> object.</p>
+<p>When an exception is caught the runtime system converts deoptimization
+environment associated with the call site that threw an exception into
+<code>CatchEntryMoves</code> and then uses it to prepare the state of the stack for the
+catch block entry. See <code>ExceptionHandlerFinder::{GetCatchEntryMovesFromDeopt, ExecuteCatchEntryMoves}</code>.</p>
+<p>Constructing <code>CatchEntryMoves</code> dynamically from deoptimization instructions
+allows to avoid unnecessary duplication of the metadata and save memory: as
+deoptimization environments contain all information necessary for constructing
+correct stack state.</p>
+<p class="special-important"><strong>IMPORTANT:</strong> There is a subtle difference between DBC and other architectures with
+respect to catch block entry state. On normal architectures <code>Parameter(i)</code> at
+catch entry would be associated with the same stack space that would be used to
+store variable with index <code>i</code>. On DBC however at catch entry <code>Parameter(i)</code>
+would be allocated to a separate scratch space at the very top of the register
+space. See <code>FlowGraphAllocator::ProcessInitialDefinition</code> and
+<code>FlowGraphCompiler::CatchEntryRegForVariable</code>.</p>
+    </div>
+  </body>
+</html>

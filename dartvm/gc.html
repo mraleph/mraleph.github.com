@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h2><span class="section-number"></span> Garbage Collection</h2>
+<h3><span class="section-number">1</span> Object representation</h3>
+<h3><span class="section-number">2</span> Scavenge</h3>
+<h3><span class="section-number">3</span> Mark-Sweep</h3>
+<h3><span class="section-number">4</span> Mark-Compact</h3>
+<h3><span class="section-number">5</span> Concurrent Marking</h3>
+<p>To reduce the time the mutator is paused for old-space GCs, we allow the mutator to continue running during most of the marking work. </p>
+<h4><span class="section-number">5.1</span> Barrier</h4>
+<p>With the mutator and marker running concurrently, the mutator could write a pointer to an object that has not been marked (TARGET) into an object that has already been marked and visited (SOURCE), leading to incorrect collection of TARGET. To prevent this, the write barrier checks if a store creates a pointer from an old-space object to an old-space object that is not marked, and marks the target object for such stores. We ignore pointers from new-space objects because we treat new-space objects as roots and will revisit them to finalize marking. We ignore the marking state of the source object to avoid expensive memory barriers required to ensure reordering of accesses to the header and slots can't lead skipped marking, and on the assumption that objects accessed during marking are likely to remain live when marking finishes.</p>
+<p>The barrier is equivalent to</p>
+<div class="codehilite"><pre><span></span>StorePoint(RawObject* source, RawObject** slot, RawObject* target) {
+  *slot = target;
+  if (target-&gt;IsSmi()) return;
+  if (source-&gt;IsOldObject() &amp;&amp; !source-&gt;IsRemembered() &amp;&amp; target-&gt;IsNewObject()) {
+    source-&gt;SetRemembered();
+    AddToRememberedSet(source);
+  } else if (source-&gt;IsOldObject() &amp;&amp; target-&gt;IsOldObject() &amp;&amp; !target-&gt;IsMarked() &amp;&amp; Thread::Current()-&gt;IsMarking()) {
+    if (target-&gt;TryAcquireMarkBit()) {
+      AddToMarkList(target);
+    }
+  }
+}
+</pre></div>
+
+<p>But we combine the generational and incremental checks with a shift-and-mask.</p>
+<div class="codehilite"><pre><span></span>enum HeaderBits {
+  ...
+  kOldAndNotMarkedBit,      // Incremental barrier target.
+  kNewBit,                  // Generational barrier target.
+  kOldBit,                  // Incremental barrier source.
+  kOldAndNotRememberedBit,  // Generational barrier source.
+  ...
+};
+
+static const intptr_t kGenerationalBarrierMask = 1 &lt;&lt; kNewBit;
+static const intptr_t kIncrementalBarrierMask = 1 &lt;&lt; kOldAndNotMarkedBit;
+static const intptr_t kBarrierOverlapShift = 2;
+COMPILE_ASSERT(kOldAndNotMarkedBit + kBarrierOverlapShift == kOldBit);
+COMPILE_ASSERT(kNewBit + kBarrierOverlapShift == kOldAndNotRememberedBit);
+
+StorePointer(RawObject* source, RawObject** slot, RawObject* target) {
+  *slot = target;
+  if (target-&gt;IsSmi()) return;
+  if ((source-&gt;header() &gt;&gt; kBarrierOverlapShift) &amp;&amp;
+      (target-&gt;header()) &amp;&amp;
+      Thread::Current()-&gt;barrier_mask()) {
+    if (target-&gt;IsNewObject()) {
+      source-&gt;SetRemembered();
+      AddToRememberedSet(source);
+    } else {
+      if (target-&gt;TryAcquireMarkBit()) {
+        AddToMarkList(target);
+      }
+    }
+  }
+}
+
+StoreIntoObject(object, value, offset)
+  str   value, object#offset
+  tbnz  value, kSmiTagShift, done
+  lbu   tmp, value#headerOffset
+  lbu   tmp2, object#headerOffset
+  and   tmp, tmp2 LSR kBarrierOverlapShift
+  tst   tmp, BARRIER_MASK
+  bz    done
+  mov   tmp2, value
+  lw    tmp, THR#writeBarrierEntryPointOffset
+  blr   tmp
+done:
+</pre></div>
+
+<h4><span class="section-number">5.2</span> Data races</h4>
+<p>Operations on headers and slots use (relaxed ordering)[https://en.cppreference.com/w/cpp/atomic/memory_order] and do not provide synchronization.</p>
+<p>The concurrent marker starts with an acquire-release operation, so all writes by the mutator up to the time that marking starts are visible to the marker.</p>
+<p>For old-space objects created before marking started, in each slot the marker can see either its value at the time marking started or any subsequent value sorted in the slot. Any slot that contained a pointer continues to continue a valid pointer for the object's lifetime, so no matter which value the marker sees, it won't interpret a non-pointer as a pointer. (The one interesting case here is array truncation, where some slot in the array will become the header of a filler object. We ensure this is safe for concurrent marking by ensuring the header for the filler object looks like a Smi.) If the marker sees an old value, we may lose some precision and retain a dead object, but we remain correct because the new value has been marked by the mutator.</p>
+<p>For old-space objects created after marking started, the marker may see uninitialized values because operations on slots are not synchronized. To prevent this, during marking we allocate old-space objects black (marked) so the marker will not visit them.</p>
+<p>New-space objects and roots are only visited during a safepoint, and safepoints establish synchronization.</p>
+<p>When the mutator's mark block becomes full, it transfered to the marker by an acquire-release operation, so the marker will see the stores into the block.</p>
+    </div>
+  </body>
+</html>

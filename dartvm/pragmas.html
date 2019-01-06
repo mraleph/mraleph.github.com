@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h2><span class="section-number"></span> VM-Specific Pragma Annotations</h2>
+<h3><span class="section-number">1</span> Pragmas for general use</h3>
+<p>These pragmas are part of the VM's API and are safe for use in external code.</p>
+<table>
+<thead>
+<tr>
+<th>Pragma</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vm:entry-point</code></td>
+<td><a href="compiler/aot/entry_point_pragma.md">Defining entry-points into Dart code for an embedder or native methods</a></td>
+</tr>
+</tbody>
+</table>
+<h3><span class="section-number">2</span> Pragmas for internal use</h3>
+<p>These pragmas can cause unsound behavior if used incorrectly and therefore are only allowed within the core SDK libraries.</p>
+<table>
+<thead>
+<tr>
+<th>Pragma</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vm:exact-result-type</code></td>
+<td><a href="compiler/result_type_pragma.md">Declaring an exact result type of a method</a></td>
+</tr>
+</tbody>
+</table>
+<h3><span class="section-number">3</span> Pragmas for internal testing</h3>
+<p>These pragmas are used for inspecting or modifying internal VM state and should be used exclusively by SDK tests.
+They must be enabled with the <code>--enable-testing-pragmas</code> flag.
+The names of these pragmas are prefixed with "testing".
+Additionally, they are categorized into "safe" and "unsafe" forms: "safe" pragmas should not affect the behavior of the program and can be safely added anywhere, whereas "unsafe" pragmas may change the code's behavior or may cause the VM to crash if used improperly.</p>
+<table>
+<thead>
+<tr>
+<th>Pragma</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vm:testing.unsafe.trace-entrypoints-fn</code></td>
+<td><a href="compiler/frontend/testing_trace_entrypoints_pragma.md">Observing which flow-graph-level entry-point was used when a function was called</a></td>
+</tr>
+</tbody>
+</table>
+    </div>
+  </body>
+</html>

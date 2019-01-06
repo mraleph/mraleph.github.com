@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h3><span class="section-number">1</span> Dart Mini Design Doc</h3>
+<h4><span class="section-number">1.1</span> Using Data Dependence to Preserve Control Dependence</h4>
+<h3><span class="section-number">2</span> Introduction</h3>
+<p>The <a href="http://go/dartfuzz">DartFuzzer</a> found <a href="https://github.com/dart-lang/sdk/issues/34684">bug 34684</a> with the current LICM implementation. We need a fix urgently, since this bug may break user code, emerges for pretty much every nightly fuzz test run (making investigating new fuzz test divergences cumbersome; most of the time, it is a "same as"), and blocks moving towards more shards per nightly fuzz test run (the Q4 objective is 100 shards with 8 isolates each). Fixing the LICM bug, however, requires a bit more redesign in the way <em>control dependence</em> is preserved in our IR.</p>
+<h3><span class="section-number">3</span> The Problem</h3>
+<p>The bug itself consists of an issue with applying LICM to an array bound check with loop invariant values. In its simplest form, LICM should not be applied to the bounds check that belongs to <code>l[j]</code> below since the loop condition (for a situation <code>k &lt;= 0</code>) could logically protect OOB exceptions for particular values of <code>n</code> (for example, calling <code>foo(2,0)</code> should not throw).</p>
+<p><div class="codehilite"><pre><span></span>void foo(int n, int k) {
+  var l = new List&lt;int&gt;(1);
+  var j = n - 1;
+  for (var i = 0; i &lt; k; i++) {
+     l[j] = 10;
+  }
+}
+</pre></div>
+Hosting the seemingly loop invariant bounds check out of the loop would break the control dependence between the loop condition and potentially move an OOB exception into the always-taken path.</p>
+<p>An obvious fix would simply disable hoisting <code>CheckBound</code> constructs of out loops, thereby respecting the control dependence between condition and check. However, this exposes another omission in our IR with respect to control dependence. Leaving <code>CheckBound</code> in place would not prevent hoisting the IndexLoad that follows, as illustrated below.</p>
+<p><div class="codehilite"><pre><span></span>              ←-----------------+
+for loop                         |
+    Checkbound (length, index)   |      &lt;- pinned in the loop
+    IndexLoad (base, index)   ---+
+</pre></div>
+In this case, this problem is caused by the fact that the control dependence from <code>CheckBound</code> to <code>IndexLoad</code> is not made explicit. Trending on the same path would require us to disable hoisting such instructions as well….</p>
+<p>At first glance, it may seem that a <code>Redefinition</code> could help here, as in:</p>
+<p><div class="codehilite"><pre><span></span>for loop
+  v0 = get array
+  v1 = get length of v0
+  v2 = get index
+  CheckBound:id(v1, v2)
+  v3 &lt;- Redefinition(v2)
+  IndexLoad(v0, v3)
+</pre></div>
+This would indeed keep the index load instruction inside the loop, thereby relying on not-too-well-documented assumptions on unmovable redefinitions and the now explicit data dependence on <code>v3</code>. However, this approach would be too prohibitive, since cases that would allow for hoisting or eliminating <code>CheckBound</code> from the IR would not break the newly introduced chain on v3 (nothing in the IR expresses the relation between the <code>Redefinition</code> and the <code>CheckBound</code>).</p>
+<p>Alternatively, we could introduce control dependence as an explicit, but orthogonal order in our compiler. However, this would require introducing a new data structure to our IR as well as inspecting all code to ensure that this new order is indeed respected. The next section introduces a simpler solution.</p>
+<h3><span class="section-number">4</span> Proposed Solution</h3>
+<p>The proposed solution is making the control dependence between any check and all its uses explicit with a data dependence, as shown below.</p>
+<div class="codehilite"><pre><span></span>  v3 &lt;- CheckBound:id(v1, v2)   // returns the index value v2 in v3
+  IndexLoad(v0, v3)
+</pre></div>
+
+<p>The semantics of the new node is that the returned value (<code>v3</code>) is a safe index (viz. checked values <code>v2</code>) into any load that uses that value. Any optimization that hoists or removes the <code>CheckBound</code> automatically exposes the opportunity for further optimization of the load by hoisting or breaking the dependence on <code>v3</code>. Common subexpression elimination can also be applied to equal-valued <code>CheckBound</code> nodes.</p>
+<p>For completeness, the same approach will be taken for null checks.</p>
+<p>The construct</p>
+<p><div class="codehilite"><pre><span></span> CheckNull:id(v2)
+ v100 &lt;- LoadField(v2, …)
+</pre></div>
+will be replaced by</p>
+<p><div class="codehilite"><pre><span></span> v3 = CheckNull:id(v2)  // returns the reference value v2 in v3
+ v100 &lt;- LoadField(v3, …)
+</pre></div>
+Here, the value <code>v3</code> denotes a safe, null-checked reference of <code>v2</code>.</p>
+<p>The explicit data dependence ensures that all passes and transformations automatically preserve the required order, without the need to make adjustments anywhere else. In contrast, introducing an explicit control dependence as a new concept in our compiler would require a careful inspection of all code to make sure the new dependence is respected. A drawback of the new "indirection" through the check is that it may break some optimizations and simplifications that inspect the inputs directly. Although cumbersome, since it also involves looking at a lot of code, this is easily remedied by "looking under the hood" of checks (as is done for redefinitions). Missed opportunities for optimizations are preferable over missed correctness.</p>
+<p>The proposed solution will have <em>no impact</em> on the register allocator or any of our backends, since the new data dependence will be removed in the <code>FinalizeGraph</code> pass, similar to what is already done now for redefinitions in <code>RemoveRedefinitions()</code>, except that this method will only redirect the inputs across checks, but obviously not remove the checks themselves. Nothing that runs after the register allocator should move code around too freely, an assumption that is already made in our current implementation with respect to redefinitions.</p>
+<p>This approach was used successfully in <a href="https://cs.corp.google.com/android/art/compiler/optimizing/nodes.h">the ART optimization compiler</a>. Here, check-based control dependence was made explicit with data dependence. All passes and transformations were aware that data dependence should always be satisfied (inter- and intra-basic block), whereas all optimizations that crossed basic blocks were aware of <em>implicit</em> control dependence (e.g. using dominance relation). In combination with the actual LICM fix, the proposed solution will result in a previously proven robust framework for null and bounds checks.</p>
+<h3><span class="section-number">5</span> IR Nodes</h3>
+<p>Our IR currently has the following "check" instructions. Although potentially others could benefit form this new scheme too, the first CL will focus on the ones marked below only. As the implementation progresses, we may introduce some "object-orientedness" for check instructions that return their safe value.</p>
+<p>```
+CheckEitherNonSmiInstr
+CheckClassInstr
+CheckSmiInstr
+CheckNullInstr                 // returns safe non-null reference
+CheckClassIdInstr
+CheckArrayBoundInstr           // returns safe non-OOBE index
+GenericCheckBoundInstr         // returns safe non-OOBE index
+CheckConditionInstr</p>
+    </div>
+  </body>
+</html>

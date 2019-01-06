@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h2><span class="section-number"></span> @pragma annotations recognized by the compiler.</h2>
+<h3><span class="section-number">1</span> Annotations for return types and field types.</h3>
+<p>The VM is not able to see across method calls (apart from inlining) and
+therefore does not know anything about the return'ed values of calls, except for
+the interface type of the signature.</p>
+<p>To improve this we have two types of additional information sources the VM
+utilizes to gain knowledge about return types:</p>
+<ul>
+<li>
+<p>inferred types (stored in kernel metadata): these are computed by global
+     transformations (e.g. TFA) and are only available in AOT mode</p>
+</li>
+<li>
+<p>@pragma annotations: these are recognized in JIT and AOT mode</p>
+</li>
+</ul>
+<p>This return type information is mainly used in the VM's type propagator.</p>
+<p>Since those annotations side-step the normal type system, they are unsafe and we
+therefore restrict those annotations to only have an affect inside dart:
+libraries.</p>
+<h4><span class="section-number">1.1</span> @pragma("vm:exact-result-type", <type>) annotation</h4>
+<p>Tells the VM about the exact result type (i.e. the exact class-id) of a function
+or a field load.</p>
+<p>There are two limitations on this pragma:</p>
+<ol>
+<li>
+<p>The Dart object returned by the method at runtime must have <strong>exactly</strong> the type specified in the annotation (not a subtype).</p>
+</li>
+<li>
+<p>The exact return type declared in the pragma must be a subtype of the interface type declared in the method signature.
+   Note that this restriction is not enforced automatically by the compiler.</p>
+</li>
+</ol>
+<p>If those limitations are violated, undefined behavior may result.
+Note that since <code>null</code> is an instance of the <code>Null</code> type, which is a subtype of any other, exactness of the annotated result type implies that the result must be non-null.</p>
+<h5><span class="section-number">1.1.1</span> Syntax</h5>
+<div class="codehilite"><pre><span></span><span class="kd">class</span> <span class="nc">A</span> <span class="p">{}</span>
+<span class="kd">class</span> <span class="nc">B</span> <span class="kd">extends</span> <span class="n">A</span> <span class="p">{}</span>
+
+<span class="c1">// Reference to type via type literal</span>
+<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="n">A</span> <span class="n">foo</span><span class="p">()</span> <span class="kd">native</span> <span class="s2">&quot;foo_impl&quot;</span><span class="p">;</span>
+
+<span class="c1">// Reference to type via path</span>
+<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span> <span class="s2">&quot;dart:core#_Smi&quot;</span><span class="p">);</span>
+<span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="kd">native</span> <span class="s2">&quot;foo_impl&quot;</span><span class="p">;</span>
+
+<span class="kd">class</span> <span class="nc">C</span> <span class="p">{</span>
+  <span class="c1">// Reference to type via type literal</span>
+  <span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s1">&#39;vm:exact-result-type&#39;</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+  <span class="kd">final</span> <span class="n">B</span> <span class="n">bValue</span><span class="p">;</span>
+
+  <span class="c1">// Reference to type via path</span>
+  <span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s1">&#39;vm:exact-result-type&#39;</span><span class="p">,</span> <span class="s2">&quot;dart:core#_Smi&quot;</span><span class="p">)</span>
+  <span class="kd">final</span> <span class="kt">int</span> <span class="n">intValue</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<h4><span class="section-number">1.2</span> @pragma("vm:non-nullable-result-type") annotation</h4>
+<p>Tells the VM that the method/field cannot return <code>null</code>.</p>
+<p>There is one limitation on this pragma:</p>
+<ol>
+<li>The Dart object returned by the method at runtime <strong>must not</strong> return <code>null</code>.</li>
+</ol>
+<p>If this limitation is violated, undefined behavior may result.</p>
+<h5><span class="section-number">1.2.1</span> Syntax</h5>
+<div class="codehilite"><pre><span></span><span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:non-nullable-result-type&quot;</span><span class="p">)</span>
+<span class="n">A</span> <span class="n">foo</span><span class="p">()</span> <span class="kd">native</span> <span class="s2">&quot;foo_impl&quot;</span><span class="p">;</span>
+
+<span class="kd">class</span> <span class="nc">C</span> <span class="p">{</span>
+  <span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s1">&#39;vm:non-nullable-result-type&quot;);</span>
+  <span class="kd">final</span> <span class="kt">int</span> <span class="n">value</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+    </div>
+  </body>
+</html>
