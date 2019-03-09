@@ -1,0 +1,2035 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>6 years of Dart</title>
+
+		<meta name="description" content="6 years of Dart">
+		<meta name="author" content="Vyacheslav Egorov">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/simple.css" id="theme">
+
+    <style type="text/css">
+      .complete-in-him {
+        font-family: 'KG Complete in Him' !important;
+        font-size: 1.7em !important;
+      }
+
+      .life-is-messy {
+        font-family: 'KG Life is Messy' !important;
+        font-size: .7em !important;
+      }
+
+      .font-2em { font-size: 12em !important; }
+
+      .font-life-is-messy {
+        font-family: 'KG Life is Messy' !important;
+      }
+
+      .font-handwriting {
+        font-family: 'KG Complete in Him' !important;
+        font-size: 1.2em !important;
+      }
+
+      .gradient-text {
+        background: linear-gradient(90deg, #40C4FF 0,#01579B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .dblue {
+        color: #01579B;
+      }
+
+      .attn {
+        color: #C00;
+      }
+
+      .blink_me {
+  animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+      pre.scheme { line-height: 1.1em !important; }
+      pre.scheme .hljs { display: inline; }
+
+      .w50 { width: 60%; hyphens: none !important; word-break: normal !important; word-wrap: normal !important; margin-left: auto !important; margin-right: auto !important; }
+
+      pre:not(.scheme) {
+        line-height: 1.1em !important;
+      }
+
+      ul.smaller2 {
+        font-size: 2em !important;
+        line-height: 1.5em !important;
+      }
+    </style>
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="css/googlecode.css">
+
+		<!--[if lt IE 9]>
+		<script src="js/html5shiv.js"></script>
+		<![endif]-->
+
+<!--
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-6701581-4', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+        <section data-background="linear-gradient(45deg,#40C4FF 0,#01579B 100%)">
+          <h2 style="color: white; font-family: 'KG Life is Messy';">
+            <span style="font-size: .8em;">
+            Rebuilding <br/> Optimizing Compiler <br/> for Dart
+            </span>
+          </h2>
+          <h4 style='color: white; padding-top: 1em; font-family: "Iosevka Term"; '>{ @mraleph | vegorov@google.com }</h4>
+        </section>
+
+        <section data-background="linear-gradient(45deg,#40C4FF 0,#01579B 100%)">
+          <h2 style="color: white; font-family: 'KG Life is Messy';">
+            6 years of Dart
+          </h2>
+          <h3 style="color: white; font-family: 'KG From Where You Are';">
+            (VM engineer perspective)
+          </h3>
+          <h4 style='color: white; padding-top: 1em; font-family: "Iosevka Term"; '>{ @mraleph | vegorov@google.com }</h4>
+        </section>
+
+        <section>
+          <div style="text-align: left;">
+          <h2 style="background: #288; color: white; padding-left: .3em;">Excelsior JET</h2>
+          <h2 style="background: #3F89EC; color: white; padding-left: .3em;">V8</h2>
+          <h2 style="background: linear-gradient(45deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%); color: white; padding-left: .3em;">Dart VM</h2>
+          <h2 style="background: #4162bf; color: white; padding-left: .3em;">Lua<span style="color: #ffb380;">JIT</span></h2>
+          </div>
+        </section>
+
+        <section data-background="url(images/panda-me-upside-down.png) no-repeat fixed right top">
+          <div style="text-align: left;">
+          <h2 style="background: #288; color: white; padding-left: .3em; opacity: 0;">Excelsior JET</h2>
+          <h2 style="background: #3F89EC; color: white; padding-left: .3em; opacity: 0;">V8</h2>
+          <h2 style="background: linear-gradient(45deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%); color: white; padding-left: .3em;">Dart VM (2012 - ...)</h2>
+          <h2 style="background: #4162bf; color: white; padding-left: .3em; opacity: 0;">Lua<span style="color: #ffb380;">JIT</span></h2>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="gradient-text">Dart 2011</h2>
+          <div style="max-width: 80%; text-align: justify; margin-left: auto; margin-right: auto; font-size: 1em; line-height: 1.5em;">&laquo;Dart targets a wide range of development scenarios: from a one-person project without much structure to a large-scale project needing formal types in the code to state programmer intent. <em>To support this wide range of projects, Dart has optional types; this means you can start coding without types and add them later as needed.</em> We believe Dart will be great for writing large web applications.&raquo;
+          <div style="text-align: right;"><a href="https://blog.chromium.org/2011/10/dart-language-for-structured.html">&mdash; Dart: A language for structured web programming</a></div></div>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+Dog d = new Cat();
+d.woof();
+          </pre></code>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+Dog d = new Cat();
+d.woof();
+
+class Cat {
+  noSuchMethod(invocation) {
+    if (invocation.memberName == #woof) {
+      print('I am a 🐱 not a 🐶!');
+    }
+  }
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <h2>dynamic language</h2>
+        </section>
+
+        <section>
+          <h1 class="gradient-text font-life-is-messy font-2em">JIT</h1>
+        </section>
+
+        <section>
+          <h2>initially <br/> AST based</h2>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">2012</h1>
+          <h3>started new <span class="font-life-is-messy">JIT</span> compiler</h3>
+        </section>
+
+        <section>
+          <h2>inline caching (IC)</h2>
+          <h2>+</h2>
+          <h2>speculative opts</h2>
+        </section>
+
+        <section>
+<pre class="scheme">
+             <span class="attn">// call-site specific cache</span>
+       ─── <span class="">ICData { class ↦ (target, frequency) }</span>
+      ╱
+  dog.woof();
+      ╲      <span class="attn">// generic dispatch stub</span>
+       ─── <span class="hljs nasm">movq rcx,[rbx+0x27]
+             inc dword ptr [rcx+0x87]
+             mov rax, dword ptr [thr+0x20]
+             cmp byte ptr [rax+0x60], 0
+             jnz 0x0000000108a41c8c
+             mov r10, dword ptr [rbx+0x17]
+             mov r13, dword ptr [rbx+0x7]</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+             <span class="attn">// call-site specific cache</span>
+       ─── <span class="">ICData { class ↦ (target, frequency) }</span>
+      ╱
+  dog.woof();
+      ╲      <span class="attn">// generic dispatch stub</span>
+       ─── <span class="hljs dart">dispatch(icData, receiver, ...) {
+               target = icData.lookup(receiver.classId)
+               if (target == null) {
+                 target = LookupAndCache(icData, receiver)
+               }
+               invoke target(...)
+             }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱
+  dog.woof();
+
+
+
+
+
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Dog {
+        woof() => print("🐶🐶🐶");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱       <span class="attn">➥LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Dog {
+        woof() => print("🐶🐶🐶");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}<span class="attn">⮪</span>
+      ╱       <span class="attn">➥LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Dog {
+        woof() => print("🐶🐶🐶");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 1)}
+      ╱
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Dog {
+        woof() => print("🐶🐶🐶");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 2)}
+      ╱                        <span class="attn">⮝</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Dog {
+        woof() => print("🐶🐶🐶");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 3)}
+      ╱                        <span class="attn">⮝</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Dog {
+        woof() => print("🐶🐶🐶");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 4)}
+      ╱                        <span class="attn">⮝</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Dog {
+        woof() => print("🐶🐶🐶");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 4)}
+      ╱
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Wolf {
+        woof() => print("&#128058;&#128058;&#128058;");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 4)}
+      ╱       <span class="attn">➥ LookupAndCache() ⮭</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Wolf {
+        woof() => print("&#128058;&#128058;&#128058;");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog  ↦ (Dog.woof, 4),
+      ╱       <span class="attn">Wolf ↦ (Wolf.woof, 1)</span>}
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Wolf {
+        woof() => print("&#128058;&#128058;&#128058;");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+          <h2>type profiling</h2>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 1000)}
+  ... ╱
+  dog.woof();
+  ...
+
+
+
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 1000)}
+  ... ╱
+  dog.woof();─┐
+  ...          │   <span class="attn">// Optimized method IR</span>
+               │   ...
+               └─▶ CheckClass(dog, Dog)
+                   StaticCall(Dog.woof, dog)
+                   ...
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 1000)}
+  ... ╱
+<span class="attn">┌▶</span>dog.woof();
+<span class="attn">│</span> ...              <span class="attn">// Optimized method IR</span>
+<span class="attn">│</span>                  ...
+<span class="attn">└─────────────────</span>CheckClass(dog, Dog)
+   <span class="attn">deoptimization</span>  StaticCall(Dog.woof, dog)
+                   ...
+
+
+</pre>
+        </section>
+
+        <section>
+          <h1>classics</h1>
+        </section>
+
+        <section data-background="images/pic.png" data-background-size="contain" data-background-color="#515558">
+        </section>
+
+        <section>
+          <h1>suprisingly</h1>
+          <h1>general</h1>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+
+  dog.woof();  <span class="hljs dart">// Looks like a call, but is actually
+            // a field load and a call.</span>
+   
+     <span class="hljs dart">class Alien {
+        var woof;  // A field
+        Alien() : woof = () => print("👽👽👽");
+      }</span>
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+  <span class="hljs dart">//      (...) => dog.woof(...)
+  var f = dog.woof;</span>
+          ─────
+       <span class="attn">method tear-off</span>
+
+
+
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        noSuchMethod(invocation) {
+          if (invocation.memberName == #woof) {
+            print('I am a 🐱 not a 🐶!');
+          }
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        noSuchMethod(invocation) {
+          if (invocation.memberName == #woof) {
+            print('I am a 🐱 not a 🐶!');
+          }
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱       <span class="attn">➥ LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        noSuchMethod(invocation) {
+          if (invocation.memberName == #woof) {
+            print('I am a 🐱 not a 🐶!');
+          }
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Cat ↦ (<span class="attn">❓</span>, 1)}
+      ╱       <span class="attn">➥ LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        noSuchMethod(invocation) {
+          if (invocation.memberName == #woof) {
+            print('I am a 🐱 not a 🐶!');
+          }
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        noSuchMethod(invocation) {
+          if (invocation.memberName == #woof) {
+            print('I am a 🐱 not a 🐶!');
+          }
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱       <span class="attn">➥ LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        noSuchMethod(invocation) {
+          if (invocation.memberName == #woof) {
+            print('I am a 🐱 not a 🐶!');
+          }
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱       <span class="attn blink_me">➥ LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        noSuchMethod(invocation) {
+          if (invocation.memberName == #woof) {
+            print('I am a 🐱 not a 🐶!');
+          }
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        noSuchMethod(invocation) {
+          if (invocation.memberName == #woof) {
+            print('I am a 🐱 not a 🐶!');
+          }
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱       <span class="attn">➥ LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+
+
+
+
+
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}
+      ╱       <span class="attn">➥ LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        // ⮮ injected
+        noSuchMethod:woof() {
+          return noSuchMethod(
+              Invocation(memberName: #woof));
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {}<span class="attn">⮪</span>
+      ╱       <span class="attn">➥ LookupAndCache()</span>
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        // ⮮ injected
+        noSuchMethod:woof() {
+          return noSuchMethod(
+              Invocation(memberName: #woof));
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── { <span class="attn">Cat ↦ (Cat.noSuchMethod:woof, 1)</span> }
+      ╱
+  dog.woof();
+  
+   
+     <span class="hljs dart">class Cat {
+        // ⮮ injected
+        noSuchMethod:woof() {
+          return noSuchMethod(
+              Invocation(memberName: #woof));
+        }
+      }</span>
+</pre>
+        </section>
+
+        <section>
+          <h2>suddenly</h2>
+          <h2>all optimizations</h2>
+          <h2>just work</h2>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">2012 - 2013</h1>
+          <h2>new <span class="font-life-is-messy">JIT</span> is "done"</h2>
+        </section>
+
+        <section>
+          <h1>non-classical</h1>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 1000)}
+  ... ╱
+  dog.woof();─┐
+  ...          │   <span class="attn">// Optimized method IR</span>
+               │   ...
+               └─▶ CheckClass(dog, Dog)
+                   StaticCall(Dog.woof, dog)
+                   ...
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+       ─── {Dog ↦ (Dog.woof, 1000)}
+  ... ╱
+  dog.woof();─┐
+  ...          │   // Optimized method IR
+               │   ...
+               └─▶ <span class="attn">CheckClass(dog, Dog) ⬅ check at use</span>
+                   StaticCall(Dog.woof, dog)
+                   ...
+
+
+</pre>
+        </section>
+
+        <section>
+          <h3>Globally Tracked Field State</h3>
+<pre class="scheme">
+
+<span class="hljs dart">class DogHolder {</span>
+       <span class="attn"> ─── (class, nullability, length-of-array)
+       ╱</span>
+<span class="hljs dart">  var dog = Dog();</span>
+
+        <span class="attn">  ─── (class, nullability, length-of-array)
+         ╱</span>
+<span class="hljs dart">  final listOfDogs = List&lt;Dog&gt;(10);
+}</span>
+
+</pre>
+        </section>
+
+        <section>
+          <ul>
+            <li>Loads can <em>assume</em> the state<small>[Concrete classes are used to eliminate <code>CheckClass</code>, length is is used to eliminate bounds checks.]</small></li>
+            <li>Stores update the state<small>[If incompatible change: optimized code depending
+            on the assumption is deoptimized]</small></li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>Globally Tracked Field State</h3>
+<pre class="scheme">
+
+<span class="hljs dart">class DogHolder {</span>
+        <span class="attn">─── (Dog, not-null, N/A)
+       ╱</span>
+<span class="hljs dart">  var dog = Dog();</span>
+
+          <span class="attn">─── (_List, not-null, 10)
+         ╱</span>
+<span class="hljs dart">  final listOfDogs = List&lt;Dog&gt;(10);
+}</span>
+
+</pre>
+        </section>
+
+        <section>
+          <h3>Optimization shifts checks <br/> from uses to definitions</h3>
+          <h4>[where they often can be eliminated]</h4>
+        </section>
+
+        <section>
+          <h2>Strange Loop 2013</h2>
+          <h3>&laquo; Building an Optimizing Compiler for Dart &raquo;</h3>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">2014</h1>
+          <h3>tweaking things</h3>
+        </section>
+
+        <section>
+          <h2>&laquo;🙅‍♂️ to hand-written assembly&raquo; effort</h2>
+        </section>
+
+        <section>
+          <h3>intrinsics rewritten in IL</h3>
+          <h4>[planned to move stubs too, still not started on that ]</h4>
+        </section>
+
+        <section>
+          <h2>irregexp port</h2>
+        </section>
+
+        <section>
+          <ul class="smaller2">
+            <li>irregexp is a V8's JITing RE engine</li>
+            <li>in V8 it has platform specific backends</li>
+            <li>in Dart we just generate IL from RegExp-s</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>...</h2>
+        </section>
+
+        <section>
+          <h2>&laquo; Wait, I thought Dart is supposed to be a Web language 🤔 &raquo;</h2>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">VM</h1>
+          <h1>dart2js</h1>
+        </section>
+
+        <section>
+          <h1>VM</h1>
+          <h1 class="gradient-text">dart2js</h1>
+        </section>
+
+        <section>
+<h3>Parallel evolution of Dart-to-JS compilers</h3>
+<pre class="scheme">
+<span class="attn">  dartc</span>  [AST based written in Java]
+  <span class="attn">╲</span>
+<span class="attn">    frog</span>  [AST based "transpiler" in Dart]
+    <span class="attn">╲</span>
+<span class="attn">      leg</span>  [SSA based written in Dart]
+      <span class="attn">╲</span>
+<span class="attn">        dart2js</span> [Actually just renamed leg]
+
+</pre>
+        </section>
+
+        <section>
+          <h2><span class="font-life-is-messy">AOT</span> compilation <br/> of Dart to JS <br/> is <span class="attn">hard</span></h2>
+        </section>
+
+        <section>
+          <h2>Object model <br/> mismatch</h2>
+          <h4>can not completely erase Dart object model in JS</h4>
+          <h4>representation only as efficient as JS engine allows it</h4>
+        </section>
+
+        <section><h1>...</h1></section>
+
+        <section data-background="images/open-the-sky.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section><h3 class="w50">&laquo;What would happen if you take WebView and remove the constraint that it has to render web-pages?&raquo;
+        <div style="text-align: right; font-size: .5em;">&mdash; <a href="https://twit.tv/shows/floss-weekly/episodes/439">Adam Barth at FLOSS Weekly 439</a></div></h3>
+        </section>
+
+        <section>
+          <h3>Initially <span class="gradient-text">Sky</span> started with JS</h3>
+          <h3>but later moved to <span class="gradient-text">Dart</span> <em>entirely</em></h3>
+          <h4>[with C++ for lowest <em>engine</em> layers]</h4>
+        </section>
+
+        <section>
+          <h3>and renamed</h3>
+          <h2><img src='images/flutter-mark-square-100.png' class='borderless'> <span class='fn-roboto'>Flutter</span></h2>
+        </section>
+
+        <section>
+          <h4>talk from Strange Loop 2017</h4>
+          <h3 class="w50"><a href="https://www.youtube.com/watch?v=VUiVkDpikDI">&laquo; <span class='fn-roboto'>Flutter</span>: How we're building a UI framework for tomorrow at Google&raquo; by Eric Seidel</a></h3>
+        </section>
+
+        <section>
+          <h2><img src='images/flutter-mark-square-100.png' class='borderless'> <span class='fn-roboto'>Flutter</span> <br/> is a mobile framework</h2>
+        </section>
+
+        <section>
+          <h2>iOS does not <br/> allow JITing</h2>
+          <h4>[... unless you are Mobile Safari]</h4>
+        </section>
+
+        <section>
+          <h1 class="gradient-text font-life-is-messy font-2em">AOT</h1>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">2015</h1>
+          <h3>started AOT prototype</h3>
+        </section>
+
+        <section>
+<pre class="scheme">
+ instructions               pool
+┌─────────────────────┐    ┌─┬─┬─┬─┬─┬─┬─
+│ object_pool_ ─────────▶│ │ │ │ │ ││
+├─────────────────────┤    └─┴─┴─┴─┴─┴┴─
+│ ...                 │               │
+│ ldr r4, (pp, 0x14)  │               └─▶ object
+│ ...                 │                   in the heap
+└─────────────────────┘
+</pre>
+        </section>
+
+        <section>
+          <h2>JIT code <br/> is relocatable</h2>
+        </section>
+
+        <section>
+<pre class="scheme">
+ instructions              pool
+┌─────────────────────┐    ┌─┬─┬─┬─┬─┬─┬─
+│ <span class="attn">object_pool_</span> ─────────▶│ │ │ │ │ ││
+├─────────────────────┤    └─┴─┴─┴─┴─┴┴─
+│ ...                 │               │
+│ ldr r4, (pp, 0x14)  │               └─▶ object
+│ ...                 │                   in the heap
+└─────────────────────┘
+</pre>
+        </section>
+
+        <section>
+          <h2>had to change<br/>calling conventions</h2>
+          <h4 class="w50">[want instructions to be RO and <em>isolate</em> independent, while
+          pools are isolate dependent - so instructions can't
+          contain pointer to the pool]</h4>
+        </section>
+
+        <section>
+          <h2>&laquo; don't want flags &amp; nobody cares about JIT &raquo;</h2>
+          <h4 class="w50">[changed calling conventions in a way that impacted JIT performance &mdash; in retrospect was a mistake]</h4>
+        </section>
+
+        <section>
+          <h2>then just <br/> serialize it!</h2>
+        </section>
+
+        <section>
+          <h2>already had <br/> <em class="attn">snapshots</em></h2>
+          <h4>[kinda like a heap dump that you can hydrate back]</h4>
+        </section>
+
+        <section>
+          <h2>how to get <br/> "JIT" code?</h2>
+          <h4>[real JIT does speculative opts!]</h4>
+        </section>
+
+        <section>
+          <h3>disable speculations then</h3>
+          <h3>force compile everything</h3>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">DONE</h1>
+          <h4>[prototype took around 2-3 months]</h4>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">"DONE"</h1>
+          <h4>[...]</h4>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">"DONE"</h1>
+          <h4>[...]</h4>
+        </section>
+
+        <section>
+          <h2><span class="font-life-is-messy">AOT</span> compilation <br/> of Dart to JS <br/> is <span class="attn">hard</span></h2>
+        </section>
+
+        <section>
+          <h2><span class="font-life-is-messy">AOT</span> compilation <br/> of Dart to [___] <br/> is <span class="attn">nontrivial</span></h2>
+        </section>
+
+        <section>
+          <h2>need replacement <br/> for <span class='font-life-is-messy'>speculations</span></h2>
+        </section>
+
+        <section>
+          <h2><span class="gradient-text">switchable</span> calls</h2>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+             <span class="attn">// call-site specific cache</span>
+       ─── <span class="">ICData { ... }</span>
+      ╱
+  dog.woof();
+      ╲      <span class="attn">// generic dispatch stub</span>
+       ─── dispatch(icData, receiver, ...) { ... }
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+
+       ─── ICData
+      ╱
+  dog.woof();
+      ╲
+       ─── DispatchStub
+
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ ICData
+      ╱            ├───┤⬉
+  dog.woof();      │   │ can patch these
+      ╲            ├───┤⬋
+       ──────────▶│ ────▶ DispatchStub
+                   ├───┤
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ UnlinkedCall(#woof)
+      ╱            ├───┤
+  dog.woof();      │   │     <span class="attn">UNLINKED</span>
+      ╲            ├───┤
+       ──────────▶│ ────▶ LinkCall
+                   ├───┤
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ class Dog
+      ╱            ├───┤
+  dog.woof();      │   │     <span class="attn">MONOMORPHIC</span>
+      ╲            ├───┤
+       ──────────▶│ ────▶ Dog.woof#monomorphicEntry
+                   ├───┤
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ class Dog
+      ╱            ├───┤
+  dog.woof();      │   │
+      ╲            ├───┤     Dog.woof
+       ──────────▶│ ────▶ ┌────────────────────────────────┐
+                   ├───┤     │ if (this.class != expected)    │
+                      normal │   return monomorphicMiss(...); │
+                       entry⬊├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌─┤
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ class Dog
+      ╱            ├───┤
+  dog.woof();      │   │
+      ╲            ├───┤     Dog.woof
+       ──────────▶│ ────▶ ┌────────────────────────────────┐
+                   ├───┤     │ if (this.class != icData)      │
+                      normal │   return monomorphicMiss(...); │
+                       entry⬊├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌─┤
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ { fromCid, toCid, target }
+      ╱            ├───┤
+  dog.woof();      │   │     <span class="attn">SINGLE TARGET</span>
+      ╲            ├───┤
+       ──────────▶│ ────▶ SingleTargetCallStub
+                   ├───┤
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ ICData { ... }
+      ╱            ├───┤
+  dog.woof();      │   │     <span class="attn">POLYMORPHIC</span>
+      ╲            ├───┤
+       ──────────▶│ ────▶ ICDispatchStub
+                   ├───┤
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ MegamorphicCache { ... }
+      ╱            ├───┤
+  dog.woof();      │   │     <span class="attn">MEGAMORPHIC</span>
+      ╲            ├───┤
+       ──────────▶│ ────▶ MegamorphicDispatchStub
+                   ├───┤
+
+
+</pre>
+        </section>
+
+        <section>
+          <h2>inline arithmetic<br/>fast-paths</h2>
+        </section>
+
+        <section>
+          <ul>
+            <li>operators can be overriden</li>
+            <li><code>int</code> is nullable in Dart</li>
+            <li><code>int</code> <em>was</em> arbitrary precision</li>
+          <ul>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-notrim data-noescape class="nasm">     ;; Y <- CheckedSmiOp(+, X, 1)
+     testl X, 1
+     jnz slow──┐
+     movq Y, X  │
+     addq Y, 2  │
+     jo slow───┤
+┌▶ done:        │
+│    ...        │
+│               │
+│  slow: ◀──────┘ ;; "cold" section of the code
+│    pushq X
+│    pushq 1
+│    movq RBX, [PP+...] ;; megamorphic cache
+│    callq THR->megamorphic_call_stub
+│    movq Y, RAX
+└───jmp done
+          </pre></code>
+        </section>
+
+        <section>
+          <pre class="smaller2"><code data-notrim data-noescape class="nasm">     ;; Y <- CheckedSmiOp(+, X, 1)
+     testl X, 1   ;; what is this if (X & 1 != 0) check?
+     jnz slow──┐
+     movq Y, X  │
+     addq Y, 2  │ ;; why are we adding 2?
+     jo slow───┤
+┌▶ done:        │
+│    ...        │
+│               │
+│  slow: ◀──────┘ ;; "cold" section of the code
+│    pushq X
+│    pushq 1
+│    movq RBX, [PP+...] ;; megamorphic cache
+│    callq THR->megamorphic_call_stub
+│    movq Y, RAX
+└───jmp done
+          </pre></code>
+        </section>
+
+        <section>
+          <h2>plus some <br/> closed-world <br/> CHA opts</h2>
+        </section>
+
+        <section>
+          <h2>what about <br/> code size?</h2>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ ICData
+      ╱            ├───┤
+  dog.woof();      │   │
+      ╲            ├───┤
+       ──────────▶│ ────▶ DispatchStub
+                   ├───┤
+
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+  code (rx)         pool (rw)
+                   ┌───┐
+       ──────────▶│ ────▶ ...
+      ╱            ├───┤
+  dog.???();       │   │
+      ╲            ├───┤
+       ──────────▶│ ────▶ ...
+                   ├───┤
+
+
+</pre>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+void doOne(x) {
+  return x.foo().bar();
+}
+
+void doTwo(z) {
+  return z.baz().quux();
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+void doOne(p0) {
+  return p0.???().???();
+}
+
+void doTwo(p0) {
+  return p0.???().???();
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+void doOne(p0) {
+  return p0.???().???();  ───
+}                             ╲
+                                same machine code
+void doTwo(p0) {              ╱  and can be shared
+  return p0.???().???();  ───
+}
+          </pre></code>
+        </section>
+
+        <section>
+          <h2>byproduct of AOT work <br/> <em>AppJIT snapshots</em></h2>
+          <h4 class="w50">[warmup the application - then serialize JIT code; massive reduction in warmup time &mdash; used by our tools now]</h4>
+        </section>
+
+        <section>
+          <h3>only so much can be done</h3>
+          <h4>[remember for example dynamic method injection?]</h4>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">2016</h1>
+          <h3>the wind of changes</h3>
+        </section>
+
+        <section>
+          <h2>(1) dart2js is too slow</h2>
+          <h2>for development</h2>
+        </section>
+
+        <section>
+          <h2>Dart Dev Compiler</h2>
+          <h3>has been cooking since 2014</h3>
+        </section>
+
+        <section>
+          <h2>Dart Dev Compiler</h2>
+          <h3>fast-modular compiles</h3>
+        </section>
+
+        <section>
+          <h2>Dart Dev Compiler</h2>
+          <h3>requires stronger type system</h3>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+Dog d;  // is guaranteed to be a 🐶
+
+List&lt;Cat&gt; x;
+x[0];   // is guaranteed to be a 🐱
+          </pre></code>
+        </section>
+
+        <section>
+          <h4>talk from Dart Conf 2018</h4>
+          <h3 class="w50"><a href="https://www.youtube.com/watch?v=9FA3brRCz2Q">&laquo; Evolving Dart: Leaving the ocean and learning to fly &raquo;</a> <br/> by Leaf Petersen</h3>
+        </section>
+
+        <section>
+          <h2>(2) every Dart tool</h2>
+          <h2>has its own parser</h2>
+        </section>
+
+        <section>
+<pre class="scheme">
+              Dart VM (in C++)
+              ┌─────────────────────────┐
+           ┌─▶│ Parser ─▶ AST ─▶ ...  │
+           │  └─────────────────────────┘
+           │  dart2js (in Dart)
+ ╭────────╮  ┌─────────────────────────┐
+ │  Dart  ──▶│ Parser ─▶ AST ─▶ ...  │
+ │ Source │  └─────────────────────────┘
+ ╰────────╯│  dartanalyzer (in Dart)
+           │  ┌─────────────────────────┐
+           └─▶│ Parser ─▶ AST ─▶ ┌─────┐  some tools use
+              └────────────────────│┌─────┐ analyzer as a Dart
+                                   └│     │ parser
+                                    └─────┘
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+                                     Dart VM
+                                     ┌──────┐
+                                  ┌─▶│ ...  │
+                                  │  └──────┘
+                                  │  dart2js
+ ╭────────╮   ┌────────┐   ╭─────╮  ┌──────┐
+ │  Dart  │──▶│ Parser │─▶│ AST ──▶│ ...  │
+ │ Source |   └────────┘   ╰─────╯  └──────┘
+ ╰────────╯   (in Dart)           ┊
+                                  ┊
+
+
+
+
+</pre>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">2016</h1>
+          <h3>new type system <br/>&amp; common front-end <br/> migration starts</h3>
+        </section>
+
+        <section>
+          <h1 class="gradient-text">Aug 2018</h1>
+          <h3>Dart 2 shipped</h3>
+        </section>
+
+        <section>
+          <h2>tons of <em>gnarly</em> work</h2>
+          <h4>[cool stuff too: e.g. started implementing optimization passes in Dart]</h4>
+        </section>
+
+        <section>
+          <h2>is <span class="font-life-is-messy gradient-text">AOT</span> trivial now?</h2>
+        </section>
+
+        <section>
+          <ul class="smaller2">
+            <li>many important types are <em>interfaces</em>, e.g. <code>List&lt;T&gt;</code></li>
+            <li><code>int</code> and <code>double</code> are still nullable</li>
+            <li><code>int</code> became 64-bit wrap around integer</li>
+            <li class="gradient-text"><em>soundness</em> requires runtime type checks</li>
+          </ul>
+        </section>
+
+        <section>
+          <pre><code data-trim data-noescape class="dart">
+// In Dart all generics are covariant
+var strings = ["a", "b"];  // static type List&lt;String&gt;
+strings.add(10);           // compile time error
+
+// Upcast List&lt;String&gt; to List&lt;Object&gt;
+List&lt;Object&gt; objects = strings; // ok
+objects.add(10);           // runtime error
+                           // requires check somewhere
+<span class="fragment">
+// Also Dart 2 still has dynamic
+dynamic x = strings;
+x.append("a");  // runtime error
+x.add(10);      // runtime error</span>
+          </pre></code>
+        </section>
+
+        <section>
+          <h2>Current approach:</h2>
+          <ul class="smaller2">
+            <li>track type arguments (statically in AOT, dynamically in JIT)</li>
+            <li>bypass type checks when runtime type arguments are known to match static type arguments</li>
+          </ul>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+
+
+
+
+  List&lt;T&gt;.join(String sep)
+  ┌────────────────────────────────┐⬋ every call
+  │ arguments not affected by      │  enters here
+  │ covariance - no checks         │  <span class="attn fragment">except dynamic ones</span>
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+
+                                           <span class="hljs dart">dynamic x = [...];</span>
+                                           <span class="hljs dart">x.join(10);</span>
+
+  List&lt;T&gt;.join(String sep)
+  ┌────────────────────────────────┐
+  │ arguments not affected by      │
+  │ covariance - no checks         │
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+
+                                           <span class="hljs dart">dynamic x = [...];</span>
+                                           <span class="hljs dart">x.dyn:join(10);</span>
+                                                                     ─────
+  List&lt;T&gt;.join(String sep)
+  ┌────────────────────────────────┐
+  │ arguments not affected by      │
+  │ covariance - no checks         │
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+  List&lt;T&gt;.<span class="attn">dyn:join</span>(String sep)
+  ┌───────────────────────┐
+  | Assert(sep is String) |
+  | Call List.join ───────────────────┐  <span class="hljs dart">dynamic x = [...];</span>
+  └───────────────────────┘             │  <span class="hljs dart">x.join(10);</span>
+                                        │
+  List&lt;T&gt;.join(String sep)              │
+  ┌────────────────────────────────┐◀───┘
+  │ arguments not affected by      │
+  │ covariance - no checks         │
+
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+
+
+
+
+  List&lt;T&gt;.add(T elem)
+  ┌────────────────────────────────┐
+  │ arguments are affected by      │
+  │ covariance - need to check     │
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+
+
+
+
+
+  List&lt;T&gt;.add(T elem)
+  ┌────────────────────────────────┐⬋ checked entry
+  │ Assert(elem is T)              │
+  ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌─┤⬋ unchecked entry
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+         ┌──────── match ─────────┐
+       ──                   ───
+  <span class="dart hljs">List&lt;String&gt; strs = new List&lt;String&gt;();
+  strs.add(x); </span> ─────────────────────────────────────────┐
+                                                         │
+  List&lt;T&gt;.add(T elem)                                    │
+  ┌────────────────────────────────┐⬋ checked entry      │
+  │ Assert(elem is T)              │                     │
+  ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌─┤⬋ unchecked entry ◀──┘
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+
+         ┌───── not match ────────┐
+       ──                   ───
+  <span class="dart hljs">List&lt;Object&gt; strs = new List&lt;String&gt;();
+  strs.add(x); </span> ─────────────────────────────────────────┐
+                                                         │
+  List&lt;T&gt;.add(T elem)                                    │
+  ┌────────────────────────────────┐⬋ checked entry   ◀──┘
+  │ Assert(elem is T)              │
+  ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌─┤⬋ unchecked entry
+</pre>
+        </section>
+
+        <section>
+<pre class="scheme">
+                can use static analysis or dynamic profiling
+         ┌───── to determine / speculate invariance
+       ──
+  <span class="dart hljs">List&lt;String&gt; strs = ...;
+  strs.add(x); </span>
+
+  List&lt;T&gt;.add(T elem)
+  ┌────────────────────────────────┐⬋ checked entry
+  │ Assert(elem is T)              │
+  ├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌─┤⬋ unchecked entry
+</pre>
+        </section>
+
+        <section data-background="images/dart2_aot.png" data-background-size="contain"  data-background-color="white">
+        </section>
+
+        <section data-background="linear-gradient(45deg,#40C4FF 0,#01579B 100%)">
+          <h2 style='color: white;'></h2>
+        </section>
+
+        <section data-background="linear-gradient(60deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%)">
+          <h2 style='color: white;'>architectural changes take forever</h2>
+          <h3 style='color: white;'>[choose the balance wisely]</h3>
+        </section>
+
+        <section data-background="linear-gradient(60deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%)">
+          <h2 style='color: white;'>parameterize your architecture</h2>
+        </section>
+
+        <section data-background="linear-gradient(45deg,#40C4FF 0,#01579B 100%)">
+          <h2 style='color: white;'>optimizations are more general than you think</h2>
+          <h3 style='color: white;'>[just need to tweak things a bit]</h3>
+        </section>
+
+        <section data-background="linear-gradient(45deg,#40C4FF 0,#01579B 100%)">
+          <h2 style='color: white;'>there are still interesting problems to solve</h2>
+          <h3 style='color: white;'>[code size for example]</h3>
+        </section>
+
+
+        <section data-background="linear-gradient(60deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%)">
+          <h2 style='color: white;'>if you have your own compiler use it more</h2>
+          <h3 style='color: white;'>[don't write assembly by hand]</h3>
+        </section>
+      </div>
+
+      <div id="footer" style="
+          position: absolute;
+          display: block;
+          bottom: 0px;
+          right: 0px;
+          font-size: .4em; text-align: center; color: white;
+          padding: 4px; z-index: 99;
+      "></div>
+		</div>
+
+		<script src="js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				history: true,
+				center: true,
+
+        slideNumber: true,
+
+				theme: 'simple', // available themes are in /css/theme
+				transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+				backgroundTransition: 'none',
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+        margin: 0.0,
+        width: 1280,
+        height: 720,
+
+        showNotes: true,
+
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'js/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				]
+			});
+
+      function updateFooter(slide) {
+        var footer = document.getElementById("footer");
+        footer.innerHTML = "";
+
+        var text = slide.getAttribute("data-footer") || "";
+
+        if (text !== "") {
+          if (text.substring(0, 4) === 'http') {
+            var anchor = document.createElement("a");
+            anchor.href = anchor.innerText = text;
+            footer.appendChild(anchor);
+          } else {
+            footer.innerText = text;
+          }
+        }
+      }
+
+      Reveal.addEventListener('ready', function(event) { updateFooter(event.currentSlide); });
+      Reveal.addEventListener('slidechanged', function(event) { updateFooter(event.currentSlide); });
+
+      (function () {
+        var style = document.createElement("style");
+        document.head.appendChild(style);
+
+        var percents = [].slice.call(document.querySelectorAll(".x")).forEach(function (el) {
+          var classes = el.classList.toString();
+          var p = classes.match(/\bx(\d+)\b/)[1];
+
+          style.sheet.addRule(".x" + p + "::after", "width: " + p + "%;")
+        });
+      })();
+		</script>
+
+    <style>
+.rainbow {
+  background-image: linear-gradient(45deg,#0084c5 0,#0489c3 36%,#30cabf 66%,#2fbcb2 100%);
+  color:transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-size: 1.5em;
+}
+
+      .x-confirmed-2 {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+
+      }
+
+      .x-confirmed {
+        font-weight: bold;
+        border: 10px solid green !important;
+        color: green;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+      .x-confirmed-red {
+        font-weight: bold;
+        border: 10px solid #dc1e1a !important;
+        color: #dc1e1a;
+        transform: rotate(-15deg);
+        -webkit-transform: rotate(-15deg);
+        display: inline-block;
+      }
+
+
+      pre.bigger {
+        font-size: 1.4em !important;
+      }
+
+      pre:not(.smaller) {
+        font-size: 1.4em !important;
+      }
+
+      pre.smaller2 {
+        font-size: 1.1em !important;
+        line-height: 1em !important;
+      }
+
+      pre.smaller3 {
+        font-size: .7em !important;
+      }
+
+      pre.bigger15 {
+        font-size: 1.75em !important;
+      }
+
+      pre.bigger2 {
+        font-size: 2em !important;
+      }
+
+      pre.bigger3 {
+        font-size: 3em !important;
+      }
+
+      pre.mediumer {
+        font-size: 1.2em !important;
+      }
+
+      .custom-counter {
+        margin: 0;
+        padding: 0;
+        list-style-type: none !important;
+      }
+      .custom-counter li {
+        counter-increment: step-counter;
+        margin-bottom: 5px;
+        padding: 5px 10px;
+      }
+      .custom-counter li::before {
+        content: counter(step-counter) ".";
+        margin-right: 20px;
+        padding: 10px 8px;
+        border-radius: 5px;
+        display: inline-block;
+      }
+
+      .B h1 {
+        font-size: 6em;
+      }
+
+      .B h2 {
+        font-size: 4em;
+      }
+
+      .B h3 {
+        font-size: 2em;
+      }
+
+      .B ul {
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      section:not(.S) h1 {
+        font-size: 6em;
+      }
+
+      section:not(.S) h2 {
+        font-size: 4em;
+      }
+
+      section:not(.S) h3 {
+        font-size: 2em;
+      }
+
+      section:not(.S) ul,
+      section:not(.S) ol {
+        font-size: 3em;
+        line-height: 1.2em;
+      }
+
+      section:not(.S) ol {
+        font-size: 2em;
+        line-height: 1.4em;
+      }
+
+
+      /*
+      .B p {
+        font-size: 1.5em;
+      }
+      */
+
+      span.green {
+        font-weight: bold !important;
+        color: green;
+      }
+
+      span.red {
+        font-weight: bold !important;
+        color: red !important;
+      }
+
+      .mat-red {
+        color: #F44336 !important;
+      }
+
+      .mat-red-bold {
+        color: #F44336 !important;
+        font-weight: bold;
+      }
+
+      span.mat-green {
+        color: #4CAF50;
+      }
+
+      span.mat-green-bold {
+        color: #4CAF50 !important;
+        font-weight: bold;
+      }
+
+      pre.highlight-bold b {
+        color: #E65100;
+      }
+
+      span.greenish-block {
+        background: rgba(0, 255, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.fade-away {
+        opacity: 0.1;
+      }
+
+      span.anti-fade {
+        font-weight: bold;
+        font-size: 2em;
+        line-height: 1em;
+      }
+
+      .yellow {
+        color: #f57f17;
+        font-weight: bold !important;
+      }
+
+      .dr, .dr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+      }
+
+      .udr, .udr * {
+        color: #bf360c !important;
+        font-weight: bold !important;
+        text-decoration: underline;
+      }
+
+      .pinkish {
+        color: #dc1e1a !important;
+      }
+
+      .ccc {
+        display: inline-block !important;
+        width: auto !important;
+      }
+
+      .borderish {
+        border: 1px dashed;
+      }
+
+      span.leftish {
+        text-align: left;
+        display: inline-block;
+      }
+
+      span.leftish50 {
+        text-align: left;
+        display: inline-block;
+        max-width: 70%;
+
+      }
+
+      .golden-block {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      .golden {
+        background: rgba(255, 215, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      .custom-counter li.golden {
+      }
+
+      span.redish {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+      }
+
+      .redish-block {
+        background: rgba(255, 0, 0, 0.4);
+        border-radius: 10px;
+        display: inline-block;
+      }
+
+      span.fn-roboto {
+        font-family: Roboto;
+      }
+
+
+          .y {
+  position: relative;
+}
+
+.x {
+  position: relative;
+  z-index: 100;
+  color: black;
+}
+
+.x::after {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+}
+
+.x-red::after {
+  background: rgba(215, 25, 28 , 1.0);
+}
+
+.x-green::after {
+  background: rgba(145, 207, 96, 1.0);
+}
+
+.x-gold::after {
+  background: rgba(253,174,97, 1.0);
+}
+
+img.borderless {
+  border: 0px !important;
+  box-shadow: none !important;
+  margin: 0px 0px !important;
+}
+
+.x::before {
+  position: absolute;
+  left: 0px;
+  top: 1em;
+  height: 0.2em;
+  content: "";
+  z-index: -10;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+span.deopt {
+  opacity: .3;
+}
+
+span.deopt2 {
+  color: red;
+}
+
+span.deopt3 {
+  color: green;
+}
+    </style>
+
+	</body>
+</html>
