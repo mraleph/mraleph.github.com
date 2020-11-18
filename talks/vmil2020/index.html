@@ -1,0 +1,1202 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <title>10 Years of Dart</title>
+
+        <link rel="stylesheet" href="https://mralephfonts.s3.us-east-2.amazonaws.com/pp-mono.css">
+
+        <link rel="stylesheet" href="dist/reset.css">
+        <link rel="stylesheet" href="dist/reveal.css">
+        <link rel="stylesheet" href="dist/theme/serif.css" id="theme">
+
+        <!-- Theme used for syntax highlighted code -->
+        <link rel="stylesheet" href="plugin/highlight/mono-blue.css" id="highlight-theme">
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section><h1>10 years of Dart</h1><code>by Vyacheslav Egorov</code><p><code>me@mrale.ph</code></p>
+
+<aside class="notes">
+Hello, my name is Vyacheslav Egorov, and I am an engineer on the Dart team at
+Google, where I am primarily involved in the evolution of Dart's native
+platform. I have been on the team since 2012 initially helping to build
+new speculative JIT for Dart VM, before Dart I worked on V8.
+</aside></section>
+                <section>
+                    <h3>Evolution of the Dart platform</h3>
+                    <pre class="scheme"><code data-trim data-noescape class="console">
+                                     dynamic                static
+                        ──────────────────────────── ──────────
+                        2011     2013     2015         2018     2020
+                        ──────────────────────────────────────►
+                        0.x       1.0                  2.0      2.12
+                        ───────JIT────── ──────JIT or AOT───────
+                                                  ╱        ╲    NNBD
+                                      development          deployment
+                    </code></pre>
+                    <aside class="notes">
+                        This talk looks at the evolution of the Dart programming
+                        language and changes that occurred to the Dart
+                        virtual machine (Dart VM) as it followed the evolution
+                        of the language. It is impossible to cover 10 years
+                        of evolution in details - so this talk is going to
+                        focus on two things specifically: on the language side
+                        a shift from dynamic types system (optional typing) to
+                        static type system, and a shift from VM focused on JIT
+                        compilation to VM capable of both just-in-time and
+                        ahead-of-time compilation.
+                    </aside>
+                </section>
+                <section>
+                    <h3>Dart 1</h3>
+                    <pre><code data-trim data-noescape class="dart">
+                        Dog d = new Cat();  // ignored type annotations
+                                            //   access to a field
+                        d.f                 // ─ invocation of getter
+                                            //  method tear-off
+                                            //   noSuchMethod invocation
+
+                        int x = null;       // no primitive types
+                        (1 << 100) >> 100;  // == 1, int is bignum
+                    </code></pre>
+                    <aside class="notes">
+                        Wikipedia <a href="https://en.wikipedia.org/wiki/Dart_(programming_language)" target="_blank">describes</a>
+                        Dart as &laquo;Dart is an object-oriented, class-based,
+                        garbage-collected language with C-style syntax.&raquo; which should give you a good idea of what to expect from it.                         If you want a proper introduction to the language
+                        check our <a href="https://dart.dev/guides/language/language-tour" target="_blank">language tour</a>.
+                        Here I simply want to highlight few features of Dart 1
+                        which make it challenging to compile ahead-of-time (AOT): in Dart 1 type annotations served more or less the role
+                        of comments, and were completely ignored during execution (outside of so called <em>checked mode</em>), this in
+                        turn meant that all method calls and property lookups were dynamically dispatched. Dart 1 has no primitive types
+                        and all reference types are nullable. Finally integers were arbitrary width in Dart 1.
+                    </aside>
+                </section>
+                <section>
+                    <h1>Dart 1 was designed to be JITed</h1>
+                    <aside class="notes">Dart 1 was clearly designed to be JIT,
+                        because AOT compiling dynamically typed language with no
+                        primitive types and arbitrary width integers is a
+                        daunting task. It is however well understood how to JIT
+                        compile such language to achieve good performance.</aside>
+                </section>
+                <section>
+                    <pre class="scheme"><code data-trim data-noescape class="console">
+                                /* How to make a JIT */
+
+                        ╔══════════╗               ┌──────────┐
+                        ║ Compiler ║ ▶ generates ▶ │   Code   │
+                        ╚══════════╝               └──────────┘
+                             ▲                          │
+                             ╰──────────────────────────╯
+                                 execution feedback
+                    </code></pre>
+                    <aside class="notes">These days there is no secret in how
+                        to make a JIT compiler for a language like Dart 1: to
+                        achieve good peak performance you need to setup an
+                        adaptive (re)compilation loop between your compiler(s)
+                        and the code they generate. Compiler produces the code,
+                        which collects execution profile and feeds it back to
+                        compiler which then produces new versions of code. There
+                        are of course some technicalities in how to set things up
+                        depending on constraints you operate in (e.g. if
+                        you need to optimize for startup latency or memory
+                        footprint), but the overall structure is the same no
+                        matter which high performance VM you look at.
+                    </aside>
+               </section>
+               <section style="text-align: left; font-size: 1.3em;">
+                <h3><span style="color: white; background: #383D3D; padding: .1em .2em; border-radius: .7em;">2012</span> Dart's <mark>artisanal</mark> JIT</h3>
+                <p>&mdash; generate unoptimized code;</p>
+                <p>&mdash; collect type feedback through <em>inline caches</em>;</p>
+                <p>&mdash; generate optimized code using type feedback;</p>
+                <p>&mdash; rinse and repeat.</p>
+                <aside class="notes">We have built Dart 1 JIT following the same recipe.
+                There is no deep architectural innovation here: the recipe was
+                known since 90s when pioneered in context of <a href="https://dl.acm.org/doi/book/10.5555/891759" target="_blank">SELF</a>.
+                Our compiler was built from scratch: every piece from front-end to middle-end optimization passes to backend and machine
+                specific assemblers was written from scratch, with no external dependencies.
+            </aside>
+            </section>
+               <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                            <span class="attn">// call-site specific cache</span>
+                      ─── <span class="">ICData { ... }</span>
+                     ╱
+                 dog.bark();
+                     ╲      <span class="attn">// generic dispatch stub</span>
+                      ─── dispatch(icData, receiver, ...) { ... }
+                </code></pre>
+                <aside class="notes">Adaptive JITs with speculative
+                optimizations are well understood these days, so I don't want
+                to spend too much time discussing Dart 1 JIT architecture. I do
+                however want to touch on a fundamental piece: <em>inline caching</em>.
+                In Dart VM each call site (and remember that property loads are also
+                call-sites due to dynamic nature of the language) has two pieces
+                associated with it: a call-site specific cache and a dispatch
+                stub (usually written in assembly). Each time call-site is
+                reached stub would check if cache already
+                contains method resolution result for the receiver's class and
+                dispatch to it if present, otherwise (if cache does not contain
+                the mapping) stub would invoke runtime to update the cache.
+            </aside>
+            </section>
+            <section>
+                <h3><code>d.bark()</code> (unoptimized)</h3>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+                mov RBX, [PP + 0x7f] ; ICData
+                call [PP + 0x87]     ; dispatch stub
+                ;       ╲
+                ;         instead of embedding constants
+                ;          into the code we access them
+                ;          through <mark>object pool</mark>
+                </code></pre>
+                <aside class="notes">Here is how a call site looked like in
+                machine code. First you lood call-site specific cache into
+                a fixed register (here <code>RBX</code>, prescribed by dispatch
+                stub calling convention). Then you invoke the dispatch stub.
+                One thing I want to highlight here is that we don't embed any
+                references to GC managed objects directly into the generated
+                code - instead an indirection through an auxiliarly object,
+                reachable through a dedicated register is used. This will
+                become relevant a bit later in the talk.</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                      ─── <span class="">ICData { }</span>
+                     ╱
+                 dog.bark();
+                </code></pre>
+                <aside class="notes">Here is a short illustration of how inline caching works. Initially all call sites start with an empty cache.</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                      ─── <span class="">ICData { Dog: Dog.bark (1) }</span>
+                     ╱
+                 dog.bark();
+                </code></pre>
+                <aside class="notes">When call-site is reached the cache will be
+                updated with a mapping from observed receiver class to the
+                result of method resolution on that class. Here we have reached
+                call-site once with an instance of <code>Dog</code> and resolving
+                <code>bark</code> on <code>Dog</code> yields method <code>Dog.woof</code>.</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                      ─── <span class="">ICData { Dog: Dog.bark (2) }</span>
+                     ╱
+                 dog.bark();
+                </code></pre>
+                <aside class="notes">We executed the same call-site <em>twice</em> now with receivers being instances of the same class (<code>Dog</code>).</aside>
+                </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                      ─── <span class="">ICData { Dog: Dog.bark (3) }</span>
+                     ╱
+                 dog.bark();
+                </code></pre>
+                <aside class="notes">We executed the same call-site <em>3 times</em> now with receivers being instances of the same class (<code>Dog</code>). Inline caches collect frequences to facilitate frequency based optimizations for polymorphic call-sites (e.g. inlining the hottest alternative).</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                      ─── <span class="">ICData { Dog: Dog.bark (555) }</span>
+                     ╱
+                 dog.bark();
+                </code></pre>
+                <aside class="notes">Eventually surrounding function becomes <em>hot</em>, meaning that it got invoked many times. At this point an optimizing recompilation is requested.</aside>
+            </section>
+            <section>
+                <h3><code>d.bark()</code> (optimized, monomorphic)</h3>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+                ;; Check that RAX contains a Dog
+                test al, 0x1
+                jz ->deopt  ; deopt if RAX is a Smi
+                movzx rcx, word ptr [rax + 0x1]
+                cmp rcx, 0x53a
+                jnz ->deopt
+                ;; Call Dog.bark directly.
+                mov r10, qword ptr [PP + 0x5f] ; argdesc
+                call qword ptr [PP + 0x67]
+                </code></pre>
+                <aside class="notes">Here is the same call-site speculatively optimized by the JIT under the assumption that its future behavior would match its previously observed behavior: meaning that <em>we expect to always reach this call-site with an instance of <code>Dog</code></em>.</aside>
+            </section>
+            <section>
+                <h3><code>d.bark()</code> (optimized, monomorphic)</h3>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+                <mark>;; Check that RAX contains a Dog</mark>
+                test al, 0x1
+                jz ->deopt  ; deopt if RAX is a Smi
+                movzx rcx, word ptr [rax + 0x1]
+                cmp rcx, 0x53a
+                jnz ->deopt
+                ;; Call Dog.bark directly.
+                mov r10, qword ptr [PP + 0x5f] ; argdesc
+                call qword ptr [PP + 0x67]
+                </code></pre>
+                <aside class="notes">Optimizing compiler transforms this call-site into a check which verifies the assumption that receiver is indeed an instance of <code>Dog</code>. If checks fails we would <em>deoptimize</em>, switch back to unoptimized code.</aside>
+            </section>
+            <section>
+                <h3><code>d.bark()</code> (optimized, monomorphic)</h3>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+                ;; Check that RAX contains a Dog
+                test al, 0x1
+                jz ->deopt  ; deopt if RAX is a Smi
+                movzx rcx, word ptr [rax + 0x1]
+                cmp rcx, 0x53a
+                jnz ->deopt
+                <mark>;; Call Dog.bark directly.</mark>
+                mov r10, qword ptr [PP + 0x5f] ; argdesc
+                call qword ptr [PP + 0x67]
+                </code></pre>
+                <aside class="notes">The check is followed by a direct invocation of <code>Dog.bark</code> method. Note that while this invocation looks very similar to how
+                it looked like in unoptimized code, it does not do the same thing. In unoptimized code we were calling dispatch stub, while in optimized code we are invoking target method directly.</aside>
+            </section>
+<!--
+            <section style="text-align: left; font-size: 1.3em;">
+                <h3>Inline Caches</h3>
+                <p>&mdash; classical tool;</p>
+                <p>&mdash; not limited to method invocation;</p>
+                <p>&mdash; you can <em>synthesize</em> invocation targets;</p>
+                <p>&mdash; not limited to simply caching receiver's class;</p>
+            </section>
+-->
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                                 dynamic
+                    ──────────────────────────────────────────
+                    2011     2013
+                    ─────────────────────────────────────────►
+                    0.x       1.0
+                    ───────JIT─────────────────────────────────
+
+                    &nbsp;
+                </code></pre>
+                <aside class="notes">We have spent 2012-2013 building our JIT compilation toolchain until we got something pretty solid.
+                    It has all pieces you would expect from a solid JIT compiler (SSA IR and various classical optimizations passes). It looked
+                like Dart will continue to be dynamically typed and JIT compiled for forseeable future.</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                                 dynamic
+                    ──────────────────────────────────────────
+                    2011     2013
+                    ────────────────────────────────────────►
+                    0.x       1.0  │
+                    ───────JIT────────────────────────────────
+                                   │
+                                Flutter
+                </code></pre>
+                <aside class="notes">In late 2014 a team of Chrome engineers decided to do an experiment (initially called Sky):
+                what would happen if you take WebView and took away the constraint that it has to render web-pages? Over the time
+                this experiment shed JavaScript in favor of Dart, and moved most of the parts responsible for layout from native
+                (C++) DOM layer into Dart code, given the user control over it. This project is known as <b>Flutter</b>
+                today.
+                </aside>
+            </section>
+            <section>
+                <div style="max-width: 80%; text-align: justify; margin-left: auto; margin-right: auto; font-size: 1em; line-height: 1.5em;">&laquo;Flutter is Google’s UI toolkit for building beautiful, natively compiled applications for mobile, web, and desktop from a single codebase.&raquo;
+                    <div style="text-align: right; font-size: 0.8em;">&mdash; <a href="https://flutter.dev">https://flutter.dev</a></div></div>
+                <h2></h2>
+                <aside class="notes">Started as a "faster WebView" experiment,
+                Flutter evolved into an popular framework for developing
+                multiplatform applications. Flutter applications (as well as
+                Flutter framework itself) are written in Dart. For history of Flutter check
+                Adam Barth's <a href="https://twit.tv/shows/floss-weekly/episodes/439?autostart=false" target="_blank">FLOSS interview</a> and
+                Eric Seidel's <a href="https://www.youtube.com/watch?v=VUiVkDpikDI" target="_blank">Strange Loop talk</a>.
+            </aside>
+            </section>
+            <section>
+                <div style="max-width: 80%; text-align: justify; margin-left: auto; margin-right: auto; font-size: 1em; line-height: 1.5em;">&laquo;Flutter is Google’s UI toolkit for building beautiful, natively compiled applications for <mark>mobile</mark>, web, and desktop from a single codebase.&raquo;
+                    <div style="text-align: right; font-size: 0.8em;">&mdash; <a href="https://flutter.dev">https://flutter.dev</a></div></div>
+                <h2></h2>
+                <aside class="notes">Initially Flutter was focused on mobile
+                and this introduced an interesting constraint for Dart.</aside>
+            </section>
+
+            <section>
+              <h2>No JITing on iOS</h2>
+              <h4>(... unless you have special <em>entitlements</em>)</h4>
+              <aside class="notes">On iOS only applications signed with special
+              entitlements (e.g. Safari) can produce executable code dynamically
+              and even those apps that are permitted are doing it in a rather
+              <a href="https://iokit.racing/bluehatil.pdf" target="_blank">round about way</a>
+              to make exploitation harder. This essentially means that other
+              applications can't contain a native JIT inside, OS simply does
+              not give you necessary primitives to create executable machine
+              code dynamically.
+              </aside>
+            </section>
+
+            <section>
+                <h1>Need AOT!</h1>
+                <aside class="notes">As a result we started to look at AOT
+                compiling Dart code to make Flutter run (well) on iOS devices.
+                </aside>
+            </section>
+
+            <section style="text-align: left;">
+                <h2><span style="color: white; background: #383D3D; padding: .1em .2em; border-radius: .7em;">2015</span> JIT &rArr; AOT</h2>
+                <ol>
+                  <li>disable speculations;</li>
+                  <li>compile all potentially reachable code;</li>
+                  <li><span class="fragment highlight-mark">serialize heap</span></li>
+                </ol>
+                <aside class="notes">The path towards native AOT was clear:
+                we looked for a way to reuse the good compilation toolchain
+                which we built for our JIT compiler. To achieve that we simply
+                need to compile all potentially reachable code in the program
+                in a way that does not use any speculative optimizations (as
+                you would not be able to deoptimize in runtime) and then
+                serialize VM's heap to disk. On the phone VM then can simply
+                load this blob (instead of loading source code) and start
+                running the program - no compilation would be required because
+                all code is precompiled.
+                </aside>
+            </section>
+
+            <section style="text-align: left;">
+                <h2 style="border-bottom: 2px dashed #383D3D;">snapshot <span style="color: gray; float: right;">/ˈsnæpˌʃɒt/</span></h2>
+                <p><span style="color: gray; font-style: oblique;">(noun)</span> serialized form for heap object graphs, used for faster
+                startup or exchanging data between <em>isolates</em>.
+                Similar to Smalltalk <em>images</em>. Only supported data, not machine code.</p>
+                <aside class="notes">In fact Dart VM already had a mechanism for
+                serializing its heap to a blob and restoring its state from it.
+                This mechanism simply did not support serializing machine code,
+                and that's the problem we needed to solve first.
+                </aside>
+            </section>
+
+            <section>
+                <pre class="scheme">
+          instructions               pool
+      ┌─────────────────────┐    ┌─┬─┬─┬─┬─┬─┬─
+      │ object_pool_ ──────────┤ │ │ │ │ ││
+      ├─────────────────────┤    └─┴─┴─┴─┴─┴┴─
+entry │ mov PP, [RIP-0x25]  │               │
+      │ ...                 │            ┌──┴───┐
+      │ mov rax, [PP+0x2f]  │            │object│
+      │ ...                 │            └──────┘
+      └─────────────────────┘
+                </pre>
+                <aside class="notes">To serialize machine code we need to make
+                it relocatable. However it turns out that machine code was
+                already <em>almost</em> relocatable - because it did not
+                address any heap allocation objects directly, but rather through
+                an indirection via <em>object pool</em>. In JIT each generated
+chunk of machine code (<em>instructions</em> object) had a pointer to its pool
+in the header, on entry we would use PC relative addressing to take pool from the
+header and put it in the dedicated register, the rest of the code would use
+this dedicated register to access constants. Object pool serialization/
+deserialization could be handled by a builtin snapshot mechanism, we just need to
+figure out how to connect instruction to object pool in a relocatable manner.
+                </aside>
+            </section>
+
+            <section>
+                <pre class="scheme">
+          instructions (RX)          pool (RO)
+      ┌─────────────────────┐    ┌─┬─┬─┬─┬─┬─┬─
+      │ object_pool_ ──────────┤ │ │ │ │ ││
+      ├─────────────────────┤    └─┴─┴─┴─┴─┴┴─
+entry │ mov PP, [RIP-0x25]  │               │
+      │ ...                 │            ┌──┴───┐
+      │ mov rax, [PP+0x2f]  │            │object│
+      │ ...                 │            └──────┘
+      └─────────────────────┘
+                </pre>
+                <aside class="notes">You might suggest the following:
+instructions reside in read-execute (<code>.text</code>) section of the binary,
+while pool resides in read-only (<code>.rodata</code>) section, OS specific
+runtime linker is then responsible for relocating <code>object_pool_</code>
+reference. This design might indeed work in some situations, however it has
+various drawbacks - and most importantly it is not suitable for Dart at all.</aside>
+            </section>
+
+            <section style="font-size: .9em;">
+                <h3>Dart Isolates</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+╔════════════════════════╗  ╔════════════════════════╗
+║ Isolate    ┌─────────┐ ║  ║ Isolate    ┌─────────┐ ║
+║           ┌─────────┐│ ║  ║           ┌─────────┐│ ║
+║          ┌─────────┐│┘ ║  ║          ┌─────────┐│┘ ║
+║          │         │┘  ║  ║          │         │┘  ║
+║          └─────────┘   ║  ║          └─────────┘   ║
+╚════════════════════════╝  ╚════════════════════════╝
+                    </code></pre>
+                <aside class="notes">Dart's concurrency is structured around
+                <em>isolates</em>, which can be seen as completely independent
+                heaps each with a single mutator thread. Even if these isolates
+                are running the same programs their heaps do not intersect and
+                are almost entirely disjoint.</aside>
+            </section>
+
+            <section style="font-size: .9em;">
+                <h3>Dart Isolates</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+╔════════════════════════╗  ╔════════════════════════╗
+║ Isolate    ┌─────────┐ ║  ║ Isolate    ┌─────────┐ ║
+║           ┌─────────┐│ ║  ║           ┌─────────┐│ ║
+║          ┌─────────┐│┘ ║  ║          ┌─────────┐│┘ ║
+║          │ Pool    │┘  ║  ║          │ Pool    │┘  ║
+║          └─────────┘   ║  ║          └─────────┘   ║
+╚════════════════════════╝  ╚════════════════════════╝
+                    </code></pre>
+                <aside class="notes">If we spawn two isolates from the same AOT
+                snapshot these two isolates should each get their own copy of
+                every object pool in the snapshot. This needs to happen because
+                even if object pool itself was immutable (which it is not) it
+                can certainly point to mutable data and mutable data can't be
+                shared between isolates.
+                </aside>
+            </section>
+
+            <section>
+                <pre class="scheme">
+          instructions (RX)   ╏      pool <strong>(RW)</strong>
+      ┌─────────────────────┐ ╏  ┌─┬─┬─┬─┬─┬─┬─
+      │ object_pool_ ──────────┤ │ │ │ │ ││
+      ├─────────────────────┤ ╏  └─┴─┴─┴─┴─┴┴─
+entry │ mov PP, [RIP-0x25]  │ ╏             │
+      │ ...                 │ ╏          ┌──┴───┐
+      │ mov rax, [PP+0x2f]  │ ╏          │object│
+      │ ...                 │ ╏ isolate  └──────┘
+      └─────────────────────┘ ╏ heap
+                </pre>
+                <aside class="notes">This means pools must reside in dynamically allocated read-write portion of the isolate specific heaps, which in turn means that instructions object can't have a pointer to its pool at all. In fact the very same pool corresponding to a single instructions object would be cloned in each isolate.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme">
+          instructions (RX)   ╏
+                              ╏
+                              ╏
+      ┌─────────────────────┐ ╏
+entry │ mov PP, [RIP-0x25]  │ ╏  ┌──────┐
+      │ ...                 │ ╏  │ pool │
+      │ mov rax, [PP+0x2f]  │ ╏  └──────┘
+      │ ...                 │ ╏ isolate
+      └─────────────────────┘ ╏ heap
+                </pre>
+                <aside class="notes"><code>object_pool_</code> has to disappear from the instructions object.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme">
+          instructions (RX)   ╏           ┌──────┐
+                              ╏           │ code │
+                 ┌────────────────┐       └────┘
+      ┌──────────┴──────────┐ ╏   └─────────┘  │
+entry │ mov PP, [RIP-0x25]  │ ╏  ┌──────┐      │
+      │ ...                 │ ╏  │ pool ├──────┘
+      │ mov rax, [PP+0x2f]  │ ╏  └──────┘
+      │ ...                 │ ╏ isolate
+      └─────────────────────┘ ╏ heap
+                </pre>
+                <aside class="notes">Instead <code>Code</code> object would contain both a pointer to the executable machine code (instructions) and the pointer to pool.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme">
+          instructions (RX)   ╏           ┌──────┐
+                              ╏           │ code │
+                 ┌────────────────┐       └────┘
+      ┌──────────┴──────────┐ ╏   └─────────┘  │
+entry │ mov PP, <mark>[CR+pp_ofs]</mark> │ ╏  ┌──────┐      │
+      │ ...                 │ ╏  │ pool ├──────┘
+      │ mov rax, [PP+0x2f]  │ ╏  └──────┘
+      │ ...                 │ ╏ isolate
+      └─────────────────────┘ ╏ heap
+                </pre>
+                <aside class="notes">Entry point can no longer find the pool pointer through PC relative addressing, instead we tweak calling conventions to pass code object in a dedicated register on all calls (rewriting them to an equivalent of <code>code-&gt;entry(code, ...)</code>), so that entry point could then load pool pointer from the code object itself.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+                ; STATIC CALLS
+                ; ═ BEFORE ═══════════════════════════════════════
+                call [PP + 0x87]          ; direct call
+                  mov PP, [RIP - 0x25]   ; in callee load PP
+
+                ; ═ AFTER ════════════════════════════════════════
+                mov CR, [PP + 0x87]       ; load Code object
+                call [CR + entry_ofs]     ; call through Code
+                  mov PP, [CR + pp_ofs]  ; in callee load PP
+                </code></pre>
+                <aside class="notes">This highlights the difference in how static (direct) calls looked before
+                and after our tweaks to the calling conventions.</aside>
+            </section>
+
+            <section style="text-align: left;">
+                <h2><span style="color: white; background: #383D3D; padding: .1em .2em; border-radius: .7em;">2015</span> JIT &rArr; AOT</h2>
+                <ol>
+                  <li>disable speculations;</li>
+                  <li>compile all potentially reachable code;</li>
+                  <li>serialize heap ✓</li>
+                </ol>
+                <aside class="notes">Calling convention tweaks and shifting the
+                pool pointer from instructions to code object were the only major
+                changes required to make machine code serializable.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                                 dynamic
+                    ──────────────────────────────────────────
+                    2011     2013     2015 2016
+                    ───────────────────────────────────────►
+                    0.x       1.0          └ we are here
+                    ───────JIT────── ──────JIT or AOT────────
+                                              ╱        ╲
+                                  development          deployment
+                </code></pre>
+                <aside class="notes">We build a POC of AOT compiler in the
+                first half of 2015 on a branch and it was then redone from
+                scratch on the main branch in the second half. I have not
+                participated in that: instead for half a year I went to work
+                on LuaJIT at DeepMind.</aside>
+            </section>
+
+            <section>
+               <h1><em>everything</em> is a dynamic call</h1>
+               <aside class="notes">Dart VM AOT compiler worked well enough for
+Flutter - in fact its startup characteristics were so much better than JIT
+that Flutter ended up using it on both iOS and Android. It did however struggle
+to match JIT in peak performance, as it simply lacked the same detailed type
+information that JIT could collect dynamically.
+               </aside>
+            </section>
+
+            <section style="text-align: left; font-size: 1.3em;">
+                <h3>Optimizing Dart 1 AOT</h3>
+                <ul class="dashed">
+                <li>inline caching;</li>
+                <li>inline fast paths;</li>
+                <li>local optimizations;</li>
+                <li>some global optimizations (CHA); <small>remember: AOT was built JIT so it is not really well set for global optimizations</small></li>
+                </ul>
+                <aside class="notes">We tried to do whatever possible to close the gap, doubling down on inline caching,
+                    identifying and inlining fast paths for various operations, and performing various local optimizations.
+                It was however challenging to move past that: we had an AOT compiler built out of a method based JIT compiler, so we simply lacked infrastructure for any sort of global optimizations. To make things worse: at this point in time AOT compiler had to run Dart code while it was compiling code, meaning that your
+                AOT compiled code had to be immediately runnable as well - making global optimizations challenging.
+                </aside>
+            </section>
+
+             <section>
+                <pre class="scheme"><code data-trim class="console">
+code (rx)         pool (rw)
+                 ┌───┐
+     ──────────▶│ ────▶ ICData
+    ╱            ├───┤⬉
+dog.bark();      │   │ can patch these
+    ╲            ├───┤⬋
+     ──────────▶│ ────▶ DispatchStub
+                 ├───┤
+                </code></pre>
+                <aside class="notes">Recall that every call-site has two things associated with it: call-site specific cache and dispatch stub. In JIT we would just update the cache (<code>ICData</code> object) and rely on optimizing compiler to specicialize the call-site. In AOT recompilation is not an option, but we can start looking at <em>pool entries</em> themselves as the cache, because both of these can be updated dynamically.</aside>
+              </section>
+
+              <section>
+                <pre class="scheme"><code data-trim class="console" style="font-size: .8em; line-height: 1.1em;">
+                  code (rx)         pool (rw)
+                                   ┌───┐
+                       ──────────▶│ ────▶ class Dog
+                      ╱            ├───┤
+                  dog.woof();      │   │
+                      ╲            ├───┤     Dog.woof
+                       ──────────▶│ ────▶ ┌────────────────────────────────┐
+                                   ├───┤     │ if (this.class != icData)      │
+                                      normal │   return monomorphicMiss(...); │
+                                       entry⬊├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+                </code></pre>
+                <aside class="notes">For example, on monomorphic call-sites (those that always see instances of the same class) we can patch pool entries corresponding to the call in such a way that we directly invoke
+                the target method instead of going through the dispatch stub. In this case we will enter the method through a special <em>checked entry</em>, which would validate that receiver is an instances of a fixed expected class (passed to the entry in the same dedicated register which dispatch stub would use for <code>ICData</code> object). We called this <em>switchable calls</em>, but it is essentially the same technique as original inline caching <a href="https://dl.acm.org/doi/10.1145/800017.800542" target="_blank">described for Smalltalk-80 system</a>. In Dart VM call-site could be switched between unlinked, monomorphic, range-based-single-target, polymoprhic and megamorphic states.</aside>
+              </section>
+
+              <section style="text-align: left; font-size: 1.3em;">
+                <h3>inline arithmetic fast paths</h3>
+                <ul class="dashed">
+                  <li>operators can be overridden</li>
+                  <li><code>int</code> is nullable</li>
+                  <li><code>int</code> is arbitrary precision</li>
+                <ul>
+                <aside class="notes">For some operations, like arithmetic, overhead of a call (even monomorphic and cached) is considerably larger than the operation itself. In such cases we were forced to inline <em>fast paths</em> to avoid calls whenever possible. Note that we still had to keep slow-paths for fallback purposes as we did not have enough information to conclude with certainty that only integers would flow into the call-site.</aside>
+              </section>
+
+              <section>
+                <pre style="font-size: .70em;"><code data-notrim data-noescape class="x86asm">
+           ;; Y <- X + 1
+           test X, 1
+           jnz slow──┐
+           mov Y, X   │
+           add Y, 2   │
+           jo slow───┤
+     ┌─▶ done:        │
+     │     ...        │
+     │   slow: ◀──────┘ ;; "cold" code
+     │     ;; ... X.operator+(1) call ...
+     └────jmp done
+                </pre></code>
+                <aside class="notes">This is an example of a <code>CheckedSmi</code> arithmetic operation which inlines fast path for <em>small integer</em> (tagged integer) receiver while keeping slow-path for all other cases: non-smi boxed integer, null or an object with <code>operator+</code> override. This sort of inlining allows to reclaim some of the performance previously lost through calling overheads, but does not facilitate any further optimizations (the type of <code>Y</code> is unknown as it might originate from the slow path). It also leads to significant code bloat.</aside>
+              </section>
+
+              <section>
+                <h1>scraping the bottom of the barrel</h1>
+                <aside class="notes">All in all it would be fair to say that at some point we were scraping the bottom of optimizations barrel when it comes to Dart VM AOT.</aside>
+              </section>
+
+            <section>
+                <h2><span style="color: white; background: #383D3D; padding: .1em .2em; border-radius: .7em;">2015</span> state of the union</h2>
+                <table>
+                    <thead>
+                        <tr><td></td><td>Development</td><td>Production</td></tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Native</td><td>JIT</td><td>JIT</td>
+                    </tr>
+                    <tr>
+                        <td>Web</td><td>Dartium&dagger;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td>AOT (closed world)</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p style="font-size: .6em; text-align: left; margin-top: 5em;"><sup>&dagger;</sup> Fork of Chromium with Dart VM embedded</p>
+                <aside class="notes">Let us look a bit back in time to the beginning of 2015. At that point Dart execution story look this: developers would use JIT enabled VM to develop their code, either on the native VM or via a fork of Chromium with Dart VM embedded if they were developing for the web. When deploying developers had a choice of either using JIT based native VM or compiling Dart ahead-of-time to JavaScript via dart2js compiler if they were targeting the web.</aside>
+            </section>
+
+            <section style="text-align: left; font-size: 1.3em;">
+                <h3><span style="color: white; background: #383D3D; padding: .1em .2em; border-radius: .7em;">2014</span> DDC & strong mode</h3>
+                <ul class="dashed">
+                    <li>Dartium was a maintenance liability</li>
+                    <li><code>dart2js</code> too slow</li>
+                    <li>An idea was born to build a <em>modular AOT compiler</em> operating on a <mark>stronger typed Dart</mark>.</li>
+                </ul>
+                <aside class="notes">At that point it was becoming clear that the dream of native browsers embedding native Dart VM(s) alongside JS envisioned by Dart's founders <a href="https://en.wikipedia.org/wiki/Lars_Bak_(computer_programmer)" target="_blank">Lars Bak</a> and <a href="https://verdich.dk/kasper/" target="_blank">Kasper Lund</a> is unlikely to become reality. Maintaining Dartium and rebasing it with each new Chromium version was becoming very hard. <code>dart2js</code> was too slow for interactive development due to its whole program nature. This led to the idea to build a Dart development compiler (DDC) which would compile application modularly to JS. However compiling Dart 1 modularly (and quickly) to a reasonably <em>performant</em> JS was considered hard which gave birth to an idea to define a statically typed subset of Dart.</aside>
+            </section>
+
+            <section style="text-align: left; font-size: 1.3em;">
+                <h3><span style="color: white; background: #383D3D; padding: .1em .2em; border-radius: .7em;">2016</span> Dart Kernel & CFE</h3>
+                <p>Pace of Dart language evolution was often hindered by duplication between different language implementations.
+                    A project is born to address that.</p>
+                <aside class="notes">Meanwhile Dart team was also approaching consensus that it is unsustainable to develop multiple language implementations (e.g. native and targeting JS) in complete isolation, because this leads to tremendous duplication of effort and slows down the language evolution, because multiple implementation have to be updated even for the trivial syntactic sugar changes to the language. Making a major language change (e.g. tweaking type system) was dreaded.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme" style="font-size: .7em;"><code data-trim data-noescape>
+                              Dart VM (in C++)
+                              ┌─────────────────────────┐
+                           ┌─▶│ Parser ─▶ AST ─▶ ...  │
+                           │  └─────────────────────────┘
+                           │  dart2js (in Dart)
+                 ╭────────╮  ┌─────────────────────────┐
+                 │  Dart  ──▶│ Parser ─▶ AST ─▶ ...  │
+                 │ Source │  └─────────────────────────┘
+                 ╰────────╯│  dartanalyzer (in Dart)
+                           │  ┌─────────────────────────┐
+                           └─▶│ Parser ─▶ AST ─▶ ┌─────┐  some tools use
+                              └────────────────────│┌─────┐ analyzer as a Dart
+                                                   └│     │ parser
+                                                    └─────┘
+                                                </code></pre>
+                            <aside class="notes">At that point each Dart backend had its own Dart parser and AST representing the program, each written in different style and with different performance characteristics and goals. VM, for example, did not even have an AST representation of the whole program.</aside>
+                        </section>
+
+                        <section>
+                            <pre class="scheme" style="font-size: .7em;"><code data-trim data-noescape>
+                                                     Dart VM
+                                                     ┌──────┐
+                                                  ┌─▶│ ...  │
+                                                  │  └──────┘
+                                CFE         Kernel│  dart2js
+                 ╭────────╮   ┌────────┐   ╭─────╮  ┌──────┐
+                 │  Dart  │──▶│ Parser │─▶│ AST ──▶│ ...  │
+                 │ Source |   └────────┘   ╰─────╯  └──────┘
+                 ╰────────╯   (in Dart)           ┊
+                                                  ┊
+
+
+
+
+                            </code></pre>
+                            <aside class="notes">CFE/Kernel project goal was to provide a single parser and a common AST representation for the Dart programming language.</aside>
+                        </section>
+
+            <section style="text-align: left; font-size: 1.3em;">
+                <h3><span style="color: white; background: #383D3D; padding: .1em .2em; border-radius: .7em;">2018</span> Dart 2 release</h3>
+                <ul class="dashed">
+                    <li><em>CFE/Kernel</em> form front-end foundation</li>
+                    <li><em>Strong mode</em> replaces Dart 1 optional typing</li>
+                    <li><code>int</code> becomes 64-bit signed integer</li>
+                </ul>
+                <aside class="notes">These efforts culminated in Dart 2 release in 2018. <em>Strong mode</em> type system developed as part of DDC project was a clear improvement over Dart 1 optional type system: users appreciated strong static guarantees, while tooling benefited from static types it could trust. As a result Dart language has shifted from dynamic (optional) type system to a <a href="https://dart.dev/guides/language/type-system" target="_blank">static type system</a>. See Leaf Peterson's <a href="https://www.youtube.com/watch?v=9FA3brRCz2Q" target="_blank">talk on the evolution of Dart's type system</a> for more details. Meanwhile different implementations moved towards sharing their front-ends and a common AST. Version 2 included few other changes, including moving away from arbitrary precision integers towards fixed-width ones (64-bit).</aside>
+            </section>
+
+            <section>
+                <h3>Dart 1</h3>
+                <pre><code data-trim data-noescape class="dart">
+                    Dog d = new Cat();  // ignored type annotations
+                                        //   access to a field
+                    d.f                 // ─ invocation of getter
+                                        //  method tear-off
+                                        //   noSuchMethod invocation
+
+                    int x = null;       // no primitive types
+                    (1 << 100) >> 100;  // == 1, int is bignum
+                </code></pre>
+                <aside class="notes">Remember the challenges that Dart 1 posed for AOT compilation?</aside>
+            </section>
+
+            <section>
+                <h3>Dart 1 &rArr; Dart 2</h3>
+                <pre><code data-trim data-noescape class="dart">
+                    Dog d = new Cat();  // <mark>compile time error</mark>
+                                        //
+                    d.f                 // <mark>calls an implementation</mark>
+                                        // <mark>of Dog.f</mark>
+                                        //
+
+                    int x = null;       // still no primitive types
+                    (1 << 100) >> 100;  //  <mark>== 0, int is 64-bit</mark>
+                </code></pre>
+                <aside class="notes">Dart 2 at least partially addressed some of them. Type annotations can now be trusted and are statically guaranteed by the compiler. Accessing a property <code>f</code> on a variable of type <code>Dog</code> is no longer fully dynamic: instead it is guaranteed that the receiver (which is known to be subtype of <code>Dog</code>) is going to have an implementation of <code>get f</code> and that implementation is a valid override of a getter <code>get f</code> declared in class <code>Dog</code>. This moves us from the real of dynamic dispatch to a real of <em>interface dispatch</em>.</aside>
+            </section>
+
+            <section>
+                <h1>What about VM's AOT?</h1>
+            </section>
+
+            <section  style="text-align: left; font-size: 1.3em;">
+                <h3>Dart 2 impact on AOT</h3>
+                <ul class="dashed">
+                    <li>strong mode: types you <mark>can trust</mark></li>
+                    <li>Kernel: whole program AST</li>
+                </ul>
+                <aside class="notes">Dart 2 gave Dart VM AOT two major tools: static type information and whole program AST (recall that previously VM was struggling with any sort of global analysis for purely architectural reasons).</aside>
+            </section>
+
+            <section style="text-align: left; font-size: 1.3em;">
+                <h3>type flow analysis (TFA)</h3>
+                <p>global context sensitive analysis over Kernel to annotate
+                it with more accurate type information than what is available
+                in static type annotations<sup>&dagger;</sup>.</p>
+                <p style="font-size: .6em; text-align: left; margin-top: 5em;"><sup>&dagger;</sup> which specify <em>nullable interface types</em></p>
+                <aside class="notes">One thing to note about Dart 2 type annotations is that they only provide compiler with <em>(nullable) interface types</em>, a variable <code>v</code> of type <code>X</code> can contain a null or an instance of any class extending or implementing <code>X</code>. In trivial cases we might be able to combine this with CHA to establish that <code>X</code> is never extended or implemented allowing us to devirtualize method calls on <code>v</code>. However in many cases we need a more precise type information (and for numeric types non-nullability) to perform good optimization. That is why we build TFA.</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="dart">
+groom(Animal a) {
+  a.method();
+}
+
+main() {
+  groom(Dog());
+  feed(Cat());
+}
+                </code></pre>
+                <aside class="notes">Here for example if we just look at <code>groom</code> in isolation we would be forced to conservatively assume that <code>a</code> can be any subtype of <code>Animal</code> (including <code>null</code>), which would not allow us to devirtualize <code>method</code> call.</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="dart">
+groom(Animal a) {
+  a.method();  /* TFA: a is non-nullable Dog */
+}    /* TFA: invokes Dog.method */
+
+main() {
+  groom(Dog());
+  feed(Cat());
+}
+                </code></pre>
+                <aside class="notes">However TFA looking at this program under
+                    closed world assumption would be able to infer that <code>a</code> will always be a <code>Dog</code>, which would not allow us to devirtualize <code>method</code> call into a direct call to <code>Dog.method</code>.</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="dart">
+f(int anInt, double aDouble) {
+<span class="fragment">//      ╲            ╱
+// conservative *boxed* representation</span>
+}
+
+// Dart 1
+f(IntegerDog(), FloatingCat());  // ooook
+
+// Dart 2
+f(null, 2.0);  // ok
+                </code></pre>
+                <aside class="notes">This becomes especially important in context of numeric types, where with Dart 1 we did not have any information to base our optimizations on and with Dart 2, even though specification at least guarantees that numeric types are never extended or implemented, we still have to account for possibility of <code>null</code>, which prevents us from using unboxed representations.</aside>
+            </section>
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="dart">
+f(int anInt, double aDouble) {
+//      ╲            ╱
+// In real code TFA can often prove
+// that such variables are non-nullable
+// allowing to use *unboxed* representation.
+<span class="fragment">// ... btw this was an intern project!</span>
+}
+</code></pre>
+<aside class="notes">TFA can often infer that variables and fields of numeric types are non-nullable which opens possibility to use unboxed inline representations for these types and avoid boxing.</aside>
+            </section>
+
+            <section style="text-align: left;">
+                <h2>devirtualization highlights costs of calling conventions</h2>
+                <aside class="notes">In Dart 1 most of calls in the AOT compiled code were dynamic. With Dart 2 and TFA we started to see more and more direct calls in AOT compiled code, this in turn highlighted deficiencies introduced by the changes to the calling conventions made to enable code serialization.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+                ; a lot of code for a static call
+                mov CR, [PP + 0x87]       ; load Code object
+                call [CR + entry_ofs]     ; call through Code
+                  mov PP, [CR + pp_ofs]  ; in callee load PP
+                </code></pre>
+                <aside class="notes">Remember that each call needs to pass down a <code>Code</code> object so that callee could load its object pool from it. This is rather far in terms of overhead from direct calls in a language like C++ where we would just perform a relative call.</aside>
+            </section>
+
+            <section style="text-align: left; font-size: 1.3em;">
+                <h3>bare instructions</h3>
+                <ul class="dashed">
+                    <li>merge all object pools together</li>
+                    <li>no longer need to call through <code>Code</code> object</li>
+                </ul>
+                <aside class="notes">To eliminate this overhead we run a project to switch from multiple object pools (one per instructions object) to a single global object pool (<em>GOP</em>). With GOP it is enough to populate <code>PP</code> register when entering Dart code (e.g. from C++) and Dart-to-Dart calls no longer need to change this register removing the need for loading it from <code>Code</code> object (or preserve caller's <code>PP</code>).</aside>
+            </section>
+
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+                    ; ═ BEFORE ═══════════════════════════════════════
+                    mov CR, [PP + 0x87]       ; load Code object
+                    call [CR + entry_ofs]     ; call through Code
+                      mov PP, [CR + pp_ofs]  ; in callee load PP
+
+                    ; ═ AFTER ════════════════════════════════════════
+                    call #relative-offset-to-target
+                </code></pre>
+                <aside class="notes">Here is how calling conventions changed with GOP. This change might seem trivial on the first sight but in reality it should be seen in context of architectural restrictions which existed before Dart VM shifted to CFE. In pre-Dart 2 world AOT compiler would sometimes would need to execute the code it generated making it very hard to shift to GOP. With Dart 2 we have finally shifted from "precompiling JIT" to an AOT compiler architecture which is more akin to classical AOT compilers</aside>
+            </section>
+
+            <section style="text-align: left;">
+                <h2>ICs are not that good at handling polymorphism</h2>
+                <p>a lot of monomorphic call-sites are devirtualized by TFA</p>
+                <aside class="notes">Another observation that we made is that <em>switchable calls</em> were good for handling monomorphic accesses, but with TFA devirtualizing a lot of those we also needed a mechanism that would be making polymorphic call-sites fast.</aside>
+            </section>
+
+            <section style="text-align: left; font-size: 1.3em;">
+                <h3>global dispatch table (GDT)</h3>
+                <p>Table indexed by a combination of receiver's class id and
+                selector id. Classical idea described in literature as
+                <em><a href="https://dl.acm.org/doi/abs/10.1145/217839.217851" target="_blank">row displacement dispatch tables</a></em>.</p>
+                <aside class="notes">Our choice fell on <em>row displacement dispatch tables</em>, because we have previously tried them in several experimental implementations of Dart language and found them to be a good fit.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+&nbsp;&nbsp;&nbsp;movzx cid, word ptr [obj + 15] ; load class id
+   call [GDT + cid * 8 + #(sid * 8)]
+                </code></pre>
+                <pre class="scheme"><code data-trim data-noescape>
+┌────────────────────────┐ ╱
+│ Selectors are numbered ├
+│ such that GDT[cid+sid] │
+│ gives dispatch target  │
+└────────────────────────┘
+                    </code></pre>
+                    <aside class="notes">In this approach all <em>selectors</em> in the program (a combination of method name and signature) are numbered in such a way that a sum of the selector id and receiver's class id yields an index in a global table containing a pointer to a method implementing this selector on the receiver's class.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+&nbsp;&nbsp;&nbsp;movzx cid, word ptr [obj + 15] ; load class id
+   call [GDT + cid * 8 + #(sid * 8)]
+                </code></pre>
+                <pre class="scheme"><code data-trim data-noescape>
+┌────────────────────────┐ ╱
+│ Naive numbering 0,     ├
+│ NumCids, 2*NumCids, ...│
+│ is too sparse          │
+└────────────────────────┘
+                    </code></pre>
+                    <aside class="notes">Imagine you have a list of selectors <code>Sa, Sb, ...</code>. You can assign <code>0</code> as an id to <code>Sa</code>, <code>0 + NumCids</code> to <code>Sb</code> and so on. Such numbering would by construction ensure that <code>sid + cid</code> is a unique index for all <code>sid</code> and <code>cid</code>. However it will also create and large sparse table.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="x86asm">
+&nbsp;&nbsp;&nbsp;movzx cid, word ptr [obj + 15] ; load class id
+   call [GDT + cid * 8 + #(sid * 8)]
+                </code></pre>
+                <pre class="scheme"><code data-trim data-noescape>
+┌────────────────────────┐ ╱
+│ Selectors are numbered ├
+│ in a way that tries to │
+│ minimize GDT size.     │
+└────────────────────────┘
+                    </code></pre>
+                    <aside class="notes">An observation here is that not all combinations of <code>(sid, cid)</code> can occur in the program, as each call site will only ever see a subset of classes permitted by the static type of the receiver. This opens holes in the table which can be filled by carefully selecting selector ids. Imagine you have classes <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code> (numbered 0 to 4 respectively). <code>A</code> and <code>E</code> answer selector <code>F</code> while <code>B</code> and <code>C</code> answer selector <code>G</code>, call-sites <code>(A|E).G</code>, <code>(B|C).F</code> are impossible and <code>D</code> does not participate in interface dispatch. Naive numbering of selectors would create a table with 10 elements. A good packing would instead produce <code>[A.F, _, B.G, C.G, E.F]</code> assigning <code>F</code> id 0 and <code>G</code> id 1.</aside>
+            </section>
+
+            <section>
+                <pre class="scheme"><code data-trim data-noescape class="console">
+                                 dynamic                static
+                    ──────────────────────────── ──────────
+                    2011     2013     2015         2018     2020
+                    ─────────────────────────────────────
+                    0.x       1.0  │               2.0│     2.12
+                 vm ───────JIT───── ──────────AOT──────────
+                                   │                  │
+                                Flutter              We are here
+                </code></pre>
+                <aside class="notes">We have developed a lot of these optimizations in 2018 - 2019 time frame. What has happened since?</aside>
+            </section>
+            <section>
+                <h3>Dart 1 &rArr; Dart 2</h3>
+                <pre><code data-trim data-noescape class="dart">
+                    Dog d = new Cat();  // <mark>compile time error</mark>
+                                        //
+                    d.f                 // <mark>calls an implementation</mark>
+                                        // <mark>of Dog.f</mark>
+                                        //
+
+                    int x = null;       // still no primitive types
+                    (1 << 100) >> 100;  //  <mark>== 0, int is 64-bit</mark>
+                </code></pre>
+                <aside class="notes">We are in the middle of another tectonic shift similar to one occurred in Dart 1 to Dart 2 period.</aside>
+            </section>
+            <section>
+                <h3>Dart 2 &rArr; Dart 2.12</h3>
+                <pre><code data-trim data-noescape class="dart">
+                    &nbsp;
+                    &nbsp;
+                    &nbsp;
+                    &nbsp;
+                    &nbsp;
+                    // types are now non-nullable by default
+                    int x = null;          // <mark>compile time error</mark>
+                    &nbsp;
+                </code></pre>
+                <aside class="notes">Reference types in Dart 2.12 release are <em>non-nullable by default</em> (NNBD).</aside>
+            </section>
+            <section>
+                <h3>Dart 2 &rArr; Dart 2.12</h3>
+                <pre><code data-trim data-noescape class="dart">
+                    // types are now non-nullable by default
+                    int x = null;          // <mark>compile time error</mark>
+                    int? x = null;         // ok
+                    List&lt;Dog&gt;? dogs;
+                    if (dogs != null) {
+                        dogs.add(null);    // <mark>compile time error</mark>
+                        dogs.add(Dog());   // ok
+                    }
+                </code></pre>
+                <aside class="notes">Reference types have to explicitly opt into allowing <code>null</code> via <code>?</code> suffix. At the same time compiler will only allow method calls on non-nullable receiver (with exception of <code>toString</code>, <code>get hashCode</code> and <code>operator ==</code> which are defined on <code>null</code>).</aside>
+            </section>
+            <section>
+                <h2>More<sup>&dagger;</sup> optimization opportunities!</h2>
+                <p style="font-size: .6em; text-align: left; margin-top: 5em;"><sup>&dagger;</sup> NNBD is incremental and provides an opt-out escape hatch. Compiler can only rely on static non-nullability if none of the libraries are opted out.</em></p>
+                <aside class="notes">Our compilation pipeline is already set to benefit from non-nullability. Previously this information was inferred by TFA, but global inference is not 100% precise so static type system guaranteeing non-nullability is an improvement. There is a small catch here: NNBD comes with an builtin support for incremental migration which allows libraries to opt-out and as long as there are opted out libraries NNBD does not guarantee soundness. This means compiler can only utilize non-nullability of static types when none of the libraries are opted-out.</aside>
+            </section>
+            <section>
+                <h2>Demand for smaller downloads size and memory footprint.</h2>
+                <aside class="notes">As we are evolving our native platform we see more and more demand for smaller AOT compiled binaries and smaller memory footprint.</aside>
+            </section>
+            <section style="text-align: left; font-size: 1.5em;">
+                <h3>Diverging AOT from JIT</h3>
+                <ul class="dashed">
+                    <li>compressed stack maps</li>
+                    <li><mark>DWARF stack traces</mark></li>
+                </ul>
+                <aside class="notes">To make AOT snapshots smaller and our AOT runtime leaner, we often have to make architectural changes which diverge it more and more from its JIT heritage. For example, we made a change which merged individual <em>stack maps</em> (metadata used by our precise GC to traverse the stack, JIT emits one per instructions object) into a single object leading to nice savings in snapshot size and memory footprint. We also added a mode which changes how stack traces are symbolicated.</aside>
+            </section>
+            <section style="text-align: left;">
+                <pre>
+Unhandled exception:
+Error occurred!
+#0 causeError (test.dart:4)
+#1 main (test.dart:9)</pre>
+<aside class="notes">When executing in JIT environment one usually expects all symbol information to be readily available. However the same is not true in AOT: developers are accustomed to shipping native builds which send back non-symbolic crash reports to a cloud crash reporting service, which then can symbolicate them.</aside>
+            </section>
+            <section style="text-align: left; font-size: .5em;">
+                <pre>
+Unhandled exception:
+Error occurred!
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+pid: 83265, tid: 4552355264, name Dart_Initialize
+build_id: 'c0371757e9bbea5ce6a27b1f22e5a25a'
+isolate_dso_base: 10f396000, vm_dso_base: 10f396000
+isolate_instructions: 10f3a0000, vm_instructions: 10f398000
+    #00 abs 000000010f3efd87 virt 0000000000059d87 _kDartIsolateSnapshotInstructions+0x4fd87
+    #01 abs 000000010f3efd62 virt 0000000000059d62 _kDartIsolateSnapshotInstructions+0x4fd62
+</pre>
+<aside class="notes">This lead us to implement a similar mode for Dart VM. In this mode compiler emits DWARF instead of including custom source location mappings into AOT snapshot, while runtime simply generates raw unsymbolicated stacks, which then can be symbolicated using DWARF emitted by the compiler.</aside>
+            </section>
+            <section style="text-align: left;">
+                <h3>DWARF stack traces</h3>
+                <p><mark>Opens doors for
+                dropping symbolic information and parts of program structure.</mark></p>
+                <aside class="notes">Some objects were previously only included into the snapshot to facilitate symbolication of stack traces and moving to offline symbolication means that these objects can be dropped from the snapshot leading to snapshot size and runtime memory footprint savings.</aside>
+            </section>
+            <section>
+                <h2>Demand for low-overhead concurrency.</h2>
+                <aside class="notes">Finally we are seeing demand for improvements in Dart's concurrency model.</aside>
+            </section>
+            <section style="font-size: .9em;">
+                <h3>Dart Isolates</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+╔════════════════════════╗  ╔════════════════════════╗
+║ Isolate    ┌─────────┐ ║  ║ Isolate    ┌─────────┐ ║
+║           ┌─────────┐│ ║  ║           ┌─────────┐│ ║
+║ ┌───┐    ┌─────────┐│┘ ║  ║  ╌╌╌     ┌─────────┐│┘ ║
+║ │MSG│    │ Program │┘  ║  ║ ╎   ╎    │ Program │┘  ║
+║ └─┬─┘    └─────────┘   ║  ║  ╌▲╌     └─────────┘   ║
+╚═══┆════════════════════╝  ╚═══┆════════════════════╝
+    └╌╌╌╌╌╌╌╌╌╌╌ copying ╌╌╌╌╌╌╌┘
+                    </code></pre>
+                    <aside class="notes">As mentioned before <em>isolate</em> is Dart's concurrency primitive: an isolated heap with a single mutator thread. Multiple isolates can run in parallel and exchange messages, which are passed by copying. Unfortunately isolates are far from lightweight: even when multiple isolates are spawned from the same AOT snapshot they do not share anything, instead each isolate gets its own deserialized copy of program structure. This makes isolates expensive to spawn and memory hungry.</aside>
+                </section>
+            <section style="font-size: .9em;">
+                <h3>Dart <mark>Isolate Groups</mark> (new!)</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+                    ╔═════════════════════════════════════╗
+                    ║ Isolate    Isolate      ┌─────────┐ ║
+                    ║                        ┌─────────┐│ ║
+                    ║ ┌───┐       ╌╌╌       ┌─────────┐│┘ ║
+                    ║ │MSG│      ╎   ╎      │ Program │┘  ║
+                    ║ └─┬─┘       ╌▲╌       └─────────┘   ║
+                    ╚═══┆══════════┆══════════════════════╝
+                        └╌ copying ┘
+                                        </code></pre>
+                                        <aside class="notes">To address this problem we have refactored VM to allow multiple isolates spawned from the same program (e.g. same AOT snapshot) to coexist in the same heap - a huge undertaking given that the whole VM was designed with a one-heap-one-mutator in mind. Sharing heap allows isolates within an <em>isolate group</em> to share parts of the heap object graph representing the program. This makes isolates <em>lightweight</em> and fast to spawn. The fact that isolates forming an isolate group coexist in the same heap is not visible to user code and only VM's own internal structures are shared. Messages are still passed by copying.</aside>
+                                </section>
+
+                                            <section style="font-size: .9em;">
+                <h3>Dart <mark>Isolate Groups</mark> (new!)</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+                    ╔═════════════════════════════════════╗
+                    ║ Isolate    Isolate      ┌─────────┐ ║
+                    ║                        ┌─────────┐│ ║
+                    ║ ┌───┐                 ┌─────────┐│┘ ║
+                    ║ │MSG│                 │ Program │┘  ║
+                    ║ └───┘                 └─────────┘   ║
+                    ╚═════════════════════════════════════╝
+
+                                        </code></pre>
+                                        <aside class="notes">We do however experiment with ways to make message passing cheaper (zero copy).</aside>
+                                </section>
+
+
+                                            <section style="font-size: .9em;">
+                <h3>Dart <mark>Isolate Groups</mark> (new!)</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+                    ╔═════════════════════════════════════╗
+                    ║            Isolate      ┌─────────┐ ║
+                    ║                        ┌─────────┐│ ║
+                    ║ ┌───┐                 ┌─────────┐│┘ ║
+                    ║ │MSG│                 │ Program │┘  ║
+                    ║ └───┘                 └─────────┘   ║
+                    ╚═════════════════════════════════════╝
+
+                                        </code></pre>
+                                        <aside class="notes">In some situations an isolate sending the message is known to exit (e.g. it was an auxiliary isolate spawned to perform a long one shot computation), in this case no sharing would occur if we simply <em>give</em> the message to the receiving isolate (as long as they exist within the same isolate group). We call this style of message passing <a href="https://github.com/dart-lang/sdk/issues/37835" target="_blank">"send-and-exit"</a>.</aside>
+                                </section>
+
+                                            <section style="font-size: .9em;">
+                <h3>Dart <mark>Isolate Groups</mark> (new!)</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+                    ╔═════════════════════════════════════╗
+                    ║            Isolate      ┌─────────┐ ║
+                    ║                        ┌─────────┐│ ║
+                    ║   ┌───┐               ┌─────────┐│┘ ║
+                    ║   │MSG│               │ Program │┘  ║
+                    ║   └───┘               └─────────┘   ║
+                    ╚═════════════════════════════════════╝
+
+                                        </code></pre>
+                                        <aside class="notes">In some situations an isolate sending the message is known to exit (e.g. it was an auxiliary isolate spawned to perform a long one shot computation), in this case no sharing would occur if we simply <em>give</em> the message to the receiving isolate (as long as they exist within the same isolate group). We call this style of message passing <a href="https://github.com/dart-lang/sdk/issues/37835" target="_blank">"send-and-exit"</a>.</aside>
+                                </section>
+
+                                            <section style="font-size: .9em;">
+                <h3>Dart <mark>Isolate Groups</mark> (new!)</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+                    ╔═════════════════════════════════════╗
+                    ║            Isolate      ┌─────────┐ ║
+                    ║                        ┌─────────┐│ ║
+                    ║     ┌───┐             ┌─────────┐│┘ ║
+                    ║     │MSG│             │ Program │┘  ║
+                    ║     └───┘             └─────────┘   ║
+                    ╚═════════════════════════════════════╝
+
+                                        </code></pre>
+                                        <aside class="notes">In some situations an isolate sending the message is known to exit (e.g. it was an auxiliary isolate spawned to perform a long one shot computation), in this case no sharing would occur if we simply <em>give</em> the message to the receiving isolate (as long as they exist within the same isolate group). We call this style of message passing <a href="https://github.com/dart-lang/sdk/issues/37835" target="_blank">"send-and-exit"</a>.</aside>
+                                </section>
+
+                                            <section style="font-size: .9em;">
+                <h3>Dart <mark>Isolate Groups</mark> (new!)</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+                    ╔═════════════════════════════════════╗
+                    ║            Isolate      ┌─────────┐ ║
+                    ║                        ┌─────────┐│ ║
+                    ║       ┌───┐           ┌─────────┐│┘ ║
+                    ║       │MSG│           │ Program │┘  ║
+                    ║       └───┘           └─────────┘   ║
+                    ╚═════════════════════════════════════╝
+
+                                        </code></pre>
+                                        <aside class="notes">In some situations an isolate sending the message is known to exit (e.g. it was an auxiliary isolate spawned to perform a long one shot computation), in this case no sharing would occur if we simply <em>give</em> the message to the receiving isolate (as long as they exist within the same isolate group). We call this style of message passing <a href="https://github.com/dart-lang/sdk/issues/37835" target="_blank">"send-and-exit"</a>.</aside>
+                                </section>
+
+                                            <section style="font-size: .9em;">
+                <h3>Dart <mark>Isolate Groups</mark> (new!)</h3>
+                <pre class="scheme"><code data-trim data-noescape>
+                    ╔═════════════════════════════════════╗
+                    ║            Isolate      ┌─────────┐ ║
+                    ║                        ┌─────────┐│ ║
+                    ║           ┌───┐       ┌─────────┐│┘ ║
+                    ║           │MSG│       │ Program │┘  ║
+                    ║           └───┘       └─────────┘   ║
+                    ╚═════════════════════════════════════╝
+
+                                        </code></pre>
+                                        <aside class="notes">In future we plan to look at other ways to avoid copying, if we can guarantee that no mutable data sharing would occur between isolates. It seems likely that would require some form of language support for <em>deeply immutable objects</em></aside>
+                                </section>
+
+                                <section>
+
+                                <h1>Learnings</h1>
+                                <aside class="notes">This concludes my whirlwind overview of Dart language evolution and changes in Dart native platform. At the end I would like to share two things I have learned while working on Dart VM.</aside>
+                            </section>
+                            <section>
+                                <h2>Everything counts</h2>
+                                <h3>at some point</h3>
+                                <aside class="notes">Every wasted word of space and every wasted cycle of CPU time will at some point matter - because there will be a user that hits this particular place many-many-many times turning one wasted word into megabytes and 1 wasted cycle into seconds. Sometimes however you can't make progress without making few sacrifices. Unfortunately you can't always predict which of your sacrifices will come to bite you first and which ones will stay hidden for years. The only remedy is to build things in a way which allows for fast evolution.</aside>
+                            </section>
+                            <section>
+                                <h2>It is all about the balance</h2>
+                                <h3>specialized vs generic</h3>
+                                <aside class="notes">When building VMs, especially when building them from scratch you often face a choice between specialized and generic solutions. Specialized solutions are faster to build and they usually give you good results quickly. Generic solutions take time to get of the ground and yet more time to tune to the quality of specialized ones. Why then develop generic solutions to begin with? Well, they are usually much easier to evolve. Specialized solutions usually require huge rewrites when requirements change.</aside>
+                            </section>
+                            <section>
+                                <h2><em>specialized solutions</em></h2>
+                                <h2><em>but generic foundations.</em></h2>
+                                <aside class="notes">The formula I have derived for myself is that VMs should consist of a think generic foundation layer and a thin specialized layer. This is what we are trying to achieve with Dart VM as well, even though our starting design was a bit of balance with a lot of specialized bits and pieces.<br/> <b>The End</b></aside>
+                            </section>
+                        </div>
+        </div>
+
+        <script src="dist/reveal.js"></script>
+        <script src="plugin/notes/notes.js"></script>
+        <script src="plugin/highlight/highlight.js"></script>
+        <script>
+            // More info about initialization & config:
+            // - https://revealjs.com/initialization/
+            // - https://revealjs.com/config/
+            Reveal.initialize({
+                hash: true,
+                transition: 'none',
+                showNotes: true,
+
+                // Learn about plugins: https://revealjs.com/plugins/
+                plugins: [ RevealHighlight, RevealNotes ]
+            });
+        </script>
+    </body>
+</html>
