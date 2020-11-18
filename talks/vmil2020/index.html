@@ -895,7 +895,7 @@ f(int anInt, double aDouble) {
 &nbsp;&nbsp;&nbsp;movzx cid, word ptr [obj + 15] ; load class id
    call [GDT + cid * 8 + #(sid * 8)]
                 </code></pre>
-                <pre class="scheme"><code data-trim data-noescape>
+                <pre class="scheme"><code data-trim data-noescape class="console">
 ┌────────────────────────┐ ╱
 │ Selectors are numbered ├
 │ such that GDT[cid+sid] │
