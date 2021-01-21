@@ -1,6 +1,6 @@
 ---
 layout: blogpost
-title: 'Microbenchmarking Dart (Part 1)'
+title: 'Micro&#8203;benchmarking Dart (Part 1)'
 date: 2020-01-11
 ---
 
@@ -553,8 +553,8 @@ Future<void> runBenchmarks(Map<String, void Function(int)> benchmarks) async {
 }
 ```
 
-NDK also comes with a helper script `$ANDROID_NDK/simpleperf/api_profiler.py`,
-which implements two commands:
+NDK also comes with a helper script `api_profiler.py`, which implements two
+commands:
 
 * `api_profiler.py prepare` configures your device for profiling - we are going
 to call it before running benchmarks;
@@ -624,13 +624,13 @@ don't contain any useful symbol information for `simpleperf` to use.
 
 Fortunately, `libflutter.so` symbols can be fetched from Cloud Storage where
 build infrastructure is archiving them, e.g. symbols for an ARM64 Android
-release build of Flutter engine at commit `e115066dcde115066dcd65008513c66414f2f682c358d76c2a`
+release build of Flutter engine at commit `e115066d...`
 reside in
 <code class="wrappable">gs://flutter_infra/flutter/e115066d.../android-arm64-release/symbols.zip</code>. Just few months ago I have written some Dart code for downloading and caching Flutter Engine symbols based on commit hash for [`@flutter-symbolizer-bot`](https://github.com/flutter-symbolizer-bot), so I could just reuse the very same code here.
 
 Getting symbols for `libapp.so` is a more interesting problem. Dart VM AOT
 compiler is capable of producing DWARF debug sections in the ELF binaries.
-However just passing `--extra-gen-snapshot-options=--dwarf-stack-traces` does
+However just passing <code class="wrappable">--extra-gen-snapshot-options=--dwarf-stack-traces</code> does
 not get us there: `libapp.so` will still be missing symbols. Inspection of
 Flutter CLI source reveals that it simply always [instructs AOT](https://github.com/flutter/flutter/blob/master/packages/flutter_tools/lib/src/base/build.dart#L143-L157) compiler to produce
 stripped output. <span class="sidenote">Users familiar with advanced Flutter tooling options might know about <code>--split-debug-info=...</code> flag which instructs AOT compiler to produce a separate ELF file
