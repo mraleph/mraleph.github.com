@@ -1,17 +1,17 @@
-@import url('https://fonts.googleapis.com/css?family=Alegreya:400,400i|Alegreya+Sans');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500,0,600;1,400&family=Inter&display=swap');
 
 body {
-  font-family: 'Alegreya', 'Bembo', Garamond, serif;
+  font-family: 'Inter', Garamond, serif;
   font-size: 1.2rem;
   letter-spacing: 0.01em;
 }
 
 h1, h2, h3, h4, h5 {
-  font-family: 'Alegreya Sans', 'Lato', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 code, pre {
-  font-family: 'Iosevka Custom', 'Input Mono', 'Source Code Pro', 'Fira Mono', monospace;
+  font-family: 'IBM Plex Mono', monospace;
   font-size: .9em;
 }
 
@@ -22,6 +22,10 @@ small code, small pre {
 body {
   padding: 0px;
   margin: 0px;
+}
+
+p {
+  position: relative;
 }
 
 sup {
@@ -66,7 +70,7 @@ sup {
     margin-right: auto;
     padding-left: 2em;
   }
-
+/*
   div.highlighter-rouge {
     background: #fdf6e3;
     border-top: 1px solid #eee8d5;
@@ -76,6 +80,7 @@ sup {
   div.highlighter-rouge .highlight {
     border: 0px;
   }
+*/
 
   .post-title > div {
     max-width: 600px;
@@ -94,10 +99,6 @@ h2::after, h3::after, h4::after, h5::after {
   bottom: -.5em;
   left: 0;
   height: 1em;
-}
-
-.console, .language-console {
-  background-color: #002b36; color: white;
 }
 
 .post-comments {
@@ -201,20 +202,25 @@ img.centered, .post-body > p > img:only-child {
 
 .sidenote-host { position: relative; }
 
+.sidenote, aside {
+  color: gray;
+}
+
 @media (min-width: 1300px) {
-  .sidenote {
+  .sidenote, aside {
     margin-right: -260px;
     position: absolute;
     right: 0;
-    top: auto; /* default */
+    top: 0;
     width: 240px;
-    color: gray;
+    text-align: left;
+    line-height: 1.5em;
+    font-size: .9rem;
   }
 }
 
 @media (max-width: 1300px) {
-  .sidenote {
-    color: gray;
+  .sidenote, aside {
     display: block;
     margin-top: 0.2em;
     margin-bottom: 0.1em;
@@ -230,10 +236,15 @@ pre code {
 }
 
 p, li {
-  line-height: 1.5em;
+  line-height: 1.8em;
   text-align: justify;
 }
 
 li {
   list-style-type: square;
+}
+
+code.wrappable {
+  line-break: anywhere;
+  white-space: normal;
 }

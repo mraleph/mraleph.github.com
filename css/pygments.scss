@@ -1,0 +1,117 @@
+---
+# this ensures Jekyll reads the file to be transformed into CSS later
+# only Main files contain this front matter, not partials.
+---
+
+.highlight {
+  line-height: initial;
+
+  pre {
+    --bg: #fff;
+    --fg: #000;
+    --comment: #6a737d;
+    --punctuation: inherit;
+    --operator: inherit;
+    --entity: #6f42c1;
+    --keyword: #d73a49;
+    --variable: #e36209;
+    --string-constant: #032f62; /* strings etc */
+    --numeric-constant: #005cc5;
+
+    padding: 1em;
+    background: var(--bg);
+    color: var(--fg);
+
+    /* punctuation */
+    & .p { color: var(--punctuation); }
+
+    /* syntax error */
+    /*& .err { color: #ff0015; }*/
+
+    /* names / identifiers */
+    /*& .n ,*/ /* Name */
+    & .na, /* Name.Attribute */
+    & .nb, /* Name.Builtin */
+    & .nc, /* Name.Class */
+    & .no, /* Name.Constant */
+    & .nd, /* Name.Decorator */
+    & .ni, /* Name.Entity */
+    & .ne, /* Name.Exception */
+    & .nf, /* Name.Function */
+    & .nl, /* Name.Label */
+    & .nn, /* Name.Namespace */
+    & .nx,
+    & .py,
+    & .nt /* Name.Tag */ {
+      color: var(--entity);
+    }
+
+    & .vc,
+    & .vg,
+    & .vi,
+    & .nv {
+      color: var(--variable);
+    }
+
+    & .bp { /* Builtin.Pseudo */
+
+    }
+
+    & .o,
+    & .ow { color: var(--operator); }
+
+    & .c,
+    & .cm,
+    & .cp,
+    & .c1,
+    & .cs { color: var(--comment); font-style: italic; }
+
+    /* Keywords */
+    & .k,
+    & .kc,
+    & .kd,
+    & .kn,
+    & .kp,
+    & .kr,
+    & .kt { color: var(--keyword); font-weight: 500; }
+
+    /* strings */
+    & .s,
+    & .sb,
+    & .sd,
+    & .sc,
+    & .s2,
+    & .se,
+    & .sh,
+    & .si,
+    & .sx,
+    & .sr,
+    & .ss,
+    & .s1 { color: var(--string-constant); }
+
+    /* number */
+    & .m, & .mi, & .mf { color: var(--numeric-constant); }
+
+    & .gi /* Generic.Inserted */ {
+      color: #22863a;
+      background-color: #f0fff4;
+    }
+
+    & .gd /* Generic.Deleted */ {
+      color: #b31d28;
+      background-color: #ffeef0;
+    }
+
+    /* ? */
+    /*& .l,
+    & .ld,
+    & .m,
+    & .mf,
+    & .mh,
+    & .mi,
+    & .mo,
+    & .nx,
+    & .il { color: #ff0000; }*/
+  }
+}
+
