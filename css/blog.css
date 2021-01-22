@@ -1,14 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Inter&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import url('https://rsms.me/inter/inter.css');
+@import url('https://rsms.me/inter/inter-display.css');
+
+:root { font-family: 'Inter', sans-serif; }
+@supports (font-variation-settings: normal) {
+  :root { font-family: 'Inter var', sans-serif; }
+}
 
 body {
-  font-family: 'Inter', Garamond, serif;
-  font-size: 1.2rem;
+  font-size: 16px;
   letter-spacing: 0.01em;
 }
 
 h1, h2, h3, h4, h5 {
-  font-family: 'Inter', sans-serif;
+  font-family: 'InterDisplay', sans-serif;
 }
+
+h2 {
+  font-weight: 500;
+}
+
+h3 {
+  font-weight: 600;
+}
+
+
 
 code, pre {
   font-family: 'IBM Plex Mono', monospace;
@@ -35,7 +51,8 @@ sup {
 }
 
 .post-title {
-  text-align: center;
+  text-align: left;
+  margin-bottom: 3em;
 }
 
 @media (max-width: 999px) {
@@ -81,12 +98,6 @@ sup {
     border: 0px;
   }
 */
-
-  .post-title > div {
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 
 h2, h3, h4, h5 {
@@ -106,11 +117,11 @@ h2::after, h3::after, h4::after, h5::after {
 }
 
 .post-title div {
-  font-family: 'Alegreya Sans', 'Lato', sans-serif;
+  font-family: 'InterDisplay', sans-serif;
   font-size: 2.5rem;
   margin-top: 0.83em;
   margin-bottom: 5px;
-  font-weight: bold;
+  font-weight: 600;
   letter-spacing: 0.05em;
   font-feature-settings: "liga" 0;
 }
@@ -202,12 +213,12 @@ img.centered, .post-body > p > img:only-child {
 
 .sidenote-host { position: relative; }
 
-.sidenote, aside {
+.sidenote {
   color: gray;
 }
 
 @media (min-width: 1300px) {
-  .sidenote, aside {
+  .sidenote {
     margin-right: -260px;
     position: absolute;
     right: 0;
@@ -220,10 +231,14 @@ img.centered, .post-body > p > img:only-child {
 }
 
 @media (max-width: 1300px) {
-  .sidenote, aside {
+  .sidenote {
     display: block;
     margin-top: 0.2em;
     margin-bottom: 0.1em;
+    font-size: .8em;
+    line-height: 1.5em;
+    background-color: rgba(128,128,128,0.1);
+    padding: .8em;
   }
 }
 
@@ -236,8 +251,8 @@ pre code {
 }
 
 p, li {
-  line-height: 1.8em;
-  text-align: justify;
+  line-height: 24px;
+  text-align: left;
 }
 
 li {
