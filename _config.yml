@@ -2,7 +2,8 @@ permalink: /blog/:year/:month/:day/:title.html
 markdown: kramdown
 highlighter: rouge
 exclude: ["js/MathJax-2.4-latest", "vendor"]
-gems:
+plugins:
+  - jekyll-redirect-from
   - jekyll-feed
 sass:
   sass_dir: _sass
