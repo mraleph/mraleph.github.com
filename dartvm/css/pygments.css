@@ -1,0 +1,77 @@
+.highlight {
+  line-height: initial;
+}
+.highlight pre {
+  --bg: #fff;
+  --fg: #000;
+  --comment: #6a737d;
+  --punctuation: inherit;
+  --operator: inherit;
+  --entity: #6f42c1;
+  --keyword: #d73a49;
+  --variable: #e36209;
+  --string-constant: #032f62;
+  /* strings etc */
+  --numeric-constant: #005cc5;
+  padding: 1em;
+  background: var(--bg);
+  color: var(--fg);
+  /* punctuation */
+  /* syntax error */
+  /*& .err { color: #ff0015; }*/
+  /* names / identifiers */
+  /*& .n ,*/
+  /* Name */
+  /* Keywords */
+  /* strings */
+  /* number */
+  /* ? */
+  /*& .l,
+  & .ld,
+  & .m,
+  & .mf,
+  & .mh,
+  & .mi,
+  & .mo,
+  & .nx,
+  & .il { color: #ff0000; }*/
+}
+.highlight pre .p {
+  color: var(--punctuation);
+}
+.highlight pre .na, .highlight pre .nb, .highlight pre .nc, .highlight pre .no, .highlight pre .nd, .highlight pre .ni, .highlight pre .ne, .highlight pre .nf, .highlight pre .nl, .highlight pre .nn, .highlight pre .nx, .highlight pre .py, .highlight pre .nt {
+  color: var(--entity);
+}
+.highlight pre .vc, .highlight pre .vg, .highlight pre .vi, .highlight pre .nv {
+  color: var(--variable);
+}
+.highlight pre .bp {
+  /* Builtin.Pseudo */
+}
+.highlight pre .o, .highlight pre .ow {
+  color: var(--operator);
+}
+.highlight pre .c, .highlight pre .cm, .highlight pre .cp, .highlight pre .c1, .highlight pre .cs {
+  color: var(--comment);
+  font-style: italic;
+}
+.highlight pre .k, .highlight pre .kc, .highlight pre .kd, .highlight pre .kn, .highlight pre .kp, .highlight pre .kr, .highlight pre .kt {
+  color: var(--keyword);
+  font-weight: 500;
+}
+.highlight pre .s, .highlight pre .sb, .highlight pre .sd, .highlight pre .sc, .highlight pre .s2, .highlight pre .se, .highlight pre .sh, .highlight pre .si, .highlight pre .sx, .highlight pre .sr, .highlight pre .ss, .highlight pre .s1 {
+  color: var(--string-constant);
+}
+.highlight pre .m, .highlight pre .mi, .highlight pre .mf {
+  color: var(--numeric-constant);
+}
+.highlight pre .gi {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+.highlight pre .gd {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+
+/*# sourceMappingURL=pygments.css.map */

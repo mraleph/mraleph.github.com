@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h1>AOT code size analysis</h1>
+<p>The Dart VM's AOT compiler has support for emitting binary size information
+for all the code that gets generated. This information can then be visualized.</p>
+<h2>Telling the AOT compiler to generate binary size information</h2>
+<p>Our AOT compiler accepts an extra <code>--print-instructions-sizes-to=sizes.json</code>
+flag. If supplied the AOT compiler will emit binary size information for all
+generated functions to <code>sizes.json</code>.</p>
+<p>This flag can be passed to <code>gen_snapshot</code> directly, or to the various wrapper
+scripts (e.g. <code>pkg/vm/tool/precompiler2</code>):</p>
+<div class="highlight"><pre><span></span><code>% tools/build.py -mrelease -ax64 runtime_kernel dart_precompiled_runtime
+% pkg/vm/tool/precompiler2 --print-instructions-sizes-to=hello_sizes.json hello.dart hello.dart.aot
+</code></pre></div>
+<p>In Flutter, pass this argument to <code>flutter build</code>:</p>
+<div class="highlight"><pre><span></span><code>% flutter build aot --release --extra-gen-snapshot-options=--print-instructions-sizes-to=hello_sizes.json
+</code></pre></div>
+<h2>Visualizing the information from the binary size json file</h2>
+<p>To visualize the information emitted by the AOT compiler one can use our binary
+size analysis tool:</p>
+<div class="highlight"><pre><span></span><code>% dart pkg/vm/bin/snapshot_analysis.dart treemap hello_sizes.json hello_sizes
+Generated file:///.../sdk/hello_sizes/index.html
+% chrome hello_sizes/index.html
+</code></pre></div>
+<h2>Comparing the sizes of two AOT builds</h2>
+<p>To visualize the differences between two AOT builds one can use our binary size
+comparison tool:</p>
+<div class="highlight"><pre><span></span><code>% dart pkg/vm/bin/snapshot_analysis.dart compare app-sizes--before.json app-sizes--after.json
+
++---------+--------+--------------+
+| Library | Method | Diff (Bytes) |
++---------+--------+--------------+
+...
+</code></pre></div>
+<h2>Object-level data</h2>
+<p>gen_snapshot also accepts an extra <code>--write-v8-snapshot-profile-to=hello.heapsnapshot</code>
+flag. If supplied the AOT compiler will emit snapshot size information for all objects in the snapshot
+to <code>hello.heapsnapshot</code> in V8 snapshot format.</p>
+<p>This flag can be passed to <code>gen_snapshot</code> directly, or to the various wrapper
+scripts (e.g. <code>pkg/vm/tool/precompiler2</code>):</p>
+<div class="highlight"><pre><span></span><code>% tools/build.py -mrelease -ax64 runtime_kernel dart_precompiled_runtime
+% pkg/vm/tool/precompiler2 --write-v8-snapshot-profile-to=hello.heapsnapshot hello.dart hello.dart.aot
+</code></pre></div>
+<p>In Flutter, pass this argument to <code>flutter build</code>:</p>
+<div class="highlight"><pre><span></span><code>% flutter build aot --release --extra-gen-snapshot-options=--write-v8-snapshot-profile-to=hello.heapsnapshot
+</code></pre></div>
+<p>This output can be visualized by loading it in the "Memory" tab in Chrome's developer tools, or by loading it into <a href="../tools/graphexplorer/graphexplorer.html">Graph Explorer</a>.</p>
+    </div>
+  </body>
+</html>

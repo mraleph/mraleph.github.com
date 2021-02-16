@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dart VM</title>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" type="text/css">
 <link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
@@ -22,10 +22,10 @@
 
   <body>
     <div class="content">
-      <h2><span class="section-number"></span> Exceptions Implementation</h2>
+      <h1>Exceptions Implementation</h1>
 <p>This page describes how exceptions throwing and catching is implemented in the
 VM.</p>
-<h3><span class="section-number">1</span> Intermediate Language</h3>
+<h2>Intermediate Language</h2>
 <p>Dart VM's IL <strong>does not</strong> explicitly represent exceptional control flow in its
 flow graph, there are <strong>no</strong> explicit exceptional edges connecting potentially
 throwing instructions (e.g. calls) with corresponding catch blocks. Instead this
@@ -54,7 +54,7 @@ the given local variable (see <a href="compiler-pipeline-overview.md#optimized-i
 IL</a> for
 an overview). However the way we use these information for exception handling is
 slightly different in JIT and AOT modes.</p>
-<h4><span class="section-number">1.1</span> AOT mode</h4>
+<h3>AOT mode</h3>
 <p>AOT mode does not support deoptimization and thus AOT compiler does not
 associate any deoptimization metadata with generated code. Instead
 deoptimization environments associated with instructions that can throw are
@@ -77,7 +77,7 @@ stack for the catch block entry. See
 <p>NOTE: See <a href="https://docs.google.com/a/google.com/document/d/1_vX8VkvHVA1Om7jjONiWLA325k_JmSZuvVClet-x-xM/edit?usp=sharing">this
 design/motivation</a>
 document for <code>CatchEntryMoves</code> metadata</p>
-<h4><span class="section-number">1.2</span> JIT mode</h4>
+<h3>JIT mode</h3>
 <p>JIT mode heavily relies on deoptimization and all call instructions have (lazy)
 deoptimization environments associated with them. These environments are
 converted to <a href="deoptimization.md#in-optimized-code">deoptimization
@@ -91,13 +91,6 @@ catch block entry. See <code>ExceptionHandlerFinder::{GetCatchEntryMovesFromDeop
 allows to avoid unnecessary duplication of the metadata and save memory: as
 deoptimization environments contain all information necessary for constructing
 correct stack state.</p>
-<p class="special-important"><strong>IMPORTANT:</strong> There is a subtle difference between DBC and other architectures with
-respect to catch block entry state. On normal architectures <code>Parameter(i)</code> at
-catch entry would be associated with the same stack space that would be used to
-store variable with index <code>i</code>. On DBC however at catch entry <code>Parameter(i)</code>
-would be allocated to a separate scratch space at the very top of the register
-space. See <code>FlowGraphAllocator::ProcessInitialDefinition</code> and
-<code>FlowGraphCompiler::CatchEntryRegForVariable</code>.</p>
     </div>
   </body>
 </html>

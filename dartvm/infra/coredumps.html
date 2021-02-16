@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dart VM</title>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" type="text/css">
 <link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
@@ -22,7 +22,7 @@
 
   <body>
     <div class="content">
-      <h2><span class="section-number"></span> Crash Dumps Archiving</h2>
+      <h1>Crash Dumps Archiving</h1>
 <p>Testing framework and buildbot/LUCI infrastructure have support for archiving
 crash dumps and crashed binaries for unexpected crashes for postmortem
 debugging.</p>
@@ -30,28 +30,27 @@ debugging.</p>
 is supported on all three major OSes we run our tests on.</p>
 <p>Currently crash dump archiving should be enabled on the majority of the VM
 bots, including those running in CQ.</p>
-<h4><span class="section-number">1.1</span> Known limitations</h4>
+<h3>Known limitations</h3>
 <ul>
 <li>We don't archive crash dumps produced by subprocesses (e.g. service tests);</li>
 <li>We don't produce and archive crash dumps for hanged processes.</li>
 </ul>
-<h4><span class="section-number">1.2</span> Maintainers</h4>
+<h3>Maintainers</h3>
 <p>For any questions about this infrastructure contact vegorov@, kustermann@ or
 athom@.</p>
-<h3><span class="section-number">2</span> Downloading dumps</h3>
+<h2>Downloading dumps</h2>
 <p>To find if a bot managed to upload any crashdumps open its log and search for
 <code>Archiving coredumps for crash</code>. Depending on the bot configuration you
 might need to look for uploaded artifacts in two different locations.</p>
-<h4><span class="section-number">2.1</span> Isolate Server</h4>
+<h3>Isolate Server</h3>
 <p>Swarming bots upload dumps to the isolate server. In this case you will see
 something like this in the log:</p>
-<div class="codehilite"><pre><span></span>INFO: Core dump archiving is activated
+<div class="highlight"><pre><span></span><code>INFO: Core dump archiving is activated
 Archiving coredumps for crash (if possible):
 ----&gt; Crash(language_2/call_method_implicit_tear_off_test/02: binary.release_x64_dart.exe 1556)
 +++ Copying 6e3e4b40-206e-4ae6-99e8-c2c94cc21a98.dmp.tar.gz to output_directory (C:\b\s\w\ioz_p_ei)
 +++ Copying release_x64_dart.exe.tar.gz to output_directory (C:\b\s\w\ioz_p_ei)
-</pre></div>
-
+</code></pre></div>
 <p>If you see <code>+++ Copying ... to output_directory</code> this means that the bot
 is using isolate storage. In this case you need to look for
 <code>shard #... isolated out</code> link under the failed step.</p>
@@ -59,10 +58,10 @@ is using isolate storage. In this case you need to look for
 <p>This link would bring you to isolate server file browser where you will be
 able to download archived artifacts.</p>
 <p><img alt="Isolate Server Browser" src="images/isolated-out-browser.png" /></p>
-<h4><span class="section-number">2.2</span> Cloud Storage</h4>
+<h3>Cloud Storage</h3>
 <p>Other bots upload collected artifacts into a <code>dart-temp-crash-archive</code> Cloud Storage bucket. In this case you will see
 <code>+++ Uploaded gs://dart-temp-crash-archive/...</code> in the output log. For example:</p>
-<div class="codehilite"><pre><span></span>Archiving coredumps for crash (if possible):
+<div class="highlight"><pre><span></span><code>Archiving coredumps for crash (if possible):
 ----&gt; Crash(language_2/mixin_interface_check_test/mixin: binary.release_ia32_dart.exe 10620)
 
 --- Uploading into gs://dart-temp-crash-archive/0da77e10-d349-4c45-a146-0ce052972b03/ (https://storage.cloud.google.com/dart-temp-crash-archive/0da77e10-d349-4c45-a146-0ce052972b03/) ---
@@ -71,18 +70,15 @@ Running command:  [&#39;C:\\b\\s\\w\\ir\\cache\\vpython\\2d366b\\Scripts\\python
 Running command:  [&#39;C:\\b\\s\\w\\ir\\cache\\vpython\\2d366b\\Scripts\\python.exe&#39;, &#39;C:\\b\\s\\w\\ir\\cache\\builder\\sdk\\third_party\\gsutil\\gsutil&#39;, &#39;cp&#39;, &#39;a92618b1-0f99-4c87-a9fb-adb3e44ad458.dmp.tar.gz&#39;, &#39;gs://dart-temp-crash-archive/0da77e10-d349-4c45-a146-0ce052972b03/a92618b1-0f99-4c87-a9fb-adb3e44ad458.dmp.tar.gz&#39;]
 +++ Uploaded gs://dart-temp-crash-archive/0da77e10-d349-4c45-a146-0ce052972b03/a92618b1-0f99-4c87-a9fb-adb3e44ad458.dmp.tar.gz (https://storage.cloud.google.com/dart-temp-crash-archive/0da77e10-d349-4c45-a146-0ce052972b03/a92618b1-0f99-4c87-a9fb-adb3e44ad458.dmp.tar.gz)
 --- Done ---
-</pre></div>
-
+</code></pre></div>
 <p>In this case you can use <code>gsutil.py</code> from <code>depot_tools</code> (or <code>gsutil</code> from Cloud
 SDK) to download these artifacts:</p>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> gsutil.py cp gs://dart-temp-crash-archive/&lt;src-path&gt; &lt;dst-path&gt;
-</pre></div>
-
-<h3><span class="section-number">3</span> Analyzing Dumps</h3>
-<h4><span class="section-number">3.1</span> Linux</h4>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> gdb &lt;binary&gt; &lt;core&gt;
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>gsutil.py cp gs://dart-temp-crash-archive/&lt;src-path&gt; &lt;dst-path&gt;
+</code></pre></div>
+<h2>Analyzing Dumps</h2>
+<h3>Linux</h3>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>gdb &lt;binary&gt; &lt;core&gt;
+</code></pre></div>
 <p>Because bots are running slightly different Linux versions that what is
 available on development machines <code>gdb</code> might not be able to properly
 resolve symbols and unwind the stack by itself.</p>
@@ -93,31 +89,29 @@ on that instance;</li>
 <li>create a sysroot that matches operating system on the bots and tell gdb to
 use that sysroot with <code>set sysroot</code> command.</li>
 </ul>
-<h5><span class="section-number">3.1.1</span> ARM/ARM64</h5>
+<h4>ARM/ARM64</h4>
 <p>If you have a core produced on ARM or ARM64 bot and you would like to inspect
 it on a non-ARM development machine, then you will need <code>gdb-multiarch</code> and
 sysroot that matches OS version on the bot. Then you can use <code>set sysroot ...</code>
 and <code>set architecture ...</code> to configure <code>gdb-multiarch</code> before loading <code>core</code>.</p>
-<h4><span class="section-number">3.2</span> Mac</h4>
-<div class="codehilite"><pre><span></span><span class="gp">$</span> lldb &lt;binary&gt; -c &lt;core&gt;
-</pre></div>
-
-<h4><span class="section-number">3.3</span> Windows</h4>
+<h3>Mac</h3>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>lldb &lt;binary&gt; -c &lt;core&gt;
+</code></pre></div>
+<h3>Windows</h3>
 <p>Googlers can find WinDBG and CDB in <code>%depot_tools%\win_toolchain\vs_files\%toolchain_version%\win_sdk\Debuggers\x64\</code>.</p>
 <p>For quick investigation you can do</p>
-<div class="codehilite"><pre><span></span><span class="hll"><span class="go">cdb.exe -z &lt;coredump.dmp&gt;</span>
-</span><span class="go">.</span>
-<span class="go">000&gt; !uniqstack</span>
-<span class="go">.</span>
-</pre></div>
-
-<h3><span class="section-number">4</span> Implementation details</h3>
+<div class="highlight"><pre><span></span><code><span class="go">&gt; cdb.exe -z &lt;coredump.dmp&gt;</span>
+<span class="go">...</span>
+<span class="go">0:000&gt; !uniqstack</span>
+<span class="go">...</span>
+</code></pre></div>
+<h2>Implementation details</h2>
 <p>Implementation of crash dump archiving consists of two parts:</p>
 <ul>
 <li>Code in the testing framework (<code>UnexpectedCrashLogger</code> in
-<code>tools/testing/dart/test_progress.dart</code>) that detects unexpected crashes, that
-is situations when test <em>unexpectedly</em> completes with a <code>Crash</code> status. In this
-case it logs a line about this crash into <code>unexpected-crashes</code> file in the
+<code>pkg/test_runner/lib/src/test_progress.dart</code>) that detects unexpected crashes,
+that is situations when test <em>unexpectedly</em> completes with a <code>Crash</code> status. In
+this case it logs a line about this crash into <code>unexpected-crashes</code> file in the
 root of the SDK checkout. This line has format <code>test,pid,binary</code> and identifies
 which test crashed, what was the process id and which binary crashed.</li>
 <li>Code in the Python wrapper around testing framework (see <code>CoreDumpArchiver</code>
@@ -133,7 +127,7 @@ in <code>tools/utils.py</code>) is responsible for<ul>
 </ul>
 </li>
 </ul>
-<h4><span class="section-number">4.1</span> Linux</h4>
+<h3>Linux</h3>
 <p>We rely on builtin ability of the OS to generate core files (<code>man core</code>) when
 the program is terminated abnormally.</p>
 <p>We adjust core resource limits to <code>unlimited</code> before running tests. See <code>man setrlimit</code> for more information (search for <code>RLIMIT_CORE</code>).</p>
@@ -143,14 +137,14 @@ process.</p>
 <p>Core dump archiving code then uses pids to match unexpected crashes with core
 dumps.</p>
 <p>See <code>LinuxCoreDumpArchiver</code> and <code>LinuxCoreDumpEnabler</code> in <code>tools/utils.py</code>.</p>
-<h4><span class="section-number">4.2</span> Mac</h4>
+<h3>Mac</h3>
 <p>Just like on Linux we rely on OS to produce core files (<code>man core</code>) and
 similarly set core resource limits to <code>unlimited</code>.</p>
 <p>Core files are also mangled with PID of the crashing process.</p>
 <p>The only difference from Linux is that on Mac core files are written into
 <code>/cores</code> directory instead of current working directory.</p>
 <p>See <code>MacOSCoreDumpArchiver</code> and <code>PosixCoreDumpEnabler</code> in <code>tools/utils.py</code>.</p>
-<h4><span class="section-number">4.3</span> Windows</h4>
+<h3>Windows</h3>
 <p>On Windows we rely on <a href="https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md">Crashpad</a>
 library to produce minidumps of the crashed process, because configuring
 builtin crash reporting functionality requires registry changes that are global,
@@ -177,7 +171,7 @@ process id of the crashed process (see <code>utils/minidump.py</code> library).<
 <p>See <code>WindowsCoreDumpEnabler</code> and <code>WindowsCoreDumpArchiver</code> in <code>tools/utils.py</code>.</p>
 <p><strong>Note: <code>DART_CRASHPAD_CRASHES_DIR</code> is set by <code>WindowsCoreDumpEnabler</code> in
 <code>tools/utils.py</code>, while <code>DART_CRASHPAD_HANDLER</code> is set by <code>TestSuite</code> in
-<code>tools/testing/dart/test_suite.dart</code>.</strong></p>
+<code>pkg/test_runner/lib/src/test_suite.dart</code>.</strong></p>
 <p><strong>Note: Crashpad is optimized for end-user crash reporting use case and does not write full crash dumps.</strong></p>
     </div>
   </body>

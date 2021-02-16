@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h1>Dart MiniDesign Doc</h1>
+<h2>Optimization Levels for AOT Dart Compiler</h2>
+<h1>Introduction</h1>
+<p>In order to strike the right balance between compile-time, code speed, and code size, most optimizing compilers support several levels of optimizations, typically controlled by an -Ox switch. The usual ones relevant to this design code are:</p>
+<ul>
+<li>O0: short compilation-time, unoptimized code, small code size; highly debuggable</li>
+<li>O2: medium compilation-time, optimized code, reasonable code size</li>
+<li>O3: potentially long compilation-time, highly optimized code, possibly larger code size</li>
+<li>Os: medium compilation-time, optimized while favoring code size</li>
+</ul>
+<p>The O0 level is typically used during development and early testing, when a very fast compilation-time is more desirable than code speed. Also, this code is best for debugging, since unoptimized code has a very straightforward mapping between native instructions and memory locations and source program instructions and variables.</p>
+<p>The O2 level is used to generate code for shipping. It strikes a right balance between compile-time and generated code speed and size. Since shipping occurs less frequently than debugging and testing, slightly longer compilation-times are acceptable.</p>
+<p>When either code speed or size is favored, respectively, levels O3 or Os are used. For the former, longer compilation-times are acceptable as well.</p>
+<p>The Dart compiler conceptually only supports level O0 (the un-optimized code that is used as our deopt "fallback") and level O2 (optimized code). Although the quality of optimization can heavily depend on profile feedback (JIT) and the possibility for speculative execution, both JIT and AOT strike more or less the same balance between generated code speed and size.</p>
+<h1>Proposal</h1>
+<p>Some optimizations are known to benefit mostly code speed (with an unfavorable or unknown impact on code size) or mostly code size (with an unfavorable or unknown impact on code speed). For example, more aggressively inlining (to a certain extent) usually yields faster but more sizable code. Conversely, not aligning code (where allowed) usually yields more compact, but potentially slower running code.</p>
+<p>Sometimes performing more expensive analysis, which negatively impacts compile-time, may discover more optimization opportunities in some cases, but remain completely empty handed in other cases. For example, doing an expensive data dependence analysis of loops only pays of if the loop is eventually vectorized or parallelized. Otherwise, all analysis time is wasted.</p>
+<p>Note that almost every optimization decision_ is heuristic in nature_; optimizations generally improve a certain aspect of the code, but there are no hard guarantees.</p>
+<p>Since Dart conceptually only supports O2, <em>all</em> optimizations must always be chosen to strike a balance between compile-time and generated code speed and size. In order to give users more control over the optimization decision when using the Dart compiler, we propose adding the concept of Os and O3 as additional compilation modes. This could be implemented as an optimization level, for example as:</p>
+<div class="highlight"><pre><span></span><code>--optimization_level=
+       0: unoptimized (O0)
+       1: size optimized (Os)
+       2: default optimized (O2)
+       3: speed optimized (O3)
+</code></pre></div>
+<p>Level 0 corresponds to our current unoptimized path, whereas level 2 corresponds to the default path through our optimization passes. The other two levels alter the default path using the following guidelines.</p>
+<ul>
+<li>optimization_level=1 (Os)<ul>
+<li>Skip O2 optimizations that tend to increase code size, even if doing so may negatively impacts code speed</li>
+<li>Introduce new optimizations that "heuristically" decrease code size, but at high risk of negatively impacting code speed</li>
+</ul>
+</li>
+<li>optimization_level=3 (O3)<ul>
+<li>Introduce more detailed analysis or optimizations that "heuristically" increase code speed, but at high risk of negatively impacting compile-time or code size</li>
+</ul>
+</li>
+</ul>
+<p>The guidelines are intentionally worded this way to avoid reckless use of the flag as a substitute for proper heuristics. For example, an optimization aimed at reducing code size with a neutral impact on code speed belongs in O2, not Os. As another example, always inlining without proper heuristics just in the hope to improve speed by blindly giving up size is not something we want in O3. Also, inlining heuristics that overall increase code speed with only minimal code size increase belongs in O2.</p>
+<p>The proposal would apply to both the JIT and AOT compiler (to avoid adding yet another dimension through the optimization passes), although initially we may only want to expose the switch externally for the AOT compiler.</p>
+<p>Advantages of approach:</p>
+<ul>
+<li>Allows new optimizations for size or speed that don't fit the current O2 philosophy</li>
+<li>Enables removal of existing optimization from O2 that had a disproportionate negative impact on only size</li>
+<li>Allows introduction of more expensive analysis that can (but is not guaranteed to) find more opportunities for optimization</li>
+<li>Gives more control to users that favor size or speed differently than others</li>
+<li>Potentially gives more insights on optimizations that were initially deemed to risky but helped "in the field"; perhaps better heuristics can be found to move these to O2</li>
+</ul>
+<p>Disadvantages of the approach:</p>
+<ul>
+<li>Two additional code paths through compiler, increases the size of all testing matrices (Dart, Flutter, performance, correctness)</li>
+<li>Risk of misusing the flag to avoid spending time finding better heuristics</li>
+</ul>
+    </div>
+  </body>
+</html>

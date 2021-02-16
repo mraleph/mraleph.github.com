@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dart VM</title>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" type="text/css">
 <link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
@@ -22,8 +22,8 @@
 
   <body>
     <div class="content">
-      <h2><span class="section-number"></span> VM-Specific Pragma Annotations</h2>
-<h3><span class="section-number">1</span> Pragmas for general use</h3>
+      <h1>VM-Specific Pragma Annotations</h1>
+<h2>Pragmas for general use</h2>
 <p>These pragmas are part of the VM's API and are safe for use in external code.</p>
 <table>
 <thead>
@@ -37,9 +37,39 @@
 <td><code>vm:entry-point</code></td>
 <td><a href="compiler/aot/entry_point_pragma.md">Defining entry-points into Dart code for an embedder or native methods</a></td>
 </tr>
+<tr>
+<td><code>vm:never-inline</code></td>
+<td><a href="compiler/pragmas_recognized_by_compiler.md#requesting-a-function-never-be-inlined">Never inline a function or method</a></td>
+</tr>
+<tr>
+<td><code>vm:prefer-inline</code></td>
+<td><a href="compiler/pragmas_recognized_by_compiler.md#requesting-a-function-be-inlined">Inline a function or method when possible</a></td>
+</tr>
+<tr>
+<td><code>vm:notify-debugger-on-exception</code></td>
+<td>Marks a function that catches exceptions, making the VM treat any caught exception as if they were uncaught. This can be used to notify an attached debugger during debugging, without pausing the app during regular execution.</td>
+</tr>
 </tbody>
 </table>
-<h3><span class="section-number">2</span> Pragmas for internal use</h3>
+<h2>Unsafe pragmas for general use</h2>
+<p>These pragmas are available for use in third-party code but are potentially
+unsafe. The use of these pragmas is discouraged unless the developer fully
+understands potential repercussions.</p>
+<table>
+<thead>
+<tr>
+<th>Pragma</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vm:unsafe:no-interrupts</code></td>
+<td>Removes all <code>CheckStackOverflow</code> instructions from the optimized version of the marked function, which disables stack overflow checking and interruption within that function. This pragma exists mainly for performance evaluation and should not be used in a general-purpose code, because VM relies on these checks for OOB message delivery and GC scheduling.</td>
+</tr>
+</tbody>
+</table>
+<h2>Pragmas for internal use</h2>
 <p>These pragmas can cause unsound behavior if used incorrectly and therefore are only allowed within the core SDK libraries.</p>
 <table>
 <thead>
@@ -51,11 +81,15 @@
 <tbody>
 <tr>
 <td><code>vm:exact-result-type</code></td>
-<td><a href="compiler/result_type_pragma.md">Declaring an exact result type of a method</a></td>
+<td><a href="compiler/pragmas_recognized_by_compiler.md#providing-an-exact-result-type">Declaring an exact result type of a method</a></td>
+</tr>
+<tr>
+<td><code>vm:recognized</code></td>
+<td><a href="compiler/pragmas_recognized_by_compiler.md#marking-recognized-methods">Marking this as a recognized method</a></td>
 </tr>
 </tbody>
 </table>
-<h3><span class="section-number">3</span> Pragmas for internal testing</h3>
+<h2>Pragmas for internal testing</h2>
 <p>These pragmas are used for inspecting or modifying internal VM state and should be used exclusively by SDK tests.
 They must be enabled with the <code>--enable-testing-pragmas</code> flag.
 The names of these pragmas are prefixed with "testing".

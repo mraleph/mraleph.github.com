@@ -1,0 +1,267 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h1>Using and interpreting DWARF stack traces</h1>
+<p>The Dart VM AOT compiler can encode code source mapping information as DWARF
+debugging information instead of using in-snapshot <code>CodeSourceMap</code> objects.
+Unlike <code>CodeSourceMap</code> objects, this DWARF information can then be stripped
+from snapshots provided to users, which lowers the binary size.</p>
+<h2>Turning on DWARF encoding of code source mapping information</h2>
+<p>To output code source mapping information as DWARF debugging information,
+use the <code>--dwarf-stack-traces</code> flag. By default, generated assembly or ELF
+snapshots include the DWARF information directly.</p>
+<blockquote>
+<p><strong>Note</strong>: DWARF debugging information is <em>not</em> obfuscated when using the
+<code>--obfuscate</code> flag. To avoid unobfuscated information leaking to users
+when using <code>--dwarf-stack-traces</code>, use the <code>--strip</code> option when creating
+ELF snapshots.</p>
+</blockquote>
+<p>To output DWARF debugging information to a separate file that can be saved
+as an artifact for later debugging, use the <code>--save-debugging-info=&lt;...&gt;</code> flag.
+The generated file is not guaranteed to be any specific format and may change in
+the future. See
+<a href="#translating-dwarf-stack-traces">Translating DWARF stack traces</a> for how to use
+this file.</p>
+<h2>Differences when using DWARF code source mapping information</h2>
+<p>When using DWARF code source mapping information, stack traces only include PC
+address information for frames. This means that a developer will need the
+generated DWARF information to get function, file, and line number information
+for each frame.</p>
+<p>Take the following example program, saved as <code>throws.dart</code> in the root of a
+Dart SDK checkout:
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s1">&#39;vm:prefer-inline&#39;</span><span class="p">)</span>
+<span class="kt">void</span> <span class="n">bar</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="k">throw</span> <span class="kc">null</span><span class="p">;</span>
+
+<span class="nd">@pragma</span><span class="p">(</span><span class="s1">&#39;vm:never-inline&#39;</span><span class="p">)</span>
+<span class="kt">void</span> <span class="n">foo</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="n">bar</span><span class="p">();</span>
+
+<span class="kt">void</span> <span class="n">main</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="n">foo</span><span class="p">();</span>
+</code></pre></div></p>
+<p>Below is the result of running the file both without and with
+<code>--dwarf-stack-traces</code> in a 64-bit Linux development environment:</p>
+<div class="highlight"><pre><span></span><code>$ python tools/build.py -a x64 -m release runtime_kernel runtime_precompiled
+
+$ pkg/vm/tool/gen_kernel --platform out/ReleaseX64/vm_platform_strong.dill -o throws.dill throws.dart
+
+$ out/ReleaseX64/gen_snapshot --snapshot_kind<span class="o">=</span>app-aot-elf --elf<span class="o">=</span>snapshot.so throws.dill
+
+<span class="c1"># Here, we save the debugging information to a separate file debug.data as well</span>
+<span class="c1"># as including it in the generated ELF snapshot for future examples.</span>
+$ out/ReleaseX64/gen_snapshot --dwarf-stack-traces --save-debugging-info<span class="o">=</span>debug.data --snapshot_kind<span class="o">=</span>app-aot-elf --elf<span class="o">=</span>dwarf_snapshot.so throws.dill
+
+$ out/ReleaseX64/dart_precompiled_runtime snapshot.so
+Unhandled exception:
+Throw of null.
+<span class="c1">#0      bar (file:///.../sdk/throws.dart:2)</span>
+<span class="c1">#1      foo (file:///.../sdk/throws.dart:5)</span>
+<span class="c1">#2      main (file:///.../sdk/throws.dart:7)</span>
+<span class="c1">#3      _startIsolate.&lt;anonymous closure&gt; (dart:isolate-patch/isolate_patch.dart:307)</span>
+<span class="c1">#4      _RawReceivePortImpl._handleMessage (dart:isolate-patch/isolate_patch.dart:174)</span>
+
+$ out/ReleaseX64/dart_precompiled_runtime dwarf_snapshot.so
+Unhandled exception:
+Throw of null.
+Warning: This VM has been configured to produce stack traces that violate the Dart standard.
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+pid: <span class="m">148677</span>, tid: <span class="m">139648739401792</span>, name Dart_Initialize
+isolate_instructions: 7f028072e000 vm_instructions: <span class="m">0</span>
+    <span class="c1">#00 abs 00007f028098381e virt 000000000025c81e /.../sdk/snapshot.so</span>
+    <span class="c1">#01 abs 00007f0280983742 virt 000000000025c742 /.../sdk/snapshot.so</span>
+    <span class="c1">#02 abs 00007f02809837d5 virt 000000000025c7d5 /.../sdk/snapshot.so</span>
+    <span class="c1">#03 abs 00007f028099d8af virt 00000000002768af /.../sdk/snapshot.so</span>
+    <span class="c1">#04 abs 00007f02808f42ff virt 00000000001cd2ff /.../sdk/snapshot.so</span>
+    <span class="c1">#05 abs 00007f028099d7a2 virt 00000000002767a2 /.../sdk/snapshot.so</span>
+    <span class="c1">#06 abs 00007f028086df98 virt 0000000000146f98 /.../sdk/snapshot.so</span>
+</code></pre></div>
+<p>For a DWARF-based stack trace, we are guaranteed to have an absolute PC
+address for each frame (the hexadecimal number following <code>abs</code>) as well as the
+absolute addresses for the start of the isolate instructions and the VM
+instructions (the line starting with <code>isolate_instructions</code>). This information
+is used by our tool and libraries for converting DWARF stack traces, described
+later.</p>
+<p>If we are running from a snapshot which is a native format for dynamic libraries
+(e.g., ELF on Linux or Mach-O on Mac OS X), then we will also have a virtual PC
+address for each frame (the hexadecimal number following <code>virt</code>). If we have
+appropriate DWARF information for the snapshot (e.g., part of the unstripped
+ELF snapshot on Linux, or a separately generated .DSYM package when compiling
+the generated assembly on Mac OS X), we can use the virtual address along with
+the DWARF information to get back function, file, and line number information
+using native tools:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Virtual address from frame #00</span>
+$ addr2line -f -i -e dwarf_snapshot.so 000000000025c81e
+bar
+file:///.../sdk/throws.dart:2
+foo
+file:///.../sdk/throws.dart:5
+
+<span class="c1"># Virtual address from frame #01</span>
+$ addr2line -f -i -e dwarf_snapshot.so 000000000025c742
+Precompiled____main_6919
+file:///.../dart/sdk/throws.dart:7
+</code></pre></div>
+<p>However, as seen here, the information may not be exactly as expected from the
+non-DWARF stack trace. In addition, the DWARF stack trace may include frames
+that are internal to the Dart VM and would not normally be provided in
+non-DWARF stack traces. Note that there are seven frames in the DWARF stack
+trace above, but only 5 in the non-DWARF stack trace. Frame <code>#02</code> happens
+to correspond to one of these elided frames:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Virtual address from frame #02</span>
+$ addr2line -f -i -e dwarf_snapshot.so 000000000025c7d5
+Precompiled____main_main_6920
+file:///.../sdk/throws.dart:?
+</code></pre></div>
+<h2>Translating DWARF stack traces</h2>
+<p>To ease translation of DWARF stack traces, we provide a platform-independent
+tool and libraries. They can translate DWARF stack traces using the DWARF
+debugging information contained in unstripped ELF snapshots or saved separately
+using <code>--save-debugging-info=&lt;...&gt;</code>. For most uses, the tool should suffice, but
+the libraries it uses are also available for integration into Dart-based
+workflows.</p>
+<h3>Using the stack trace converter tool</h3>
+<p>A simple way to translate DWARF stack traces is to use the tool <code>decode</code>
+from the package <a href="https://pub.dev/packages/native_stack_traces">native_stack_traces</a>. The tool has one required
+argument <code>-e</code>, which takes the name of the file containing DWARF
+debugging information as an input. This can either be an
+unstripped ELF snapshot or a file generated by <code>--save-debugging-info=&lt;...&gt;</code>.</p>
+<p>Using the earlier example, we can run the snapshot and convert any generated
+stack traces as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Using the unstripped ELF snapshot and piping all output to the tool&#39;s stdin.</span>
+$ out/ReleaseX64/dart_precompiled_runtime dwarf_snapshot.so <span class="p">|&amp;</span> out/ReleaseX64/dart pkg/native_stack_traces/bin/decode.dart -e dwarf_snapshot.so
+Unhandled exception:
+Throw of null.
+Warning: This VM has been configured to produce stack traces that violate the Dart standard.
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+pid: <span class="m">158029</span>, tid: <span class="m">140495595888704</span>, name Dart_Initialize
+isolate_instructions: 7fc7ad076000 vm_instructions: <span class="m">0</span>
+<span class="c1">#0  bar (file:///.../sdk/throws.dart:2)</span>
+<span class="c1">#1  foo (file:///.../sdk/throws.dart:5)</span>
+<span class="c1">#2  main (file:///.../sdk/throws.dart:7)</span>
+<span class="c1">#3  _startIsolate.&lt;anonymous closure&gt; (dart:isolate-patch/isolate_patch.dart:307)</span>
+<span class="c1">#4  _RawReceivePortImpl._handleMessage (dart:isolate-patch/isolate_patch.dart:174)</span>
+
+<span class="c1"># Using the separately saved debugging information and piping all output to the tool&#39;s stdin.</span>
+$ out/ReleaseX64/dart_precompiled_runtime dwarf_snapshot.so <span class="p">|&amp;</span> out/ReleaseX64/dart pkg/native_stack_traces/bin/decode.dart -e debug.data
+Unhandled exception:
+Throw of null.
+Warning: This VM has been configured to produce stack traces that violate the Dart standard.
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+pid: <span class="m">158242</span>, tid: <span class="m">139697980215360</span>, name Dart_Initialize
+isolate_instructions: 7f0df76e1000 vm_instructions: <span class="m">0</span>
+<span class="c1">#0  bar (file:///.../sdk/throws.dart:2)</span>
+<span class="c1">#1  foo (file:///.../sdk/throws.dart:5)</span>
+<span class="c1">#2  main (file:///.../sdk/throws.dart:7)</span>
+<span class="c1">#3  _startIsolate.&lt;anonymous closure&gt; (dart:isolate-patch/isolate_patch.dart:307)</span>
+<span class="c1">#4  _RawReceivePortImpl._handleMessage (dart:isolate-patch/isolate_patch.dart:174)</span>
+
+<span class="c1"># Saving all output to the file &quot;output.txt&quot;.</span>
+$ out/ReleaseX64/dart_precompiled_runtime dwarf_snapshot.so &gt;output.txt <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+
+<span class="c1"># Reading the input to convert from the file &quot;output.txt&quot; instead of stdin.</span>
+$ out/ReleaseX64/dart pkg/native_stack_traces/bin/decode.dart -e debug.data -i output.txt
+Unhandled exception:
+Throw of null.
+Warning: This VM has been configured to produce stack traces that violate the Dart standard.
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+pid: <span class="m">159139</span>, tid: <span class="m">139991440654400</span>, name Dart_Initialize
+isolate_instructions: 7f524b090000 vm_instructions: <span class="m">0</span>
+<span class="c1">#0  bar (file:///.../sdk/throws.dart:2)</span>
+<span class="c1">#1  foo (file:///.../sdk/throws.dart:5)</span>
+<span class="c1">#2  main (file:///.../sdk/throws.dart:7)</span>
+<span class="c1">#3  _startIsolate.&lt;anonymous closure&gt; (dart:isolate-patch/isolate_patch.dart:307)</span>
+<span class="c1">#4  _RawReceivePortImpl._handleMessage (dart:isolate-patch/isolate_patch.dart:174)</span>
+
+<span class="c1"># Output the converted input to the file &quot;converted.txt&quot; instead of stdout.</span>
+$ out/ReleaseX64/dart pkg/native_stack_traces/bin/decode.dart -e debug.data -i output.txt -o converted.txt
+
+$ cat converted.txt
+Unhandled exception:
+Throw of null.
+Warning: This VM has been configured to produce stack traces that violate the Dart standard.
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+pid: <span class="m">159139</span>, tid: <span class="m">139991440654400</span>, name Dart_Initialize
+isolate_instructions: 7f524b090000 vm_instructions: <span class="m">0</span>
+<span class="c1">#0  bar (file:///.../sdk/throws.dart:2)</span>
+<span class="c1">#1  foo (file:///.../sdk/throws.dart:5)</span>
+<span class="c1">#2  main (file:///.../sdk/throws.dart:7)</span>
+<span class="c1">#3  _startIsolate.&lt;anonymous closure&gt; (dart:isolate-patch/isolate_patch.dart:307)</span>
+<span class="c1">#4  _RawReceivePortImpl._handleMessage (dart:isolate-patch/isolate_patch.dart:174)</span>
+</code></pre></div>
+<blockquote>
+<p><strong>Note</strong>: As seen here, only lines that contain stack trace frames are
+converted. In particular, we do not strip the extra stack trace header lines
+that are only part of DWARF-based stack traces.</p>
+</blockquote>
+<h3>Using the stack trace converter libraries</h3>
+<p>This section describes two different libraries used to retrieve and convert
+information associated with DWARF-based stack traces:</p>
+<ul>
+<li><code>package:vm/dwarf/dwarf.dart</code>, for 'Dwarf' and 'CallInfo' objects</li>
+<li><code>package:vm/dwarf/convert.dart</code>, for <code>PCOffset</code> objects and various operations on stack traces</li>
+</ul>
+<h4>DWARF debugging information</h4>
+<p>A <code>Dwarf</code> object represents the DWARF debugging information from either
+unstripped ELF snapshots or a file generated by <code>--save-debugging-info=&lt;...&gt;</code>.</p>
+<p>The <code>Dwarf.fromFile</code> factory takes a filename and returns a 'Dwarf' object,
+if the given file exists and is a recognized format that contains DWARF
+information.</p>
+<h4>Call site information</h4>
+<p>A <code>CallInfo</code> object represents a call site in the code corresponding to a
+particular virtual address and contains the function name, file name, and line
+number for the call site and whether the code for the call site has been
+inlined at this use.</p>
+<p>To look up the call information associated with a particular virtual address,
+use <code>Dwarf::callInfo</code>. If the virtual address is outside the range of those
+generated by the DWARF line number program(s), then it returns <code>null</code>, otherwise
+it returns an iterable of <code>CallInfo</code> objects. If the optional
+<code>includeInternalFrames</code> argument is false (the default), then the iterable can
+be empty if the virtual address points to code that does not correspond to
+user or library code, like generated function prologues.</p>
+<h4>Converting stack traces</h4>
+<p>To convert a stream of lines that may include DWARF stack traces, use
+the stack transformer <code>DwarfStackTraceDecoder</code>. Its constructor takes a <code>Dwarf</code>
+object, and the transformer, like <code>decode.dart</code> from the package <a href="https://pub.dev/packages/native_stack_traces">native_stack_traces</a>, only changes
+lines that correspond to stack trace frames.</p>
+<blockquote>
+<p><strong>Note</strong>: The stack transformer assumes that lines are not combined or broken
+across <code>String</code>s in the input stream. If this is not already guaranteed,
+transform the stream with <code>LineSplitter</code> from <code>dart:convert</code> prior to
+transforming it with a <code>DwarfStackTraceDecoder</code>.</p>
+</blockquote>
+<h4>Extracting information from stack traces</h4>
+<p>A <code>PCOffset</code> object represents the PC address information extracted from a
+DWARF-based stack trace frame. It contains whether the PC address comes from
+the VM or isolate instructions section, and the offset of the PC address in
+that section.</p>
+<p>The <code>PCOffset::virtualAddress</code> method takes a <code>Dwarf</code> object and returns
+a compatible virtual address for use with methods on that <code>Dwarf</code> object.</p>
+<p>The function <code>collectPCOffsets</code> extracts <code>PCOffset</code>s for the frames of a stack
+trace.</p>
+<blockquote>
+<p><strong>Note</strong>: Since the absolute addresses of the VM and isolate instruction
+sections are part of the stack frame header, <code>collectPCOffsets</code> can only
+extract information from <em>complete</em> stack traces.</p>
+</blockquote>
+    </div>
+  </body>
+</html>

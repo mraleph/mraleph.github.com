@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dart VM</title>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" type="text/css">
 <link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
@@ -22,84 +22,162 @@
 
   <body>
     <div class="content">
-      <h2><span class="section-number"></span> Garbage Collection</h2>
-<h3><span class="section-number">1</span> Object representation</h3>
-<h3><span class="section-number">2</span> Scavenge</h3>
-<h3><span class="section-number">3</span> Mark-Sweep</h3>
-<h3><span class="section-number">4</span> Mark-Compact</h3>
-<h3><span class="section-number">5</span> Concurrent Marking</h3>
+      <h1>Garbage Collection</h1>
+<p>The Dart VM has a generational garbage collector with two generations. The new generation is collected by a stop-the-world semispace <a href="https://github.com/dart-lang/sdk/blob/master/runtime/vm/heap/scavenger.h">scavenger</a>. The old generation is collected by concurrent-<a href="https://github.com/dart-lang/sdk/blob/master/runtime/vm/heap/marker.h">mark</a>-concurrent-<a href="https://github.com/dart-lang/sdk/blob/master/runtime/vm/heap/sweeper.h">sweep</a> or by concurrent-mark-parallel-<a href="https://github.com/dart-lang/sdk/blob/master/runtime/vm/heap/compactor.h">compact</a>.</p>
+<h2>Object representation</h2>
+<p>Object pointers refer either to immediate objects or heap objects, distinguished by a tag in the low bits of the pointer. The Dart VM has only one kind of immediate object, Smis (small integers), whose pointers have a tag of 0. Heap objects have a pointer tag of 1. The upper bits of a Smi pointer are its value, and the upper bits of a heap object pointer are the most signficant bits of its address (the least significant bit is always 0 because heap objects always have greater than 2-byte alignment).</p>
+<p>A tag of 0 allows many operations to be performed on Smis without untagging and retagging. It also allows hiding aligned addresses to the C heap from the GC.</p>
+<p>A tag of 1 has no penalty on heap object access because removing the tag can be folded into the offset used by load and store instructions.</p>
+<p>Heap objects are always allocated in double-word increments. Objects in old-space are kept at double-word alignment, and objects in new-space are kept offset from double-word alignment. This allows checking an object's age without comparing to a boundry address, avoiding restrictions on heap placement and avoiding loading the boundry from thread-local storage. Additionally, the scavenger can quickly skip over both immediates and old objects with a single branch.</p>
+<table>
+<thead>
+<tr>
+<th>Pointer</th>
+<th>Referent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00000002</td>
+<td>Small integer 1</td>
+</tr>
+<tr>
+<td>0xFFFFFFFE</td>
+<td>Small integer -1</td>
+</tr>
+<tr>
+<td>0x00A00001</td>
+<td>Heap object at 0x00A00000, in old-space</td>
+</tr>
+<tr>
+<td>0x00B00005</td>
+<td>Heap object at 0x00B00004, in new-space</td>
+</tr>
+</tbody>
+</table>
+<p>Heap objects have a single-word header, which encodes the object's class, size, and some status flags.</p>
+<p>On 64-bit architectures, the header of heap objects also contains a 32-bit identity hash field. On 32-bit architectures, the identity hash for heap objects is kept in a side table.</p>
+<h2>Scavenge</h2>
+<p>See <a href="https://en.wikipedia.org/wiki/Cheney's_algorithm">Cheney's algorithm</a>.</p>
+<h2>Parallel Scavenge</h2>
+<p>FLAG_scavenger_tasks (default 2) workers are started on separate threads. Each worker competes to process parts of the root set (including the remembered set). When a worker copies an object to to-space, it allocates from a worker-local bump allocation region. The same worker will process the copied object. When a worker promotes an object to old-space, it allocates from a worker-local freelist, which uses bump allocation for large free blocks. The promoted object is added to a work list that implements work stealing, so some other worker may process the promoted object. After the object is evacuated, the worker using a compare-and-swap to install the forwarding pointer into the from-space object's header. If it loses the race, it un-allocates the to-space or old-space object it just allocated, and uses the winner's object to update the pointer it was processing. Workers run until all of the work set have been processed, and every worker have processed its to-space objects and local part of the promoted work list.</p>
+<h2>Mark-Sweep</h2>
+<p>All objects have a bit in their header called the mark bit. At the start of a collection cycle, all objects have this bit clear.</p>
+<p>During the marking phase, the collector visits each of the root pointers. If the target object is an old-space object and its mark bit is clear, the mark bit is set and the target added to the marking stack (grey set). The collector then removes and visits objects in the marking stack, marking more old-space objects and adding them to the marking stack, until the marking stack is empty. At this point, all reachable objects have their mark bits set and all unreachable objects have their mark bits clear.</p>
+<p>During the sweeping phase, the collector visits each old-space object. If the mark bit is clear, the object's memory is added to a <a href="https://github.com/dart-lang/sdk/blob/master/runtime/vm/heap/freelist.h">free list</a> to be used for future allocations. Otherwise the object's mark bit is cleared. If every object on some page is unreachable, the page is released to the OS.</p>
+<p>Note that because we do not mark new-space objects, we treat every object in new-space as a root during old-space collections. This property makes new-space and old-space collections more independent, and in particular allows a scavenge to run at the same time as concurrent marking.</p>
+<h2>Mark-Compact</h2>
+<p>The Dart VM includes a sliding compactor. The forwarding table is compactly represented by dividing the heap into blocks and for each block recording its target address and the bitvector for each surviving double-word. The table is accessed in constant time by keeping heap pages aligned so the page header of any object can be accessed by masking the object.</p>
+<h2>Safepoints</h2>
+<p>Any thread or task that can allocate, read or write to the heap is called a "mutator" (because it can mutate the object graph).</p>
+<p>Some phases of GC require that the heap is not being used by a mutator; we call these "<a href="https://github.com/dart-lang/sdk/blob/master/runtime/vm/heap/safepoint.h">safepoint</a> operations". Examples of safepoint operations include marking roots at the beginning of concurrent marking and the entirety of a scavenge.</p>
+<p>To perform these operations, all mutators need to temporarily stop accessing the heap; we say that these mutators have reached a "safepoint". A mutator that has reached a safepoint will not resume accessing the heap (leave the safepoint) until the safepoint operation is complete. In addition to not accessing the heap, a mutator at a safepoint must not hold any pointers into the heap unless these pointers can be visited by the GC. For code in the VM runtime, this last property means holding only handles and no RawObject pointers. Examples of places that might enter a safepoint include allocations, stack overflow checks, and transitions between compiled code and the runtime and native code.</p>
+<p>Note that a mutator can be at a safepoint without being suspended. It might be performing a long task that doesn't access the heap. It will, however, need to wait for any safepoint operation to complete in order to leave its safepoint and resume accessing the heap.</p>
+<p>Because a safepoint operation excludes excution of Dart code, it is sometimes used for non-GC tasks that requires only this property. For example, when a background compilation has completed and wants to install its result, it uses a safepoint operation to ensure no Dart execution sees the intermediate states during installation.</p>
+<h2>Concurrent Marking</h2>
 <p>To reduce the time the mutator is paused for old-space GCs, we allow the mutator to continue running during most of the marking work. </p>
-<h4><span class="section-number">5.1</span> Barrier</h4>
+<h3>Barrier</h3>
 <p>With the mutator and marker running concurrently, the mutator could write a pointer to an object that has not been marked (TARGET) into an object that has already been marked and visited (SOURCE), leading to incorrect collection of TARGET. To prevent this, the write barrier checks if a store creates a pointer from an old-space object to an old-space object that is not marked, and marks the target object for such stores. We ignore pointers from new-space objects because we treat new-space objects as roots and will revisit them to finalize marking. We ignore the marking state of the source object to avoid expensive memory barriers required to ensure reordering of accesses to the header and slots can't lead skipped marking, and on the assumption that objects accessed during marking are likely to remain live when marking finishes.</p>
 <p>The barrier is equivalent to</p>
-<div class="codehilite"><pre><span></span>StorePoint(RawObject* source, RawObject** slot, RawObject* target) {
-  *slot = target;
-  if (target-&gt;IsSmi()) return;
-  if (source-&gt;IsOldObject() &amp;&amp; !source-&gt;IsRemembered() &amp;&amp; target-&gt;IsNewObject()) {
-    source-&gt;SetRemembered();
-    AddToRememberedSet(source);
-  } else if (source-&gt;IsOldObject() &amp;&amp; target-&gt;IsOldObject() &amp;&amp; !target-&gt;IsMarked() &amp;&amp; Thread::Current()-&gt;IsMarking()) {
-    if (target-&gt;TryAcquireMarkBit()) {
-      AddToMarkList(target);
-    }
-  }
-}
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">StorePoint</span><span class="p">(</span><span class="n">RawObject</span><span class="o">*</span> <span class="n">source</span><span class="p">,</span> <span class="n">RawObject</span><span class="o">**</span> <span class="n">slot</span><span class="p">,</span> <span class="n">RawObject</span><span class="o">*</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+  <span class="o">*</span><span class="n">slot</span> <span class="o">=</span> <span class="n">target</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">IsSmi</span><span class="p">())</span> <span class="k">return</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">source</span><span class="o">-&gt;</span><span class="n">IsOldObject</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">source</span><span class="o">-&gt;</span><span class="n">IsRemembered</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">IsNewObject</span><span class="p">())</span> <span class="p">{</span>
+    <span class="n">source</span><span class="o">-&gt;</span><span class="n">SetRemembered</span><span class="p">();</span>
+    <span class="n">AddToRememberedSet</span><span class="p">(</span><span class="n">source</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">source</span><span class="o">-&gt;</span><span class="n">IsOldObject</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">IsOldObject</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">IsMarked</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">Thread</span><span class="o">::</span><span class="n">Current</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">IsMarking</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">TryAcquireMarkBit</span><span class="p">())</span> <span class="p">{</span>
+      <span class="n">AddToMarkList</span><span class="p">(</span><span class="n">target</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <p>But we combine the generational and incremental checks with a shift-and-mask.</p>
-<div class="codehilite"><pre><span></span>enum HeaderBits {
-  ...
-  kOldAndNotMarkedBit,      // Incremental barrier target.
-  kNewBit,                  // Generational barrier target.
-  kOldBit,                  // Incremental barrier source.
-  kOldAndNotRememberedBit,  // Generational barrier source.
-  ...
-};
+<div class="highlight"><pre><span></span><code><span class="k">enum</span> <span class="nc">HeaderBits</span> <span class="p">{</span>
+  <span class="p">...</span>
+  <span class="n">kOldAndNotMarkedBit</span><span class="p">,</span>      <span class="c1">// Incremental barrier target.</span>
+  <span class="n">kNewBit</span><span class="p">,</span>                  <span class="c1">// Generational barrier target.</span>
+  <span class="n">kOldBit</span><span class="p">,</span>                  <span class="c1">// Incremental barrier source.</span>
+  <span class="n">kOldAndNotRememberedBit</span><span class="p">,</span>  <span class="c1">// Generational barrier source.</span>
+  <span class="p">...</span>
+<span class="p">};</span>
 
-static const intptr_t kGenerationalBarrierMask = 1 &lt;&lt; kNewBit;
-static const intptr_t kIncrementalBarrierMask = 1 &lt;&lt; kOldAndNotMarkedBit;
-static const intptr_t kBarrierOverlapShift = 2;
-COMPILE_ASSERT(kOldAndNotMarkedBit + kBarrierOverlapShift == kOldBit);
-COMPILE_ASSERT(kNewBit + kBarrierOverlapShift == kOldAndNotRememberedBit);
+<span class="k">static</span> <span class="k">const</span> <span class="kt">intptr_t</span> <span class="n">kGenerationalBarrierMask</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">kNewBit</span><span class="p">;</span>
+<span class="k">static</span> <span class="k">const</span> <span class="kt">intptr_t</span> <span class="n">kIncrementalBarrierMask</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">kOldAndNotMarkedBit</span><span class="p">;</span>
+<span class="k">static</span> <span class="k">const</span> <span class="kt">intptr_t</span> <span class="n">kBarrierOverlapShift</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="n">COMPILE_ASSERT</span><span class="p">(</span><span class="n">kOldAndNotMarkedBit</span> <span class="o">+</span> <span class="n">kBarrierOverlapShift</span> <span class="o">==</span> <span class="n">kOldBit</span><span class="p">);</span>
+<span class="n">COMPILE_ASSERT</span><span class="p">(</span><span class="n">kNewBit</span> <span class="o">+</span> <span class="n">kBarrierOverlapShift</span> <span class="o">==</span> <span class="n">kOldAndNotRememberedBit</span><span class="p">);</span>
 
-StorePointer(RawObject* source, RawObject** slot, RawObject* target) {
-  *slot = target;
-  if (target-&gt;IsSmi()) return;
-  if ((source-&gt;header() &gt;&gt; kBarrierOverlapShift) &amp;&amp;
-      (target-&gt;header()) &amp;&amp;
-      Thread::Current()-&gt;barrier_mask()) {
-    if (target-&gt;IsNewObject()) {
-      source-&gt;SetRemembered();
-      AddToRememberedSet(source);
-    } else {
-      if (target-&gt;TryAcquireMarkBit()) {
-        AddToMarkList(target);
-      }
-    }
-  }
-}
+<span class="n">StorePointer</span><span class="p">(</span><span class="n">RawObject</span><span class="o">*</span> <span class="n">source</span><span class="p">,</span> <span class="n">RawObject</span><span class="o">**</span> <span class="n">slot</span><span class="p">,</span> <span class="n">RawObject</span><span class="o">*</span> <span class="n">target</span><span class="p">)</span> <span class="p">{</span>
+  <span class="o">*</span><span class="n">slot</span> <span class="o">=</span> <span class="n">target</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">IsSmi</span><span class="p">())</span> <span class="k">return</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">((</span><span class="n">source</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="n">kBarrierOverlapShift</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+      <span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">header</span><span class="p">())</span> <span class="o">&amp;&amp;</span>
+      <span class="n">Thread</span><span class="o">::</span><span class="n">Current</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">barrier_mask</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">IsNewObject</span><span class="p">())</span> <span class="p">{</span>
+      <span class="n">source</span><span class="o">-&gt;</span><span class="n">SetRemembered</span><span class="p">();</span>
+      <span class="n">AddToRememberedSet</span><span class="p">(</span><span class="n">source</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="o">-&gt;</span><span class="n">TryAcquireMarkBit</span><span class="p">())</span> <span class="p">{</span>
+        <span class="n">AddToMarkList</span><span class="p">(</span><span class="n">target</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
 
-StoreIntoObject(object, value, offset)
-  str   value, object#offset
-  tbnz  value, kSmiTagShift, done
-  lbu   tmp, value#headerOffset
-  lbu   tmp2, object#headerOffset
-  and   tmp, tmp2 LSR kBarrierOverlapShift
-  tst   tmp, BARRIER_MASK
-  bz    done
-  mov   tmp2, value
-  lw    tmp, THR#writeBarrierEntryPointOffset
-  blr   tmp
-done:
-</pre></div>
-
-<h4><span class="section-number">5.2</span> Data races</h4>
-<p>Operations on headers and slots use (relaxed ordering)[https://en.cppreference.com/w/cpp/atomic/memory_order] and do not provide synchronization.</p>
+<span class="n">StoreIntoObject</span><span class="p">(</span><span class="n">object</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+  <span class="n">str</span>   <span class="n">value</span><span class="p">,</span> <span class="n">object</span><span class="err">#</span><span class="n">offset</span>
+  <span class="n">tbnz</span>  <span class="n">value</span><span class="p">,</span> <span class="n">kSmiTagShift</span><span class="p">,</span> <span class="n">done</span>
+  <span class="n">lbu</span>   <span class="n">tmp</span><span class="p">,</span> <span class="n">value</span><span class="err">#</span><span class="n">headerOffset</span>
+  <span class="n">lbu</span>   <span class="n">tmp2</span><span class="p">,</span> <span class="n">object</span><span class="err">#</span><span class="n">headerOffset</span>
+  <span class="n">and</span>   <span class="n">tmp</span><span class="p">,</span> <span class="n">tmp2</span> <span class="n">LSR</span> <span class="n">kBarrierOverlapShift</span>
+  <span class="n">tst</span>   <span class="n">tmp</span><span class="p">,</span> <span class="n">BARRIER_MASK</span>
+  <span class="n">bz</span>    <span class="n">done</span>
+  <span class="n">mov</span>   <span class="n">tmp2</span><span class="p">,</span> <span class="n">value</span>
+  <span class="n">lw</span>    <span class="n">tmp</span><span class="p">,</span> <span class="n">THR</span><span class="err">#</span><span class="n">writeBarrierEntryPointOffset</span>
+  <span class="n">blr</span>   <span class="n">tmp</span>
+<span class="nl">done</span><span class="p">:</span>
+</code></pre></div>
+<h3>Data races</h3>
+<p>Operations on headers and slots use <a href="https://en.cppreference.com/w/cpp/atomic/memory_order">relaxed ordering</a> and do not provide synchronization.</p>
 <p>The concurrent marker starts with an acquire-release operation, so all writes by the mutator up to the time that marking starts are visible to the marker.</p>
 <p>For old-space objects created before marking started, in each slot the marker can see either its value at the time marking started or any subsequent value sorted in the slot. Any slot that contained a pointer continues to continue a valid pointer for the object's lifetime, so no matter which value the marker sees, it won't interpret a non-pointer as a pointer. (The one interesting case here is array truncation, where some slot in the array will become the header of a filler object. We ensure this is safe for concurrent marking by ensuring the header for the filler object looks like a Smi.) If the marker sees an old value, we may lose some precision and retain a dead object, but we remain correct because the new value has been marked by the mutator.</p>
 <p>For old-space objects created after marking started, the marker may see uninitialized values because operations on slots are not synchronized. To prevent this, during marking we allocate old-space objects black (marked) so the marker will not visit them.</p>
 <p>New-space objects and roots are only visited during a safepoint, and safepoints establish synchronization.</p>
 <p>When the mutator's mark block becomes full, it transfered to the marker by an acquire-release operation, so the marker will see the stores into the block.</p>
+<h2>Write barrier elimination</h2>
+<p>Whenever there is a store into the heap, <code>container.slot = value</code>, we need to check if the store creates references that the GC needs to be informed about.</p>
+<p>The generational write barrier, needed by the scavenger, checks if</p>
+<ul>
+<li><code>container</code> is old and not in the remembered set, and</li>
+<li><code>value</code> is new</li>
+</ul>
+<p>When this occurs, we must insert <code>container</code> into the remembered set.</p>
+<p>The incremental marking write barrier, needed by the marker, checks if</p>
+<ul>
+<li><code>container</code> is old, and</li>
+<li><code>value</code> is old and not marked, and</li>
+<li>marking is in progress</li>
+</ul>
+<p>When this occurs, we must insert <code>value</code> into the marking worklist.</p>
+<p>We can eliminate these checks when the compiler can prove these cases cannot happen, or are compensated for by the runtime. The compiler can prove this when</p>
+<ul>
+<li><code>value</code> is a constant. Constants are always old, and they will be marked via the constant pools even if we fail to mark them via <code>container</code>.</li>
+<li><code>value</code> has the static type bool. All possible values of the bool type (null, false, true) are constants.</li>
+<li><code>value</code> is known to be a Smi. Smis are not heap objects.</li>
+<li><code>container</code> is the same object as <code>value</code>. The GC never needs to retain an additional object if it sees a self-reference, so ignoring a self-reference cannot cause us to free a reachable object.</li>
+<li><code>container</code> is known to be a new object or known to be an old object that is in the remembered set and is marked if marking is in progress.</li>
+</ul>
+<p>We can know that <code>container</code> meets the last property if <code>container</code> is the result of an allocation (instead of a heap load), and there is no instruction that can trigger a GC between the allocation and the store. This is because the allocation stubs ensure the result of AllocateObject is either a new-space object (common case, bump pointer allocation succeeds), or has been pre-emptively added to the remembered set and marking worklist (uncommon case, entered runtime to allocate object, possibly triggering GC).</p>
+<div class="highlight"><pre><span></span><code>container &lt;- AllocateObject
+&lt;intructions that do not trigger GC&gt;
+StoreInstanceField(container, value, NoBarrier)
+</code></pre></div>
+<p>We can further eliminate barriers when <code>container</code> is the result of an allocation, and there is no instruction that can create an additional Dart frame between the allocation and the store. This is because after a GC, any old-space objects in the frames below an exit frame will be pre-emptively added to the remembered set and marking worklist (Thread::RestoreWriteBarrierInvariant).</p>
+<div class="highlight"><pre><span></span><code>container &lt;- AllocateObject
+&lt;instructions that cannot directly call Dart functions&gt;
+StoreInstanceField(container, value, NoBarrier)
+</code></pre></div>
     </div>
   </body>
 </html>

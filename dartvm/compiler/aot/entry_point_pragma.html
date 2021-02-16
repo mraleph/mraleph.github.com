@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dart VM</title>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" type="text/css">
 <link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
@@ -22,11 +22,11 @@
 
   <body>
     <div class="content">
-      <h2><span class="section-number"></span> <code>vm:entry-point</code> pragma</h2>
+      <h1><code>vm:entry-point</code> pragma</h1>
 <p>The annotation <code>@pragma("vm:entry-point", ...)</code> <strong>must</strong> be placed on a class or
 member to indicate that it may be resolved, allocated or invoked directly from
 native or VM code <em>in AOT mode</em>.</p>
-<h3><span class="section-number">1</span> Background</h3>
+<h2>Background</h2>
 <p>Dart VM precompiler (AOT compiler) performs whole-program optimizations such as
 tree shaking and type flow analysis (TFA) in order to decrease size of the
 resulting compiled apps and improve their performance. Such optimizations
@@ -42,51 +42,57 @@ methods which call into Dart, the entry points are required for the correctness
 of compilation.</p>
 <p>In addition, when obfuscation is enabled, the precompiler needs to know which
 symbols need to be preserved to ensure they can be resolved from native code.</p>
-<h3><span class="section-number">2</span> Syntax</h3>
+<h2>Syntax</h2>
 <p>The allowed uses of the annotation are as follows.</p>
-<h4><span class="section-number">2.1</span> Classes</h4>
+<h3>Classes</h3>
 <p>Any one of the following forms may be attached to a class:</p>
-<div class="codehilite"><pre><span></span><span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">)</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="o">/</span><span class="kc">false</span><span class="p">)</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="o">!</span><span class="kd">const</span> <span class="kt">bool</span><span class="p">.</span><span class="n">formEnvironment</span><span class="p">(</span><span class="s2">&quot;dart.vm.product&quot;</span><span class="p">))</span>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="o">/</span><span class="kc">false</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="o">!</span><span class="k">const</span> <span class="kt">bool</span><span class="p">.</span><span class="n">formEnvironment</span><span class="p">(</span><span class="s2">&quot;dart.vm.product&quot;</span><span class="p">))</span>
 <span class="kd">class</span> <span class="nc">C</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
-</pre></div>
-
+</code></pre></div>
 <p>If the second parameter is missing, <code>null</code> or <code>true</code>, the class will be
 available for allocation directly from native or VM code.</p>
 <p>Note that <code>@pragma("vm:entry-point")</code> may be added to abstract classes -- in
 this case, their name will survive obfuscation, but they won't have any
 allocation stubs.</p>
-<h4><span class="section-number">2.2</span> Procedures</h4>
+<h3>Procedures</h3>
 <p>Any one of the following forms may be attached to a procedure (including
 getters, setters and constructors):</p>
-<div class="codehilite"><pre><span></span><span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">)</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="o">/</span><span class="kc">false</span><span class="p">)</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="o">!</span><span class="kd">const</span> <span class="kt">bool</span><span class="p">.</span><span class="n">formEnvironment</span><span class="p">(</span><span class="s2">&quot;dart.vm.product&quot;</span><span class="p">))</span>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="o">/</span><span class="kc">false</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="o">!</span><span class="k">const</span> <span class="kt">bool</span><span class="p">.</span><span class="n">formEnvironment</span><span class="p">(</span><span class="s2">&quot;dart.vm.product&quot;</span><span class="p">))</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="s2">&quot;get&quot;</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="s2">&quot;call&quot;</span><span class="p">)</span>
 <span class="kt">void</span> <span class="n">foo</span><span class="p">()</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
-</pre></div>
-
-<p>If the second parameter is missing, <code>null</code> or <code>true</code>, the procedure will
-available for lookup and invocation directly from native or VM code. If the
-procedure is a <em>generative</em> constructor, the enclosing class will also be marked
-for allocation from native or VM code.</p>
-<h4><span class="section-number">2.3</span> Fields</h4>
+</code></pre></div>
+<p>If the second parameter is missing, <code>null</code> or <code>true</code>, the procedure (and its
+closurized form, excluding constructors and setters) will available for lookup
+and invocation directly from native or VM code.</p>
+<p>If the procedure is a <em>generative</em> constructor, the enclosing class must also be
+annotated for allocation from native or VM code.</p>
+<p>If the annotation is "get" or "call", the procedure will only be available for
+closurization (access via <code>Dart_GetField</code>) or invocation (access via
+<code>Dart_Invoke</code>).</p>
+<p>"@pragma("vm:entry-point", "get") against constructors or setters is disallowed
+since they cannot be closurized.</p>
+<h3>Fields</h3>
 <p>Any one of the following forms may be attached to a non-static field. The first
 three forms may be attached to static fields.</p>
-<div class="codehilite"><pre><span></span><span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">)</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="o">/</span><span class="kc">false</span><span class="p">)</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="o">!</span><span class="kd">const</span> <span class="kt">bool</span><span class="p">.</span><span class="n">formEnvironment</span><span class="p">(</span><span class="s2">&quot;dart.vm.product&quot;</span><span class="p">))</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="s2">&quot;get&quot;</span><span class="o">/</span><span class="s2">&quot;set&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="o">/</span><span class="kc">false</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="o">!</span><span class="k">const</span> <span class="kt">bool</span><span class="p">.</span><span class="n">formEnvironment</span><span class="p">(</span><span class="s2">&quot;dart.vm.product&quot;</span><span class="p">))</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:entry-point&quot;</span><span class="p">,</span> <span class="s2">&quot;get&quot;</span><span class="o">/</span><span class="s2">&quot;set&quot;</span><span class="p">)</span>
 <span class="kt">int</span> <span class="n">foo</span><span class="p">;</span>
-</pre></div>
-
+</code></pre></div>
 <p>If the second parameter is missing, <code>null</code> or `true, the field is marked for
 native access and for non-static fields the corresponding getter and setter in
 the interface of the enclosing class are marked for native invocation. If the
 'get'/'set' parameter is used, only the getter/setter is marked. For static
 fields, the implicit getter is always marked. The third form does not make sense
 for static fields because they do not belong to an interface.</p>
+<p>Note that no form of entry-point annotation allows invoking a field.</p>
     </div>
   </body>
 </html>

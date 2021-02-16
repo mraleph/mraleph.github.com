@@ -24,8 +24,6 @@ h3 {
   font-weight: 600;
 }
 
-
-
 code, pre {
   font-family: 'IBM Plex Mono', monospace;
   font-size: .9em;
@@ -87,17 +85,6 @@ sup {
     margin-right: auto;
     padding-left: 2em;
   }
-/*
-  div.highlighter-rouge {
-    background: #fdf6e3;
-    border-top: 1px solid #eee8d5;
-    border-bottom: 1px solid #eee8d5;
-  }
-
-  div.highlighter-rouge .highlight {
-    border: 0px;
-  }
-*/
 }
 
 h2, h3, h4, h5 {

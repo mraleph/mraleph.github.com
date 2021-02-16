@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dart VM</title>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" type="text/css">
 <link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
@@ -22,8 +22,22 @@
 
   <body>
     <div class="content">
-      <h2><span class="section-number"></span> @pragma annotations recognized by the compiler.</h2>
-<h3><span class="section-number">1</span> Annotations for return types and field types.</h3>
+      <h1>Pragma annotations recognized by the compiler</h1>
+<h2>Annotations for functions and methods</h2>
+<h3>Changing whether a function or method is inlined</h3>
+<p>The user can change whether the VM attempts to inline a given function or method
+with the following pragmas.</p>
+<h4>Requesting a function be inlined</h4>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:prefer-inline&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Here, the VM will inline the annotated function when possible. However, other
+factors can prevent inlining and thus this pragma may not always be respected.</p>
+<h4>Requesting a function never be inlined</h4>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:never-inline&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Here, the VM will not inline the annotated function. In this case, the pragma
+is always respected.</p>
+<h2>Annotations for return types and field types</h2>
 <p>The VM is not able to see across method calls (apart from inlining) and
 therefore does not know anything about the return'ed values of calls, except for
 the interface type of the signature.</p>
@@ -32,70 +46,99 @@ utilizes to gain knowledge about return types:</p>
 <ul>
 <li>
 <p>inferred types (stored in kernel metadata): these are computed by global
-     transformations (e.g. TFA) and are only available in AOT mode</p>
+  transformations (e.g. TFA) and are only available in AOT mode</p>
 </li>
 <li>
-<p>@pragma annotations: these are recognized in JIT and AOT mode</p>
+<p><code>@pragma</code> annotations: these are recognized in JIT and AOT mode</p>
 </li>
 </ul>
 <p>This return type information is mainly used in the VM's type propagator.</p>
 <p>Since those annotations side-step the normal type system, they are unsafe and we
 therefore restrict those annotations to only have an affect inside dart:
 libraries.</p>
-<h4><span class="section-number">1.1</span> @pragma("vm:exact-result-type", <type>) annotation</h4>
+<p>See also https://github.com/dart-lang/sdk/issues/35244.</p>
+<h3>Providing an exact result type</h3>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">type</span><span class="o">&gt;</span><span class="p">)</span>
+</code></pre></div>
 <p>Tells the VM about the exact result type (i.e. the exact class-id) of a function
 or a field load.</p>
 <p>There are two limitations on this pragma:</p>
-<ol>
+<ul>
 <li>
-<p>The Dart object returned by the method at runtime must have <strong>exactly</strong> the type specified in the annotation (not a subtype).</p>
+<p>The Dart object returned by the method at runtime must have <strong>exactly</strong> the
+  type specified in the annotation (not a subtype).</p>
 </li>
 <li>
-<p>The exact return type declared in the pragma must be a subtype of the interface type declared in the method signature.
-   Note that this restriction is not enforced automatically by the compiler.</p>
+<p>The exact return type declared in the pragma must be a subtype of the
+  interface type declared in the method signature.</p>
 </li>
-</ol>
+</ul>
+<p><strong>Note:</strong> This limitation is not enforced automatically by the compiler.</p>
 <p>If those limitations are violated, undefined behavior may result.
-Note that since <code>null</code> is an instance of the <code>Null</code> type, which is a subtype of any other, exactness of the annotated result type implies that the result must be non-null.</p>
-<h5><span class="section-number">1.1.1</span> Syntax</h5>
-<div class="codehilite"><pre><span></span><span class="kd">class</span> <span class="nc">A</span> <span class="p">{}</span>
+Note that since <code>null</code> is an instance of the <code>Null</code> type, which is a subtype of
+any other, exactness of the annotated result type implies that the result must
+be non-null.</p>
+<p>It is also possible to specify the type arguments of the result type if they are
+the same as the type arguments passed to the method itself. This is primarily
+useful for factory constructors:</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">type</span><span class="o">&gt;</span><span class="p">,</span> <span class="s2">&quot;result-type-uses-passed-type-arguments&quot;</span><span class="p">])</span>
+</code></pre></div>
+<h4>Examples for exact result types</h4>
+<div class="highlight"><pre><span></span><code><span class="kd">class</span> <span class="nc">A</span> <span class="p">{}</span>
 <span class="kd">class</span> <span class="nc">B</span> <span class="kd">extends</span> <span class="n">A</span> <span class="p">{}</span>
 
 <span class="c1">// Reference to type via type literal</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
 <span class="n">A</span> <span class="n">foo</span><span class="p">()</span> <span class="kd">native</span> <span class="s2">&quot;foo_impl&quot;</span><span class="p">;</span>
 
 <span class="c1">// Reference to type via path</span>
-<span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span> <span class="s2">&quot;dart:core#_Smi&quot;</span><span class="p">);</span>
+<span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span> <span class="s2">&quot;dart:core#_Smi&quot;</span><span class="p">);</span>
 <span class="kt">int</span> <span class="n">foo</span><span class="p">()</span> <span class="kd">native</span> <span class="s2">&quot;foo_impl&quot;</span><span class="p">;</span>
 
 <span class="kd">class</span> <span class="nc">C</span> <span class="p">{</span>
   <span class="c1">// Reference to type via type literal</span>
-  <span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s1">&#39;vm:exact-result-type&#39;</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+  <span class="nd">@pragma</span><span class="p">(</span><span class="s1">&#39;vm:exact-result-type&#39;</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
   <span class="kd">final</span> <span class="n">B</span> <span class="n">bValue</span><span class="p">;</span>
 
   <span class="c1">// Reference to type via path</span>
-  <span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s1">&#39;vm:exact-result-type&#39;</span><span class="p">,</span> <span class="s2">&quot;dart:core#_Smi&quot;</span><span class="p">)</span>
+  <span class="nd">@pragma</span><span class="p">(</span><span class="s1">&#39;vm:exact-result-type&#39;</span><span class="p">,</span> <span class="s2">&quot;dart:core#_Smi&quot;</span><span class="p">)</span>
   <span class="kd">final</span> <span class="kt">int</span> <span class="n">intValue</span><span class="p">;</span>
 <span class="p">}</span>
-</pre></div>
 
-<h4><span class="section-number">1.2</span> @pragma("vm:non-nullable-result-type") annotation</h4>
+<span class="kd">class</span> <span class="nc">D</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:exact-result-type&quot;</span><span class="p">,</span>
+          <span class="p">[</span><span class="n">D</span><span class="p">,</span> <span class="s2">&quot;result-type-uses-passed-type-arguments&quot;</span><span class="p">])</span>
+  <span class="kd">factory</span> <span class="n">D</span><span class="p">();</span>  <span class="c1">// returns an instance of D&lt;T&gt;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3>Declaring a result type non-nullable</h3>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:non-nullable-result-type&quot;</span><span class="p">)</span>
+</code></pre></div>
 <p>Tells the VM that the method/field cannot return <code>null</code>.</p>
 <p>There is one limitation on this pragma:</p>
-<ol>
+<ul>
 <li>The Dart object returned by the method at runtime <strong>must not</strong> return <code>null</code>.</li>
-</ol>
+</ul>
 <p>If this limitation is violated, undefined behavior may result.</p>
-<h5><span class="section-number">1.2.1</span> Syntax</h5>
-<div class="codehilite"><pre><span></span><span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s2">&quot;vm:non-nullable-result-type&quot;</span><span class="p">)</span>
+<h4>Examples for non-nullable result types</h4>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:non-nullable-result-type&quot;</span><span class="p">)</span>
 <span class="n">A</span> <span class="n">foo</span><span class="p">()</span> <span class="kd">native</span> <span class="s2">&quot;foo_impl&quot;</span><span class="p">;</span>
 
 <span class="kd">class</span> <span class="nc">C</span> <span class="p">{</span>
-  <span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s1">&#39;vm:non-nullable-result-type&quot;);</span>
+  <span class="nd">@pragma</span><span class="p">(</span><span class="s1">&#39;vm:non-nullable-result-type&quot;);</span>
   <span class="kd">final</span> <span class="kt">int</span> <span class="n">value</span><span class="p">;</span>
 <span class="p">}</span>
-</pre></div>
+</code></pre></div>
+<h3>Marking recognized methods</h3>
+<div class="highlight"><pre><span></span><code><span class="nd">@pragma</span><span class="p">(</span><span class="s2">&quot;vm:recognized&quot;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">kind</span><span class="o">&gt;</span><span class="p">)</span>
+</code></pre></div>
+<p>Marks the method as one of the methods specially recognized by the VM. Here,
+<kind> is one of <code>"asm-intrinsic"</code>, <code>"graph-intrinsic"</code> or <code>"other"</code>,
+corresponding to the category the recognized method belongs to, as defined in
+<a href="../../vm/compiler/recognized_methods_list.h"><code>recognized_methods_list.h</code></a>.</p>
+<p>The pragmas must match exactly the set of recognized methods.  This enables
+kernel-level analyses and optimizations to query whether a method is recognized
+by the VM. The correspondence is checked when running in debug mode.</p>
     </div>
   </body>
 </html>

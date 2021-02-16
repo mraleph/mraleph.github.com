@@ -1,0 +1,76 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h1>Type Testing Stubs</h1>
+<p>This page describes how type testing stubs (TTS) are implemented.</p>
+<h3>Type Tests</h3>
+<p>Explicit <code>&lt;obj&gt; as &lt;desination-type&gt;</code> checks in Dart code (also generated implicitly in CFE) compile
+in the Dart VM's IL to the <code>AssertAssignable</code> instruction.</p>
+<h3>Type Testing Stubs</h3>
+<p>A type testing stub is a piece of generated machine code, specialized for a type.
+The <code>RawAbstractType</code> has pointer to the entry of this machine code in <code>type_test_stub_entry_point_</code>
+(as well as to the corresponding <code>RawCode</code>, but that is actually not required for the operation of the stub)</p>
+<p>The specialized machine code is self-contained and doesn't need/have an object pool.
+The stub will not setup a frame: In the fast case it will perform the type check and return.</p>
+<p>The TTS has a special calling convention which accepts:
+   * the <code>&lt;obj&gt;</code> to perform the type test against
+   * the <code>&lt;destination-type&gt;</code> to perform the test against
+   * the instantiator type argument vector (if the destination type is not instantiated)
+   * the function type argument vector (if the <code>&lt;destination-type&gt;</code> is not instantiated)
+   * a loaded slot from the caller's object pool (which is lazily populated by runtime to contain a <code>RawSubtypeTestCache</code> if the TTS was unable to handle the type test).</p>
+<p>This calling convention is the same as for the SubtypeTestCache-based implementation.</p>
+<p>We distuinguish between different type tests (based on the <code>&lt;destination-type&gt;</code>):</p>
+<h4>Simple Subtype ClassId-based range checks</h4>
+<p>Types of the form <code>&lt;obj&gt; as Foo&lt;T1, ..., Tn&gt;</code> where <code>T1</code> .. <code>Tn</code> are all top-types are performed
+by loading the class id of <code>&lt;obj&gt;</code> and checking whether it is contained in the set of all class-id ranges of
+classes directly or transitively extending/implementing <code>Foo</code>.</p>
+<p>In AOT mode in particular this is very fast because we perform a depth-first preorder numbering of classes, which
+means we have a single range for <code>as Foo</code> if <code>Foo</code> is not implemented. Otherwise we might have multiple ranges.</p>
+<p>This test is exhaustive.</p>
+<h4>Complex Subclass ClassId-based range checks</h4>
+<p>Types of the form <code>&lt;obj&gt; as Foo&lt;T1, ..., Tn&gt;</code> where at least one <code>Ti</code> is not a top type are performed by loading the class id of <code>&lt;obj&gt;</code> and checking whether it lies inside the subclass ranges. Since we check for direct/indirect subclasses and not implementors (this test is non-exhaustive) we know at which offset the type argument vector is.</p>
+<p>We then load the instance type arguments vector <code>&lt;obj&gt;.&lt;tav&gt;</code> and perform a type check for each <code>Ti</code>. Notice these "inner type checks" are different from the original check: Instead of checking <code>&lt;some-obj&gt; as &lt;type&gt;</code> we now have to check whether <code>&lt;some-type&gt; is &lt;other-type&gt;</code>. This asymmetry is also the reason why a TTS cannot call other TTS.</p>
+<p>For each <code>Ti</code> we perform now a check of the form <code>&lt;obj&gt;.tav[i]</code> is <Ti>` as follows:</p>
+<ul>
+<li>
+<p>If <code>Tx</code> is an instantiated type of the form <code>Bar&lt;H1, ..., Hn&gt;</code> where all <code>H1</code>..<code>Hn</code> are top-types we perform the same ClassId-based range check as above in the simple case (this test is exhaustive)</p>
+</li>
+<li>
+<p>If <code>Tx</code> is a type parameter we will load its value (i.e. instantiate it) via the instantiator/function type argument vector and compare <code>&lt;obj&gt;.tav[i] == &lt;Ti&gt;.value</code> (this test is non-exhaustive)</p>
+</li>
+</ul>
+<h4>Fallbacks</h4>
+<p>If the TTS performed the type test and it succeeded, it will return immediately (fast case). If the type test failed or the TTS was non-exhaustive it will do a tail-call to a <code>SlowTypeTestStub</code> which will examine the test to be done and call the much slower SubtypeTestCache based implementation. It will, based on the STC's return value either return successfully or go to runtime to either lazily create/update a SubtypeTestCache or throw an exception.</p>
+<h2>AssertAssignable via Type Testing Stubs</h2>
+<p>The implementation of <code>AssertAssignable</code> will perform an in-line ClassId-based range check (based on code size heuristics). If such an inline check fails or the check would be too big, we will do an actual call.</p>
+<p>Currently this call always uses TTS in AOT mode (and in JIT mode if the destination type is either a type parameter or an instantiated interface type). To perform the call it will ensure the arguments to the TTS are in the right registers.</p>
+<p>If <code>&lt;destination-type&gt;</code> is a type parameter we will load its value and call its TTS instead.</p>
+<h2>JIT mode</h2>
+<p>In JIT mode we build the TTS lazily on first involcation (the TTS of types will be initialized to the <code>LazySpecializeTypeTest</code> stub). If later on more classes get loaded and the TTS fast path starts failing we re-build the TTS.</p>
+<p>After a hot-reload we reset all types to the lazy specialize TTS.</p>
+<h2>AOT mode</h2>
+<p>In AOT mode we try to guess for which types we might need a TTS. For every <code>AssertAssignable</code> we remember its <code>&lt;destination-type&gt;</code>. If it was a type parameter <code>T</code> we also try to see (in a limited way) what can flow into <code>T</code> and mark such types for needing a TTS.</p>
+    </div>
+  </body>
+</html>

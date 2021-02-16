@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dart VM</title>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" type="text/css">
 <link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
@@ -22,21 +22,20 @@
 
   <body>
     <div class="content">
-      <h2><span class="section-number"></span> <code>vm:testing.unsafe.trace-entrypoints-fn</code> pragma</h2>
+      <h1><code>vm:testing.unsafe.trace-entrypoints-fn</code> pragma</h1>
 <p>This pragma is used for testing purposes in the test suite.</p>
 <p>Example:</p>
-<div class="codehilite"><pre><span></span><span class="kt">void</span> <span class="n">hook</span><span class="p">(</span><span class="kt">String</span> <span class="n">functionName</span><span class="p">,</span> <span class="kt">int</span> <span class="n">entryPointId</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="kt">void</span> <span class="n">hook</span><span class="p">(</span><span class="kt">String</span> <span class="n">functionName</span><span class="p">,</span> <span class="kt">int</span> <span class="n">entryPointId</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// ...</span>
 <span class="p">}</span>
 
 <span class="kd">class</span> <span class="nc">C</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="p">{</span>
-  <span class="err">@</span><span class="n">pragma</span><span class="p">(</span><span class="s1">&#39;vm:testing.unsafe.trace-entrypoints-fn&#39;</span><span class="p">,</span> <span class="n">hook</span><span class="p">)</span>
+  <span class="nd">@pragma</span><span class="p">(</span><span class="s1">&#39;vm:testing.unsafe.trace-entrypoints-fn&#39;</span><span class="p">,</span> <span class="n">hook</span><span class="p">)</span>
   <span class="kt">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">T</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// ...</span>
   <span class="p">}</span>
 <span class="p">}</span>
-</pre></div>
-
+</code></pre></div>
 <p>When <code>foo</code> is invoked, <code>hook</code> will be called in <code>foo</code>'s prologue if <code>foo</code> was
 compiled with multiple entry points. <code>hook</code> will be passed the name of the
 function it was called for and the ID of the entry point used for the
