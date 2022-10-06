@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
     <title>Dart VM</title>
     <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
@@ -22,8 +23,8 @@
 
   <body>
     <div class="content">
-      <h1>VM-Specific Pragma Annotations</h1>
-<h2>Pragmas for general use</h2>
+      <h1 id="vm-specific-pragma-annotations">VM-Specific Pragma Annotations</h1>
+<h2 id="pragmas-for-general-use">Pragmas for general use</h2>
 <p>These pragmas are part of the VM's API and are safe for use in external code.</p>
 <table>
 <thead>
@@ -35,23 +36,35 @@
 <tbody>
 <tr>
 <td><code>vm:entry-point</code></td>
-<td><a href="compiler/aot/entry_point_pragma.md">Defining entry-points into Dart code for an embedder or native methods</a></td>
+<td><a href="compiler/aot/entry_point_pragma.html">Defining entry-points into Dart code for an embedder or native methods</a></td>
 </tr>
 <tr>
 <td><code>vm:never-inline</code></td>
-<td><a href="compiler/pragmas_recognized_by_compiler.md#requesting-a-function-never-be-inlined">Never inline a function or method</a></td>
+<td><a href="compiler/pragmas_recognized_by_compiler.html#requesting-a-function-never-be-inlined">Never inline a function or method</a></td>
 </tr>
 <tr>
 <td><code>vm:prefer-inline</code></td>
-<td><a href="compiler/pragmas_recognized_by_compiler.md#requesting-a-function-be-inlined">Inline a function or method when possible</a></td>
+<td><a href="compiler/pragmas_recognized_by_compiler.html#requesting-a-function-be-inlined">Inline a function or method when possible</a></td>
 </tr>
 <tr>
 <td><code>vm:notify-debugger-on-exception</code></td>
 <td>Marks a function that catches exceptions, making the VM treat any caught exception as if they were uncaught. This can be used to notify an attached debugger during debugging, without pausing the app during regular execution.</td>
 </tr>
+<tr>
+<td><code>vm:external-name</code></td>
+<td>Allows to specify an external (native) name for an <code>external</code> function. This name is used to lookup native implementation via native resolver associated with the current library through embedding APIs. This is a replacement for legacy VM specific <code>native "name"</code> syntax.</td>
+</tr>
+<tr>
+<td><code>vm:invisible</code></td>
+<td>Allows to mark a function as invisible so it will not appear on stack traces.</td>
+</tr>
+<tr>
+<td><code>vm:always-consider-inlining</code></td>
+<td>Marks a function which particularly benefits from inlining and specialization in context of the caller (for example, when concrete types of arguments are known). Inliner will not give up after one failed inlining attempt and will continue trying to inline this function.</td>
+</tr>
 </tbody>
 </table>
-<h2>Unsafe pragmas for general use</h2>
+<h2 id="unsafe-pragmas-for-general-use">Unsafe pragmas for general use</h2>
 <p>These pragmas are available for use in third-party code but are potentially
 unsafe. The use of these pragmas is discouraged unless the developer fully
 understands potential repercussions.</p>
@@ -69,7 +82,7 @@ understands potential repercussions.</p>
 </tr>
 </tbody>
 </table>
-<h2>Pragmas for internal use</h2>
+<h2 id="pragmas-for-internal-use">Pragmas for internal use</h2>
 <p>These pragmas can cause unsound behavior if used incorrectly and therefore are only allowed within the core SDK libraries.</p>
 <table>
 <thead>
@@ -81,15 +94,15 @@ understands potential repercussions.</p>
 <tbody>
 <tr>
 <td><code>vm:exact-result-type</code></td>
-<td><a href="compiler/pragmas_recognized_by_compiler.md#providing-an-exact-result-type">Declaring an exact result type of a method</a></td>
+<td><a href="compiler/pragmas_recognized_by_compiler.html#providing-an-exact-result-type">Declaring an exact result type of a method</a></td>
 </tr>
 <tr>
 <td><code>vm:recognized</code></td>
-<td><a href="compiler/pragmas_recognized_by_compiler.md#marking-recognized-methods">Marking this as a recognized method</a></td>
+<td><a href="compiler/pragmas_recognized_by_compiler.html#marking-recognized-methods">Marking this as a recognized method</a></td>
 </tr>
 </tbody>
 </table>
-<h2>Pragmas for internal testing</h2>
+<h2 id="pragmas-for-internal-testing">Pragmas for internal testing</h2>
 <p>These pragmas are used for inspecting or modifying internal VM state and should be used exclusively by SDK tests.
 They must be enabled with the <code>--enable-testing-pragmas</code> flag.
 The names of these pragmas are prefixed with "testing".
@@ -104,7 +117,29 @@ Additionally, they are categorized into "safe" and "unsafe" forms: "safe" pragma
 <tbody>
 <tr>
 <td><code>vm:testing.unsafe.trace-entrypoints-fn</code></td>
-<td><a href="compiler/frontend/testing_trace_entrypoints_pragma.md">Observing which flow-graph-level entry-point was used when a function was called</a></td>
+<td><a href="compiler/frontend/testing_trace_entrypoints_pragma.html">Observing which flow-graph-level entry-point was used when a function was called</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="flutter-tostring-transformer-pragmas">Flutter toString transformer pragmas</h2>
+<p>These pragmas are useful to exclude certain toString methods from toString transformation,
+which is enabled with <code>--delete-tostring-package-uri</code> option in kernel compilers and
+used by Flutter to remove certain toString methods in release mode to reduce size.</p>
+<table>
+<thead>
+<tr>
+<th>Pragma</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>flutter:keep-to-string</code></td>
+<td>Avoid transforming the annotated toString method.</td>
+</tr>
+<tr>
+<td><code>flutter:keep-to-string-in-subtypes</code></td>
+<td>Avoid transforming toString methods in all subtypes of the annotated class.</td>
 </tr>
 </tbody>
 </table>

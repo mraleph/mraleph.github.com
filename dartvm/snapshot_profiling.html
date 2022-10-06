@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
     <title>Dart VM</title>
     <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
@@ -22,16 +23,16 @@
 
   <body>
     <div class="content">
-      <h1>AOT Snapshot Size Profiling</h1>
+      <h1 id="aot-snapshot-size-profiling">AOT Snapshot Size Profiling</h1>
 <p>The VM supports profiling the size of AOT snapshots by leveraging the object-graph based file format introduced by V8.</p>
-<h2>Recording a profile</h2>
+<h2 id="recording-a-profile">Recording a profile</h2>
 <p>To generate a snapshot profile, simply pass the <code>--write-v8-snapshot-profile-to=&lt;filename&gt;</code> flag to <code>gen_snapshot</code>.
 The profile will be written in JSON format to the requested file.
 Make sure to use the ".heapsnapshot" extension for the file to open it in Chrome DevTools.</p>
-<h2>Examining a profile in Chrome</h2>
+<h2 id="examining-a-profile-in-chrome">Examining a profile in Chrome</h2>
 <p>Open Chrome DevTools, navigate to the "Memory" tab, right-click on the "Profiles" panel, click Load..." and select the snapshot profile file.
 See https://developers.google.com/web/tools/chrome-devtools/memory-problems/heap-snapshots for details on how to use the tool.</p>
-<h2>Examining a profile programmatically</h2>
+<h2 id="examining-a-profile-programmatically">Examining a profile programmatically</h2>
 <p>A Dart library to parse the snapshot profile format is provided in <code>pkg/vm/lib/v8_snaphsot_profile.dart</code>.
 The <code>dart2js_info</code> package has some useful code for calculating retainers and other graph statistics.</p>
     </div>

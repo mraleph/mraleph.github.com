@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
     <title>Dart VM</title>
     <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
@@ -22,9 +23,9 @@
 
   <body>
     <div class="content">
-      <h1>Dart MiniDesign Doc</h1>
-<h2>Optimization Levels for AOT Dart Compiler</h2>
-<h1>Introduction</h1>
+      <h1 id="dart-minidesign-doc">Dart MiniDesign Doc</h1>
+<h2 id="optimization-levels-for-aot-dart-compiler">Optimization Levels for AOT Dart Compiler</h2>
+<h1 id="introduction">Introduction</h1>
 <p>In order to strike the right balance between compile-time, code speed, and code size, most optimizing compilers support several levels of optimizations, typically controlled by an -Ox switch. The usual ones relevant to this design code are:</p>
 <ul>
 <li>O0: short compilation-time, unoptimized code, small code size; highly debuggable</li>
@@ -36,7 +37,7 @@
 <p>The O2 level is used to generate code for shipping. It strikes a right balance between compile-time and generated code speed and size. Since shipping occurs less frequently than debugging and testing, slightly longer compilation-times are acceptable.</p>
 <p>When either code speed or size is favored, respectively, levels O3 or Os are used. For the former, longer compilation-times are acceptable as well.</p>
 <p>The Dart compiler conceptually only supports level O0 (the un-optimized code that is used as our deopt "fallback") and level O2 (optimized code). Although the quality of optimization can heavily depend on profile feedback (JIT) and the possibility for speculative execution, both JIT and AOT strike more or less the same balance between generated code speed and size.</p>
-<h1>Proposal</h1>
+<h1 id="proposal">Proposal</h1>
 <p>Some optimizations are known to benefit mostly code speed (with an unfavorable or unknown impact on code size) or mostly code size (with an unfavorable or unknown impact on code speed). For example, more aggressively inlining (to a certain extent) usually yields faster but more sizable code. Conversely, not aligning code (where allowed) usually yields more compact, but potentially slower running code.</p>
 <p>Sometimes performing more expensive analysis, which negatively impacts compile-time, may discover more optimization opportunities in some cases, but remain completely empty handed in other cases. For example, doing an expensive data dependence analysis of loops only pays of if the loop is eventually vectorized or parallelized. Otherwise, all analysis time is wasted.</p>
 <p>Note that almost every optimization decision_ is heuristic in nature_; optimizations generally improve a certain aspect of the code, but there are no hard guarantees.</p>

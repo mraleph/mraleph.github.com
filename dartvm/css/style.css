@@ -1,82 +1,19 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap");
 @import url("https://rsms.me/inter/inter.css");
 @import url("https://rsms.me/inter/inter-display.css");
-.highlight {
-  line-height: initial;
+@font-face {
+  font-named-instance: "Regular";
+  font-family: jbmono;
+  font-style: normal;
+  font-weight: 100 800;
+  src: url(https://rsms.me/res/fonts/jbm/jetbrains-mono-wght.woff2) format("woff2");
 }
-.highlight pre {
-  --bg: #fff;
-  --fg: #000;
-  --comment: #6a737d;
-  --punctuation: inherit;
-  --operator: inherit;
-  --entity: #6f42c1;
-  --keyword: #d73a49;
-  --variable: #e36209;
-  --string-constant: #032f62;
-  /* strings etc */
-  --numeric-constant: #005cc5;
-  padding: 1em;
-  background: var(--bg);
-  color: var(--fg);
-  /* punctuation */
-  /* syntax error */
-  /*& .err { color: #ff0015; }*/
-  /* names / identifiers */
-  /*& .n ,*/
-  /* Name */
-  /* Keywords */
-  /* strings */
-  /* number */
-  /* ? */
-  /*& .l,
-  & .ld,
-  & .m,
-  & .mf,
-  & .mh,
-  & .mi,
-  & .mo,
-  & .nx,
-  & .il { color: #ff0000; }*/
-}
-.highlight pre .p {
-  color: var(--punctuation);
-}
-.highlight pre .na, .highlight pre .nb, .highlight pre .nc, .highlight pre .no, .highlight pre .nd, .highlight pre .ni, .highlight pre .ne, .highlight pre .nf, .highlight pre .nl, .highlight pre .nn, .highlight pre .nx, .highlight pre .py, .highlight pre .nt {
-  color: var(--entity);
-}
-.highlight pre .vc, .highlight pre .vg, .highlight pre .vi, .highlight pre .nv {
-  color: var(--variable);
-}
-.highlight pre .bp {
-  /* Builtin.Pseudo */
-}
-.highlight pre .o, .highlight pre .ow {
-  color: var(--operator);
-}
-.highlight pre .c, .highlight pre .cm, .highlight pre .cp, .highlight pre .c1, .highlight pre .cs {
-  color: var(--comment);
+@font-face {
+  font-named-instance: "Italic";
+  font-family: jbmono;
   font-style: italic;
+  font-weight: 100 800;
+  src: url(https://rsms.me/res/fonts/jbm/jetbrains-mono-italic_wght.woff2) format("woff2");
 }
-.highlight pre .k, .highlight pre .kc, .highlight pre .kd, .highlight pre .kn, .highlight pre .kp, .highlight pre .kr, .highlight pre .kt {
-  color: var(--keyword);
-  font-weight: 500;
-}
-.highlight pre .s, .highlight pre .sb, .highlight pre .sd, .highlight pre .sc, .highlight pre .s2, .highlight pre .se, .highlight pre .sh, .highlight pre .si, .highlight pre .sx, .highlight pre .sr, .highlight pre .ss, .highlight pre .s1 {
-  color: var(--string-constant);
-}
-.highlight pre .m, .highlight pre .mi, .highlight pre .mf {
-  color: var(--numeric-constant);
-}
-.highlight pre .gi {
-  color: #22863a;
-  background-color: #f0fff4;
-}
-.highlight pre .gd {
-  color: #b31d28;
-  background-color: #ffeef0;
-}
-
 :root {
   font-family: "Inter", sans-serif;
 }
@@ -84,6 +21,7 @@
 @supports (font-variation-settings: normal) {
   :root {
     font-family: "Inter var", sans-serif;
+    font-weight: 460;
   }
 }
 a {
@@ -102,32 +40,10 @@ a:hover {
   border-bottom: dashed 1px #b70000;
 }
 
-div.codehilite {
+div.highlight {
   font-size: 16px;
   margin: 0px -20px;
   padding: 5px 20px;
-}
-
-p {
-  position: relative;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font: normal 16px/24px "Inter", sans-serif;
-  text-align: left;
-  color: #112;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  letter-spacing: 0.01em;
-}
-
-h1, h2, h3, h4, h5 {
-  font-family: "Inter Display", sans-serif;
-  text-align: left;
-  position: relative;
 }
 
 h1 {
@@ -152,6 +68,28 @@ h5 {
 
 h6 {
   font-size: 12px;
+}
+
+p {
+  position: relative;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: left;
+  color: #112;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.01em;
+}
+
+h1, h2, h3, h4, h5 {
+  text-align: left;
+  position: relative;
 }
 
 .section-number {
@@ -228,51 +166,146 @@ p > img {
     right: 0px;
     margin: 0px;
   }
-
   .box-white {
     border: none;
   }
-
   .content {
     width: auto;
     left: 0px;
     right: 0px;
     margin: 0px;
   }
-
   .aside {
     margin-right: 0px;
     position: relative;
     right: 0px;
     width: auto;
+    text-align: left;
     font-size: 0.8em;
     line-height: 1.5em;
     background-color: rgba(128, 128, 128, 0.1);
     display: block;
-    padding: 5px;
+    padding: 0.8em;
   }
-
   body {
+    font-size: 14px;
+    line-height: 18px;
     padding: 5px;
   }
-
-  div.codehilite {
-    font: normal 10px/13px "IBM Plex Mono", Menlo, Consolas, monospace;
+  div.highlight {
+    font-size: 10px;
+    line-height: 13px;
     margin: 0px -5px;
     padding: 5px 5px;
   }
 }
 code {
-  font: normal 14.4px/24px "IBM Plex Mono", Menlo, Consolas, monospace;
+  font: normal 16px/24px jbmono, "IBM Plex Mono", Menlo, Consolas, monospace;
   white-space: pre;
 }
 
 .aside code {
-  font: normal 12.96px/21.6px "IBM Plex Mono", Menlo, Consolas, monospace !important;
+  font: normal 14.4px/21.6px jbmono, "IBM Plex Mono", Menlo, Consolas, monospace !important;
 }
 
 pre {
-  font: normal 16px/24px "IBM Plex Mono", Menlo, Consolas, monospace;
+  font: normal 16px/24px jbmono, "IBM Plex Mono", Menlo, Consolas, monospace;
+}
+
+.centered {
+  display: block;
+  text-align: center;
+}
+
+.start-reading span {
+  color: white;
+  background-color: #C00;
+  border-radius: 10px;
+  display: inline-block;
+  padding: 10px;
+}
+
+.start-reading {
+  text-align: center;
+}
+
+.highlight {
+  line-height: initial;
+}
+.highlight pre {
+  --bg: #fff;
+  --fg: #000;
+  --comment: #6a737d;
+  --punctuation: inherit;
+  --operator: inherit;
+  --entity: #6f42c1;
+  --keyword: #d73a49;
+  --variable: #e36209;
+  --string-constant: #032f62; /* strings etc */
+  --numeric-constant: #005cc5;
+  padding: 1em;
+  background: var(--bg);
+  color: var(--fg);
+  /* punctuation */
+  /* syntax error */
+  /*& .err { color: #ff0015; }*/
+  /* names / identifiers */
+  /*& .n ,*/ /* Name */
+  /* Keywords */
+  /* strings */
+  /* number */
+  /* ? */
+  /*& .l,
+  & .ld,
+  & .m,
+  & .mf,
+  & .mh,
+  & .mi,
+  & .mo,
+  & .nx,
+  & .il { color: #ff0000; }*/
+}
+.highlight pre .p {
+  color: var(--punctuation);
+}
+.highlight pre .na, .highlight pre .nb, .highlight pre .nc, .highlight pre .no, .highlight pre .nd, .highlight pre .ni, .highlight pre .ne, .highlight pre .nf, .highlight pre .nl, .highlight pre .nn, .highlight pre .nx, .highlight pre .py, .highlight pre .nt {
+  color: var(--entity);
+}
+.highlight pre .vc, .highlight pre .vg, .highlight pre .vi, .highlight pre .nv {
+  color: var(--variable);
+}
+.highlight pre .bp { /* Builtin.Pseudo */ }
+.highlight pre .o, .highlight pre .ow {
+  color: var(--operator);
+}
+.highlight pre .c, .highlight pre .cm, .highlight pre .cp, .highlight pre .c1, .highlight pre .cs {
+  color: var(--comment);
+  font-style: italic;
+}
+.highlight pre .k, .highlight pre .kc, .highlight pre .kd, .highlight pre .kn, .highlight pre .kp, .highlight pre .kr, .highlight pre .kt {
+  color: var(--keyword);
+  font-weight: 500;
+}
+.highlight pre .s, .highlight pre .sb, .highlight pre .sd, .highlight pre .sc, .highlight pre .s2, .highlight pre .se, .highlight pre .sh, .highlight pre .si, .highlight pre .sx, .highlight pre .sr, .highlight pre .ss, .highlight pre .s1 {
+  color: var(--string-constant);
+}
+.highlight pre .m, .highlight pre .mi, .highlight pre .mf {
+  color: var(--numeric-constant);
+}
+.highlight pre .gi {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+.highlight pre .gd {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+.highlight pre .gp {
+  color: var(--keyword);
+  font-weight: bold;
+}
+.highlight pre .go {
+  color: #003b7e;
 }
 
 div.epigraph blockquote {
@@ -287,17 +320,6 @@ div.epigraph blockquote .footer {
 
 div.clear {
   clear: both;
-}
-
-.sans {
-  font-family: "Inter", sans-serif;
-}
-
-.exercise {
-  background: rgba(38, 139, 210, 0.1);
-  border-radius: 10px;
-  margin: 0px -20px;
-  padding: 5px 20px;
 }
 
 .admonition {
@@ -323,14 +345,14 @@ div.clear {
 }
 
 .admonition.tryit {
-  background: #b9f6ca;
+  background: rgb(185, 246, 202);
 }
-.admonition.tryit .codehilite {
+.admonition.tryit .highlight pre {
   background-color: transparent;
   color: inherit;
   margin: 0px 0px;
 }
-.admonition.tryit .codehilite .c {
+.admonition.tryit .highlight pre .c {
   color: grey;
 }
 

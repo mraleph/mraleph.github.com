@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
     <title>Dart VM</title>
     <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
@@ -22,10 +23,10 @@
 
   <body>
     <div class="content">
-      <h1>Exceptions Implementation</h1>
+      <h1 id="exceptions-implementation">Exceptions Implementation</h1>
 <p>This page describes how exceptions throwing and catching is implemented in the
 VM.</p>
-<h2>Intermediate Language</h2>
+<h2 id="intermediate-language">Intermediate Language</h2>
 <p>Dart VM's IL <strong>does not</strong> explicitly represent exceptional control flow in its
 flow graph, there are <strong>no</strong> explicit exceptional edges connecting potentially
 throwing instructions (e.g. calls) with corresponding catch blocks. Instead this
@@ -50,11 +51,11 @@ used if exception control flow would be explicit.</p>
 available in <em>deoptimization environment</em> attached to the instruction. This
 environment encodes the state of local variables in terms of SSA values i.e. if
 we need to reconstruct unoptimized frame which SSA value should be stored into
-the given local variable (see <a href="compiler-pipeline-overview.md#optimized-il">Optimized
+the given local variable (see <a href="compiler-pipeline-overview.html#optimized-il">Optimized
 IL</a> for
 an overview). However the way we use these information for exception handling is
 slightly different in JIT and AOT modes.</p>
-<h3>AOT mode</h3>
+<h3 id="aot-mode">AOT mode</h3>
 <p>AOT mode does not support deoptimization and thus AOT compiler does not
 associate any deoptimization metadata with generated code. Instead
 deoptimization environments associated with instructions that can throw are
@@ -77,10 +78,10 @@ stack for the catch block entry. See
 <p>NOTE: See <a href="https://docs.google.com/a/google.com/document/d/1_vX8VkvHVA1Om7jjONiWLA325k_JmSZuvVClet-x-xM/edit?usp=sharing">this
 design/motivation</a>
 document for <code>CatchEntryMoves</code> metadata</p>
-<h3>JIT mode</h3>
+<h3 id="jit-mode">JIT mode</h3>
 <p>JIT mode heavily relies on deoptimization and all call instructions have (lazy)
 deoptimization environments associated with them. These environments are
-converted to <a href="deoptimization.md#in-optimized-code">deoptimization
+converted to <a href="deoptimization.html#in-optimized-code">deoptimization
 instructions</a>
 during code generation and stored on the <code>Code</code> object.</p>
 <p>When an exception is caught the runtime system converts deoptimization

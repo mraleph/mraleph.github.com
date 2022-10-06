@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
     <title>Dart VM</title>
     <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
@@ -22,15 +23,49 @@
 
   <body>
     <div class="content">
-      <h1>Introduction to Dart VM</h1>
+      <h1 id="introduction-to-dart-vm">Introduction to Dart VM</h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>This document is work in progress and is currently being written. Please contact Vyacheslav Egorov (<a href="vegorov@google.com">by mail</a> or <a href="http://twitter.com/mraleph">@mraleph</a>) if you have any questions, suggestions, bug reports. <strong>Last update: January 29 2020</strong></p>
+<p>This document is work in progress. Please contact Vyacheslav Egorov (<a href="vegorov@google.com">by mail</a> or <a href="http://twitter.com/mraleph">@mraleph</a>) if you have any questions, suggestions, bug reports. <strong>Last update: January 29 2020</strong></p>
 </div>
-<div class="admonition sourcecode">
-<p class="admonition-title">Purpose of this document</p>
+<div class="toc">
+<ul>
+<li><a href="#introduction-to-dart-vm">Introduction to Dart VM</a><ul>
+<li><a href="#how-does-dart-vm-run-your-code">How does Dart VM run your code?</a><ul>
+<li><a href="#running-from-source-via-jit">Running from source via JIT.</a></li>
+<li><a href="#running-from-snapshots">Running from Snapshots</a></li>
+<li><a href="#running-from-appjit-snapshots">Running from AppJIT snapshots</a></li>
+<li><a href="#running-from-appaot-snapshots">Running from AppAOT snapshots</a></li>
+</ul>
+</li>
+<li><a href="#runtime-system">Runtime System</a><ul>
+<li><a href="#object-model">Object Model</a></li>
+<li><a href="#representation-of-types">Representation of Types</a></li>
+<li><a href="#gc">GC</a></li>
+</ul>
+</li>
+<li><a href="#compiler">Compiler</a><ul>
+<li><a href="#method-calls">Method Calls</a><ul>
+<li><a href="#global-dispatch-table-gdt">Global Dispatch Table (GDT)</a></li>
+<li><a href="#switchable-calls">Switchable Calls</a></li>
+</ul>
+</li>
+<li><a href="#trycatch-in-il">try/catch in IL</a></li>
+<li><a href="#async-async-and-sync-methods">async, async* and sync* methods</a></li>
+<li><a href="#as-checks">as checks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#miscellaneous">Miscellaneous</a><ul>
+<li><a href="#pragmas">Pragmas</a></li>
+<li><a href="#dwarf-non-symbolic-stack-traces">DWARF (non-symbolic) stack traces</a></li>
+</ul>
+</li>
+<li><a href="#glossary">Glossary</a></li>
+</ul>
+</div>
 <p>This document is intended as a reference for new members of the Dart VM team, potential external contributors or just anybody interested in VM internals. It starts with a high-level overview of the Dart VM and then proceeds to describe various components of the VM in more details.</p>
-</div>
 <p>Dart VM is a collection of components for executing Dart code natively. Notably it includes the following:</p>
 <ul>
 <li>Runtime System<ul>
@@ -49,7 +84,7 @@
 <li>ARM simulators</li>
 </ul>
 <p>The name "Dart VM" is historical. Dart VM is a virtual machine in a sense that it provides an execution environment for a high-level programming language, however it does not imply that Dart is always interpreted or JIT-compiled, when executing on Dart VM. For example, Dart code can be compiled into machine code using Dart VM AOT pipeline and then executed within a stripped version of the Dart VM, called <em>precompiled runtime</em>, which does not contain any compiler components and is incapable of loading Dart source code dynamically.</p>
-<h2>How does Dart VM run your code?</h2>
+<h2 id="how-does-dart-vm-run-your-code">How does Dart VM run your code?</h2>
 <p>Dart VM has multiple ways to execute the code, for example:</p>
 <ul>
 <li>from source or Kernel binary using JIT;</li>
@@ -60,8 +95,36 @@
 </li>
 </ul>
 <p>However the main difference between these lies in when and how VM converts Dart source code to executable code. The runtime environment that facilitates the execution remains the same.</p>
-<p><img alt="Isolates" src="images/isolates.png" /></p>
-<p>Any Dart code within the VM is running within some <em>isolate</em>, which can be best described as an isolated Dart universe with its own memory (<em>heap</em>) and <em>usually</em> with its own thread of control (<em>mutator thread</em>). There can be many isolates executing Dart code concurrently, but they cannot share any state directly and can only communicate by message passing through <em>ports</em> (not to be confused with network ports!).</p>
+<div class="highlight"><pre><span></span><code>                                     pseudo isolate for
+                                     shared immutable objects
+                                     like null, true, false.
+                                     ┌────────────┐
+                                     │ VM Isolate │       heaps can reference
+                                     │ ╭────────╮ │       vm-isolate heap.
+                            ┏━━━━━━━━━▶│ Heap   │◀━━━━━━━━━━━━━━━━┓
+                            ┃        │ ╰────────╯ │               ┃
+                            ┃        └────────────┘               ┃
+                            ┃                                     ┃
+  ┌─────────────────────────┃────────┐            ┌───────────────┃──────────────────┐
+  │ IsolateGroup            ┃        │            │ IsolateGroup  ┃                  │
+  │                         ┃        │            │               ┃                  │
+  │ ╭───────────────────────┃──────╮ │            │ ╭─────────────┃────────────────╮ │
+  │ │ GC managed Heap              ┅┅┅┅┅┅┅┅╳┅┅┅┅┅┅┅▶│ GC managed Heap              │ │
+  │ ╰──────────────────────────────╯ │ no cross   │ ╰──────────────────────────────╯ │
+  │  ┌─────────┐     ┌─────────┐     │ group      │  ┌─────────┐     ┌─────────┐     │
+  │  │┌─────────┐    │┌─────────┐    │ references │  │┌─────────┐    │┌─────────┐    │
+  │  ││┌─────────┐   ││┌─────────┐   │            │  ││┌─────────┐   ││┌─────────┐   │
+  │  │││Isolate  │   │││         │   │            │  │││Isolate  │   │││         │   │
+  │  │││         │   │││         │   │            │  │││         │   │││         │   │
+  │  │││ globals │   │││ helper  │   │            │  │││ globals │   │││ helper  │   │
+  │  │││         │   │││ thread  │   │            │  │││         │   │││ thread  │   │
+  │  └││ mutator │   └││         │   │            │  └││ mutator │   └││         │   │
+  │   └│ thread  │    └│         │   │            │   └│ thread  │    └│         │   │
+  │    └─────────┘     └─────────┘   │            │    └─────────┘     └─────────┘   │
+  └──────────────────────────────────┘            └──────────────────────────────────┘
+</code></pre></div>
+<p>Any Dart code within the VM is running within some <em>isolate</em>, which can be best described as an isolated Dart universe with its own global state and <em>usually</em> with its own thread of control (<em>mutator thread</em>). Isolates are grouped together into <em>isolate groups</em>. Isolate within the group share the same garbage collector managed <em>heap</em>, used as a storage for objects allocated by an isolate. Heap sharing between isolates in the same group is an implementation detail which is not observable from the Dart code. Even isolates within the same group can not share any mutable state directly and can only communicate by message passing through <em>ports</em> (not to be confused with network ports!).</p>
+<p>Isolates within a group share the same Dart program. <a href="https://api.dart.dev/stable/dart-isolate/Isolate/spawn.html"><code>Isolate.spawn</code></a> spawns an isolate within the same group, while <a href="https://api.dart.dev/stable/2.18.2/dart-isolate/Isolate/spawnUri.html"><code>Isolate.spawnUri</code></a> starts a new group.</p>
 <p>The relationship between OS threads and isolates is a bit blurry and highly dependent on how VM is embedded into an application. Only the following is guaranteed:</p>
 <ul>
 <li>an OS thread can <em>enter</em> only one isolate at a time. It has to leave current isolate if it wants to enter another isolate;</li>
@@ -74,98 +137,155 @@
 <li>GC sweeper threads;</li>
 <li>concurrent GC marker threads.</li>
 </ul>
-<p>Internally VM uses a thread pool (<a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/thread_pool.h#L20" target="blank">dart::ThreadPool</a>) to manage OS threads and the code is structured around <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/thread_pool.h#L23" target="blank">dart::ThreadPool::Task</a> concept rather than around a concept of an OS thread. For example, instead of spawning a dedicated thread to perform background sweeping after a GC VM posts a <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/heap/sweeper.cc#L110" target="blank">dart::ConcurrentSweeperTask</a> to the global VM thread pool and thread pool implementation either selects an idling thread or spawns a new thread if no threads are available. Similarly the default implementation of an event loop for isolate message processing does not actually spawn a dedicated event loop thread, instead it posts a <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/message_handler.cc#L23" target="blank">dart::MessageHandlerTask</a> to the thread pool whenever a new message arrives.</p>
+<p>Internally VM uses a thread pool <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/thread_pool.h#L20" target="_blank"><code>ThreadPool</code></a> to manage OS threads and the code is structured around <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/thread_pool.h#L23" target="_blank"><code>ThreadPool::Task</code></a> concept rather than around a concept of an OS thread. For example, instead of spawning a dedicated thread to perform background sweeping after a GC VM posts a <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/heap/sweeper.cc#L110" target="_blank"><code>ConcurrentSweeperTask</code></a> to the global VM thread pool and thread pool implementation either selects an idling thread or spawns a new thread if no threads are available. Similarly the default implementation of an event loop for isolate message processing does not actually spawn a dedicated event loop thread, instead it posts a <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/message_handler.cc#L23" target="_blank"><code>MessageHandlerTask</code></a> to the thread pool whenever a new message arrives.</p>
 <div class="admonition sourcecode">
 <p class="admonition-title">Source to read</p>
-<p>Class <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/isolate.h#L974" target="blank">dart::Isolate</a> represents an isolate, class <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/heap/heap.h#L35" target="blank">dart::Heap</a> - isolate's heap. Class <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/thread.h#L239" target="blank">dart::Thread</a> describes the state associated with a thread attached to an isolate. Note that the name <code>Thread</code> is somewhat confusing because all OS threads attached to the same isolate as a mutator would reuse the same <code>Thread</code> instance. See <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/dart_api_impl.cc#L1931" target="blank">Dart_RunLoop</a> and <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/message_handler.h#L20" target="blank">dart::MessageHandler</a> for the default implementation of an isolate's message handling.</p>
+<p>Class <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/isolate.h#L974" target="_blank"><code>Isolate</code></a> represents an isolate, <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/isolate.h#L292" target="_blank"><code>IsolateGroup</code></a> an isolate group and class <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/heap/heap.h#L35" target="_blank"><code>Heap</code></a> - isolate group's heap. Class <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/thread.h#L329" target="_blank"><code>Thread</code></a> describes the state associated with a thread attached to an isolate. Note that the name <code>Thread</code> is somewhat confusing because all OS threads attached to the same isolate as a mutator will reuse the same <code>Thread</code> instance. See <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/dart_api_impl.cc#L1975" target="_blank"><code>Dart_RunLoop</code></a> and <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/message_handler.h#L20" target="_blank"><code>MessageHandler</code></a> for the default implementation of an isolate's message handling.</p>
 </div>
-<h3>Running from source via JIT.</h3>
+<h3 id="running-from-source-via-jit">Running from source via JIT.</h3>
 <p>This section tries to cover what happens when you try to execute Dart from the command line:</p>
-<div class="highlight"><pre><span></span><code><span class="c1">// hello.dart</span>
-<span class="n">main</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="n">print</span><span class="p">(</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="c1">// hello.dart</span><span class="w"></span>
+<span class="n">main</span><span class="p">()</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">);</span><span class="w"></span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart hello.dart
 <span class="go">Hello, World!</span>
 </code></pre></div>
-<p>Since Dart 2 VM no longer has the ability to directly execute Dart from raw source, instead VM expects to be given <em>Kernel binaries</em> (also called <em>dill files</em>) which contain serialized <a href="https://github.com/dart-lang/sdk/blob/master/pkg/kernel/README.md">Kernel ASTs</a>. The task of translating Dart source into Kernel AST is handled by the <a href="https://github.com/dart-lang/sdk/tree/master/pkg/front_end">common front-end (CFE)</a> written in Dart and shared between different Dart tools (e.g. VM, dart2js, Dart Dev Compiler).</p>
-<p><img alt="Dart to Kernel" src="images/dart-to-kernel.png" /></p>
-<p>To preserve convenience of executing Dart directly from source standalone <code>dart</code> executable hosts a helper isolate called <em>kernel service</em>, which handles compilation of Dart source into Kernel. VM then would run resulting Kernel binary.</p>
-<p><img alt="Running from Source in Dart 2" src="images/kernel-service.png" /></p>
+<p>Since Dart 2 VM no longer has the ability to directly execute Dart from raw source, instead VM expects to be given <em>Kernel binaries</em> (also called <em>dill files</em>) which contain serialized <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/kernel/README.html" target="_blank">Kernel ASTs</a>. The task of translating Dart source into Kernel AST is handled by the <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/front_end" target="_blank">common front-end (CFE)</a> written in Dart and shared between different Dart tools (e.g. VM, dart2js, Dart Dev Compiler).</p>
+<div class="highlight"><pre><span></span><code> ╭─────────────╮                       ╭────────────╮
+ │╭─────────────╮       ╔═════╗        │╭────────────╮        ╔════╗
+ ││╭─────────────╮┣━━━▶ ║ CFE ║ ┣━━━▶  ││╭────────────╮ ┣━━━▶ ║ VM ║
+ ┆││ Dart Source │      ╚═════╝        │││ Kernel AST │       ╚════╝
+ ┆┆│             │                     ╰││ (binary)   │
+  ┆┆             ┆                      ╰│            │
+   ┆             ┆                       ╰────────────╯
+</code></pre></div>
+<p>To preserve convenience of executing Dart directly from source standalone <code>dart</code> executable hosts a helper isolate called <em>kernel service</em>, which handles compilation of Dart source into Kernel. VM then will run resulting Kernel binary.</p>
+<div class="highlight"><pre><span></span><code>                    ┌───────────────────────────────────────────────────┐
+                    │ dart (cli)                                        │
+                    │  ┌─────────┐                          ┌─────────┐ │
+ ╭─────────────╮    │  │ kernel  │     ╭────────────╮       │ main    │ │
+ │╭─────────────╮   │  │ service │     │╭────────────╮      │ isolate │ │
+ ││╭─────────────╮┣━━━▶│ isolate │┣━━━▶││╭────────────╮┣━━━▶│         │ │
+ ┆││ Dart Source │  │  │         │     │││ Kernel AST │     │         │ │
+ ┆┆│             │  │  │╔══════╗ │     ╰││ (binary)   │     │         │ │
+  ┆┆             ┆  │  │║ CFE  ║ │      ╰│            │     │         │ │
+   ┆             ┆  │  │╚══════╝ │       ╰────────────╯     │         │ │
+                    │  │         │══════════════════════════│         │ │
+                    │  └─────────┘           VM             └─────────┘ │
+                    │         ╚═════════════════════════════════╝       │
+                    └───────────────────────────────────────────────────┘
+</code></pre></div>
 <p>However this setup is not the only way to arrange CFE and VM to run Dart code. For example, Flutter completely separates <em>compilation to Kernel</em> and <em>execution from Kernel</em> by putting them onto different devices: compilation happens on the developer machine (<em>host</em>) and execution is handled on the target mobile <em>device</em>, which receives Kernel binaries send to it by <code>flutter</code> tool.</p>
-<p><img alt="Dart to Kernel" src="images/flutter-cfe.png" /></p>
+<div class="highlight"><pre><span></span><code>                                             HOST ┆ DEVICE
+                                                  ┆
+                         ┌──────────────────────┐ ┆ ┌────────────────┐
+ ╭─────────────╮         │frontend_server (CFE) │ ┆ │ Flutter Engine │
+ │╭─────────────╮      ┌──────────────────────┐ │ ┆ │ ╔════════════╗ │
+ ││╭─────────────╮┣━━━▶│flutter run --debug   │ │ ┆ │ ║     VM     ║ │
+ ┆││ Dart Source │     │                      │─┘ ┆ │ ╚════════════╝ │
+ ┆┆│             │     │                      │   ┆ └────────────────┘
+  ┆┆             ┆     └──────────────────────┘   ┆            ▲
+   ┆             ┆               ┳                ┆            ┃
+                                 ┃                ┆            ┃
+                                 ┃         ╭────────────╮      ┃
+                                 ┃         │╭────────────╮     ┃
+                                 ┃         ││╭────────────╮    ┃
+                                 ┗━━━━━━━━▶│││ Kernel AST │┣━━━┛
+                                           ╰││ (binary)   │
+                                            ╰│            │
+                                             ╰────────────╯
+</code></pre></div>
 <p>Note that <code>flutter</code> tool does not handle parsing of Dart itself - instead it spawns another persistent process <code>frontend_server</code>, which is essentially a thin wrapper around CFE and some Flutter specific Kernel-to-Kernel transformations. <code>frontend_server</code> compiles Dart source into Kernel files, which <code>flutter</code> tool then sends to the device. Persistence of the <code>frontend_server</code> process comes into play when developer requests <em>hot reload</em>: in this case <code>frontend_server</code> can reuse CFE state from the previous compilation and recompile just libraries which actually changed.</p>
-<p>Once Kernel binary is loaded into the VM it is parsed to create objects representing various program entities. However this is done lazily: at first only basic information about libraries and classes is loaded. Each entity originating from a Kernel binary keeps a pointer back to the binary, so that later more information can be loaded as needed.<span class="aside">We use <code>Untagged...</code> prefix whenever we refer to objects allocated internally by the VM. This follows VM own naming convention: layout of internal VM objects is defined by C++ classes with names starting with <code>Untagged</code> in the header file <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lruntime/vm/raw_object.h" target="blank">runtime/vm/raw_object.h</a>. For example, <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/raw_object.h#L785" target="blank">dart::UntaggedClass</a> is a VM object describing a Dart class, <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/raw_object.h#L1239" target="blank">dart::UntaggedField</a> is a VM object describing a Dart field within a Dart class and so on. On images we will usually omit <code>Untagged...</code> prefix for brevity.</span></p>
-<p><img alt="Kernel Loading. Stage 1" src="images/kernel-loading-1.png" /></p>
+<p>Once Kernel binary is loaded into the VM it is parsed to create objects representing various program entities. However this is done lazily: at first only basic information about libraries and classes is loaded. Each entity originating from a Kernel binary keeps a pointer back to the binary, so that later more information can be loaded as needed. <span class="aside" markdown=1> Definitions of internal VM objects, like those representing classes and functions, are split into two parts: class <code>Xyz</code> in the header <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/object.h" target="_blank"><code>runtime/vm/object.h</code></a> defines C++ methods, while class <code>UntaggedXyz</code> in the header <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/raw_object.h" target="_blank"><code>runtime/vm/raw_object.h</code></a> defines memory layout. For example, <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/object.h#L1011" target="_blank"><code>Class</code></a> and <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/raw_object.h#L969" target="_blank"><code>UntaggedClass</code></a> specify a VM object describing Dart class, <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/object.h#L4038" target="_blank"><code>Field</code></a> and <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/raw_object.h#L1442" target="_blank"><code>UntaggedField</code></a> specify a VM object describing a Dart field within a Dart class and so on. We will return to this in a section covering runtime system and object model. We omit <code>Untagged...</code> prefix from illustrations to make them more compact.</span></p>
+<div class="highlight"><pre><span></span><code>             KERNEL AST BINARY    ┆ ISOLATE GROUP HEAP
+                                  ┆
+              ╭─────────────────╮ ┆   ┌───────┐
+              │                 │ ┆ ┏━┥ Class │
+              ├─────────────────┤ ┆ ┃ └───────┘╲ heap objects
+ AST node     │(Class           │◀━━┛            representing
+ representing │ (Field)         │ ┆   ┌───────┐╱ a class
+ a class      │ (Procedure      │ ┆ ┏━┥ Class │
+              │  (FunctionNode))│ ┆ ┃ └───────┘
+              │ (Procedure      │ ┆ ┃
+              │  (FunctionNode))│ ┆ ┃╲
+              ├─────────────────┤ ┆ ┃ ╲ heap objects representing
+              │(Class           │◀━━┛   program entities keep
+              │ (Field)         │ ┆     pointers back into kernel
+              │ (Field)         │ ┆     binary blob and are
+              │ (Procedure      │ ┆     deserialized lazily
+              │  (FunctionNode))│ ┆
+              ├─────────────────┤ ┆
+                                  ┆
+</code></pre></div>
 <p>Information about the class is fully deserialized only when runtime later needs it (e.g. to lookup a class member, to allocate an instance, etc). At this stage class members are read from the Kernel binary. However full function bodies are not deserialized at this stage, only their signatures.</p>
-<p><img alt="Kernel Loading. Stage 2" src="images/kernel-loading-2.png" /></p>
+<div class="highlight"><pre><span></span><code>             KERNEL AST BINARY    ┆ ISOLATE GROUP HEAP
+                                  ┆
+              ╭─────────────────╮ ┆   ┌───────┐
+              │                 │ ┆ ┏━┥ Class ┝━━━━━━━┓
+              ├─────────────────┤ ┆ ┃ └───────┘       ┃
+              │(Class           │◀━━┛   ┌──────────┐  ┃
+              │ (Field)         │◀━━━━━━┥ Field    │◀━┫
+              │ (Procedure      │◀━━━━┓ └──────────┘  ┃
+              │  (FunctionNode))│ ┆   ┃ ┌──────────┐  ┃
+              │ (Procedure      │◀━━━┓┗━┥ Function │◀━┫
+              │  (FunctionNode))│ ┆  ┃  └──────────┘  ┃
+              ├─────────────────┤ ┆  ┃  ┌──────────┐  ┃
+              │(Class           │ ┆  ┗━━┥ Function │◀━┛
+              │ (Field)         │ ┆     └──────────┘
+              │ (Field)         │ ┆
+              │ (Procedure      │ ┆
+              │  (FunctionNode))│ ┆
+              ├─────────────────┤ ┆
+                                  ┆
+</code></pre></div>
 <p>At this point enough information is loaded from Kernel binary for runtime to successfully resolve and invoke methods. For example, it could resolve and invoke <code>main</code> function from a library.</p>
 <div class="admonition sourcecode">
 <p class="admonition-title">Source to read</p>
-<p><a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/pkg/kernel/lib
-/ast.dart" target="blank">package:kernel/ast.dart</a> defines classes describing the Kernel AST. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/pkg/front_end/lib
-" target="blank">package:front_end</a> handles parsing Dart source and building Kernel AST from it. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/kernel_loader.cc#L238" target="blank">dart::kernel::KernelLoader::LoadEntireProgram</a> is an entry point for deserialization of Kernel AST into corresponding VM objects. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lpkg/vm/bin/kernel_service.dart" target="blank">pkg/vm/bin/kernel_service.dart</a> implements the Kernel Service isolate, <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lruntime/vm/kernel_isolate.cc" target="blank">runtime/vm/kernel_isolate.cc</a> glues Dart implementation to the rest of the VM. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/pkg/vm/lib
-" target="blank">package:vm</a> hosts most of the Kernel based VM specific functionality, e.g various Kernel-to-Kernel transformations. However some VM specific transformations still live in <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/pkg/kernel/lib
-" target="blank">package:kernel</a> for historical reasons. A good example of a complicated transformation is <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/pkg/kernel/lib
-/transformations/continuation.dart" target="blank">package:kernel/transformations/continuation.dart</a>, which desugars <code>async</code>,<code>async*</code> and <code>sync*</code> functions.</p>
+<p><a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/kernel/lib/ast.dart" target="_blank"><code>package:kernel/ast.dart</code></a> defines classes describing the Kernel AST. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/front_end/lib" target="_blank"><code>package:front_end</code></a> handles parsing Dart source and building Kernel AST from it. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/kernel_loader.cc#L240" target="_blank"><code>kernel::KernelLoader::LoadEntireProgram</code></a> is an entry point for deserialization of Kernel AST into corresponding VM objects. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/vm/bin/kernel_service.dart" target="_blank"><code>pkg/vm/bin/kernel_service.dart</code></a> implements the Kernel Service isolate, <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/kernel_isolate.cc" target="_blank"><code>runtime/vm/kernel_isolate.cc</code></a> glues Dart implementation to the rest of the VM. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/vm/lib" target="_blank"><code>package:vm</code></a> hosts most of the Kernel based VM specific functionality, e.g various Kernel-to-Kernel transformations.</p>
 </div>
 <div class="admonition tryit">
 <p class="admonition-title">Trying it</p>
-<p>If you are interested in Kernel format and its VM specific usage, then you can use <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lpkg/vm/bin/gen_kernel.dart" target="blank">pkg/vm/bin/gen_kernel.dart</a> to produce a Kernel binary file from Dart source. Resulting binary can then be dumped using <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lpkg/vm/bin/dump_kernel.dart" target="blank">pkg/vm/bin/dump_kernel.dart</a>.</p>
-<div class="highlight"><pre><span></span><code><span class="c"># Take hello.dart and compile it to hello.dill Kernel binary using CFE.</span>
-<span class="k">$</span><span class="g g-Text"> dart pkg/vm/bin/gen_kernel.dart                        \</span>
-<span class="g g-Text">       --platform out/ReleaseX64/vm_platform_strong.dill \</span>
-<span class="g g-Text">       -o hello.dill                                     \</span>
-<span class="g g-Text">       hello.dart</span>
-
-<span class="c"># Dump textual representation of Kernel AST.</span>
-<span class="k">$</span><span class="g g-Text"> dart pkg/vm/bin/dump_kernel.dart hello.dill hello.kernel.txt</span>
-</code></pre></div>
-<p>When you try using <code>gen_kernel.dart</code> you will notice that it requires something called <em>platform</em>, a Kernel binary containing AST for all core libraries (<code>dart:core</code>, <code>dart:async</code>, etc). If you have Dart SDK build configured then you can just use platform file from the <code>out</code> directory, e.g. <code>out/ReleaseX64/vm_platform_strong.dill</code>. Alternatively you can use
-<a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lpkg/front_end/tool/_fasta/compile_platform.dart" target="blank">pkg/front_end/tool/_fasta/compile_platform.dart</a> to generate the platform:</p>
-<div class="highlight"><pre><span></span><code><span class="c"># Produce outline and platform files using the given libraries list.</span>
-<span class="k">$</span><span class="g g-Text"> dart pkg/front_end/tool/_fasta/compile_platform.dart \</span>
-<span class="g g-Text">       dart:core                                       \</span>
-<span class="g g-Text">       sdk/lib/libraries.json                          \</span>
-<span class="g g-Text">       vm_outline.dill vm_platform.dill vm_outline.dill</span>
+<p>If you are interested in Kernel format and its VM specific usage, then you can use <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/vm/bin/gen_kernel.dart" target="_blank"><code>pkg/vm/bin/gen_kernel.dart</code></a> to produce a Kernel binary file from Dart source. Resulting binary can then be dumped using <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/vm/bin/dump_kernel.dart" target="_blank"><code>pkg/vm/bin/dump_kernel.dart</code></a>.</p>
+<ul>
+<li>Compile <code>hello.dart</code> to <code>hello.dill</code> Kernel binary using CFE
+     <div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart pkg/vm/bin/gen_kernel.dart                        <span class="se">\</span>
+       --platform out/ReleaseX64/vm_platform_strong.dill <span class="se">\</span>
+       -o hello.dill                                     <span class="se">\</span>
+       hello.dart
+</code></pre></div></li>
+<li>Dump textual representation of Kernel AST.
+     <div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart pkg/vm/bin/dump_kernel.dart hello.dill hello.kernel.txt
+</code></pre></div></li>
+</ul>
+<p>When you try using <code>gen_kernel.dart</code> you will notice that it requires something called <em>platform</em>, a Kernel binary containing AST for all core libraries (<code>dart:core</code>, <code>dart:async</code>, etc). If you have Dart SDK build configured then you can just use platform file from the <code>out</code> directory, e.g. <code>out/ReleaseX64/vm_platform_strong.dill</code>. Alternatively you can use <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/front_end/tool/_fasta/compile_platform.dart" target="_blank"><code>pkg/front_end/tool/_fasta/compile_platform.dart</code></a> to generate the platform:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart pkg/front_end/tool/_fasta/compile_platform.dart <span class="se">\</span>
+       dart:core                                       <span class="se">\</span>
+       sdk/lib/libraries.json                          <span class="se">\</span>
+       vm_outline.dill vm_platform.dill vm_outline.dill
 </code></pre></div>
 </div>
 <p>Initially all functions have a placeholder instead of an actually executable code for their bodies: they point to <code>LazyCompileStub</code>, which simply asks runtime system to generate executable code for the current function and then tail-calls this newly generated code.</p>
-<p><img alt="Lazy Compilation" src="images/raw-function-lazy-compile.png" /></p>
+<div class="highlight"><pre><span></span><code>┌──────────┐
+│ Function │
+│          │     LazyCompileStub
+│  code_ ━━━━━━▶ ┌─────────────────────────────┐
+│          │     │ code = CompileFunction(...) │
+└──────────┘     │ return code(...);           │
+                 └─────────────────────────────┘
+</code></pre></div>
 <p>When the function is compiled for the first time this is done by <em>unoptimizing compiler</em>.</p>
-<p><img alt="Unoptimized Compilation" src="images/unoptimized-compilation.png" /></p>
+<div class="highlight"><pre><span></span><code> Kernel AST            Unoptimized IL            Machine Code
+╭──────────────╮      ╭──────────────────╮      ╭─────────────────────╮
+│ FunctionNode │      │ LoadLocal(&#39;a&#39;)   │      │ push [rbp + ...]    │
+│              │      │ LoadLocal(&#39;b&#39;)   │      │ push [rbp + ...]    │
+│ (a, b) =&gt;    │ ┣━━▶ │ InstanceCall(&#39;+&#39;)│ ┣━━▶ │ call InlineCacheStub│
+│   a + b;     │      │ Return           │      │ retq                │
+╰──────────────╯      ╰──────────────────╯      ╰─────────────────────╯
+</code></pre></div>
 <p>Unoptimizing compiler produces machine code in two passes:</p>
 <ol>
 <li>
-<p>Serialized AST for the function's body is walked to generate a <em>control flow graph</em> (<strong>CFG</strong>) for the function body. CFG consists of basic blocks filled with <em>intermediate language</em> (<strong>IL</strong>) instructions. IL instructions used at this stage resemble instructions of a stack based virtual machine: they take operands from the stack, perform operations and then push results to the same stack.<span class="aside">In reality not all functions have actual Dart / Kernel AST bodies, e.g. <em>natives</em> defined in C++ or artificial tear-off functions generated by Dart VM - in these cases IL is just created from the thin air, instead of being generated from Kernel AST.</span></p>
+<p>Serialized AST for the function's body is walked to generate a <em>control flow graph</em> (<strong>CFG</strong>) for the function body. CFG consists of basic blocks filled with <em>intermediate language</em> (<strong>IL</strong>) instructions. IL instructions used at this stage resemble instructions of a stack based virtual machine: they take operands from the stack, perform operations and then push results to the same stack. <span class="aside" markdown=1> In reality not all functions have actual Dart / Kernel AST bodies, e.g. <em>natives</em> defined in C++ or artificial tear-off functions generated by Dart VM - in these cases IL is just created from the thin air, instead of being generated from Kernel AST.</span></p>
 </li>
 <li>
 <p>resulting CFG is directly compiled to machine code using one-to-many lowering of IL instructions: each IL instruction expands to multiple machine language instructions.</p>
@@ -173,14 +293,34 @@
 </ol>
 <p>There are no optimizations performed at this stage. The main goal of unoptimizing compiler is to produce executable code quickly.</p>
 <p>This also means that unoptimizing compiler does not attempt to statically resolve any calls that were not resolved in Kernel binary, so calls (<code>MethodInvocation</code> or <code>PropertyGet</code> AST nodes) are compiled as if they were completely dynamic. VM currently does not use any form of <em>virtual table</em> or <em>interface table</em> based dispatch and instead implements dynamic calls using <a href="https://en.wikipedia.org/wiki/Inline_caching"><em>inline caching</em></a>.</p>
-<p>The core idea behind inline caching is to cache results of method resolution in a call site specific cache. Inline caching mechanism used by the VM consists of:<span class="aside">Original implementations of inline caching were actually patching the native code of the function - hence the name  <em><strong>inline</strong> caching</em>. The idea of inline caching dates far back to Smalltalk-80, see <a href="https://dl.acm.org/citation.cfm?id=800542">Efficient implementation of the Smalltalk-80 system</a>.</span></p>
+<p>The core idea behind inline caching is to cache results of method resolution in a call site specific cache. Inline caching mechanism used by the VM consists of: <span class="aside" markdown=1> Original implementations of inline caching were actually patching the native code of the function - hence the name  <em><strong>inline</strong> caching</em>. The idea of inline caching dates far back to Smalltalk-80, see <a href="https://dl.acm.org/citation.cfm?id=800542">Efficient implementation of the Smalltalk-80 system</a>.</span></p>
 <ul>
-<li>a call site specific cache (<a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/raw_object.h#L2103" target="blank">dart::UntaggedICData</a> object) that maps receiver's class to a method, that should be invoked if receiver is of a matching class. The cache also stores some auxiliary information, e.g. invocation frequency counters, which track how often the given class was seen at this call site;</li>
-<li>a shared lookup stub, which implements method invocation fast path. This stub searches through the given cache to see if it contains an entry that matches receiver's class. If the entry is found then stub would increment the frequency counter and tail call cached method. Otherwise stub would invoke a runtime system helper which implements method resolution logic. If method resolution succeeds then cache would be updated and subsequent invocations would not need to enter runtime system.</li>
+<li>a call site specific cache (<a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/raw_object.h#L2435" target="_blank"><code>UntaggedICData</code></a> object) that maps receiver's class to a method, that should be invoked if receiver is of a matching class. The cache also stores some auxiliary information, e.g. invocation frequency counters, which track how often the given class was seen at this call site;</li>
+<li>a shared lookup stub, which implements method invocation fast path. This stub searches through the given cache to see if it contains an entry that matches receiver's class. If the entry is found then stub increments the frequency counter and tail call cached method. Otherwise stub invokes a runtime system helper which implements method resolution logic. If method resolution succeeds then cache is updated and subsequent invocations will not need to enter runtime system.</li>
 </ul>
 <p>The picture below illustrates the structure and the state of an inline cache associated with <code>animal.toFace()</code> call site, which was executed twice with an instance of <code>Dog</code> and once with an instance of a <code>Cat</code>.</p>
-<p><img alt="Inline Caching" src="images/inline-cache-1.png" /></p>
+<div class="highlight"><pre><span></span><code>class Dog {
+  get face =&gt; &#39;🐶&#39;;
+}
+
+class Cat {
+  get face =&gt; &#39;🐱&#39;;
+}                                 ICData
+                                  ┌─────────────────────────────────────┐
+sameFace(animal, face) ┌─────────▶│// class, method, frequency          │
+  object.face == face; │          │[Dog, Dog.get:face, 2,               │
+        ┬              │          │ Cat, Cat.get:face, 1]               │
+        └──────────────┤          └─────────────────────────────────────┘
+sameFace(Dog(), ...);  │          InlineCacheStub
+sameFace(Dog(), ...);  │          ┌─────────────────────────────────────┐
+sameFace(Cat(), ...);  └─────────▶│ idx = cache.indexOf(classOf(this)); │
+                                  │ if (idx != -1) {                    │
+                                  │   cache[idx + 2]++;  // frequency++ │
+                                  │   return cache[idx + 1](...);       │
+                                  │ }                                   │
+                                  │ return InlineCacheMiss(...);        │
+                                  └─────────────────────────────────────┘
+</code></pre></div>
 <p>Unoptimizing compiler by itself is enough to execute any possible Dart code. However the code it produces is rather slow, which is why VM also implements <em>adaptive optimizing</em> compilation pipeline. The idea behind adaptive optimization is to use execution profile of a running program to drive optimization decisions.</p>
 <p>As unoptimized code is running it collects the following information:</p>
 <ul>
@@ -190,24 +330,44 @@ callsites;</li>
 </ul>
 <p>When an execution counter associated with a function reaches certain threshold, this function is submitted to a <em>background optimizing compiler</em> for optimization.</p>
 <p>Optimizing compilations starts in the same way as unoptimizing compilation does: by walking serialized Kernel AST to build unoptimized IL for the function that is being optimized. However instead of directly lowering that IL into machine code, optimizing compiler proceeds to translate unoptimized IL into <em>static single assignment</em> (SSA) form based optimized IL. SSA based IL is then subjected to speculative specialization based on the collected type feedback and passed through a sequence of classical and Dart specific optimizations: e.g. inlining, range analysis, type propagation, representation selection, store-to-load and load-to-load forwarding, global value numbering, allocation sinking, etc. At the end optimized IL is lowered into machine code using linear scan register allocator and a simple one-to-many lowering of IL instructions.</p>
-<p>Once compilation is complete background compiler requests mutator thread to enter a <em>safepoint</em> and attaches optimized code to the function.<span class="aside">Broadly speaking a thread in a managed environment (virtual machine) is considered to be at a <em>safepoint</em> when the state associated with it (e.g. stack frames, heap, etc) is consistent and can be accessed or modified without interruption from the thread itself. Usually this implies that the thread is either paused or is executing some code outside of the managed environment e.g. running unmanaged native code. See <a href="/gc.html">GC</a> page for more information.</span></p>
+<p>Once compilation is complete background compiler requests mutator thread to enter a <em>safepoint</em> and attaches optimized code to the function. <span class="aside" markdown=1> Broadly speaking a thread in a managed environment (virtual machine) is considered to be at a <em>safepoint</em> when the state associated with it (e.g. stack frames, heap, etc) is consistent and can be accessed or modified without interruption from the thread itself. Usually this implies that the thread is either paused or is executing some code outside of the managed environment e.g. running unmanaged native code. See <a href="/gc.html">GC</a> page for more information.</span></p>
 <p>The next time this function is called - it will use optimized code. Some functions contain very long running loops and for those it makes sense to switch execution from unoptimized to optimized code while the function is still running. This process is called <em>on stack replacement</em> (<strong>OSR</strong>) owing its name to the fact that a stack frame for one version of the function is transparently replaced with a stack frame for another version of the same function.</p>
-<p><img alt="Optimizing Compilation" src="images/optimizing-compilation.png" /></p>
+<div class="highlight"><pre><span></span><code>                                                        in hot code ICs
+ Kernel AST            Unoptimized IL                   have collected type
+╭──────────────╮      ╭───────────────────────╮         ╱ feedback
+│ FunctionNode │      │ LoadLocal(&#39;a&#39;)        │   ICData
+│              │      │ LoadLocal(&#39;b&#39;)      ┌────▶┌─────────────────────┐
+│ (a, b) =&gt;    │ ┣━━▶ │ InstanceCall:1(&#39;+&#39;, ┴)│   │[(Smi, Smi.+, 10000)]│
+│   a + b;     │      │ Return      ╱         │   └─────────────────────┘
+╰──────────────╯      ╰────────────╱──────────╯
+                              deopt id  ┳
+                                        ┃
+                               SSA IL   ▼
+                              ╭────────────────────────────────╮
+                              │ v1&lt;-Parameter(&#39;a&#39;)             │
+                              │ v2&lt;-Parameter(&#39;b&#39;)             │
+                              │ v3&lt;-InstanceCall:1(&#39;+&#39;, v1, v2)│
+                              │ Return(v3)                     │
+                              ╰────────────────────────────────╯
+                                        ┳
+                                        ┃
+   Machine Code                         ▼    Optimized SSA IL
+  ╭─────────────────────╮     ╭──────────────────────────────╮
+  │ movq rax, [rbp+...] │     │ v1&lt;-Parameter(&#39;a&#39;)           │
+  │ testq rax, 1        │ ◀━━┫│ v2&lt;-Parameter(&#39;b&#39;)           │
+  │ jnz -&gt;deopt@1       │     │ CheckSmi:1(v1)               │
+  │ movq rbx, [rbp+...] │     │ CheckSmi:1(v2)               │
+  │ testq rbx, 1        │     │ v3&lt;-BinarySmiOp:1(+, v1, v2) │
+  │ jnz -&gt;deopt@1       │     │ Return(v3)                   │
+  │ addq rax, rbx       │     ╰──────────────────────────────╯
+  │ jo -&gt;deopt@1        │
+  │ retq                │
+  ╰─────────────────────╯
+</code></pre></div>
 <div class="admonition sourcecode">
 <p class="admonition-title">Source to read</p>
-<p>Compiler sources are in the <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lruntime/vm/compiler" target="blank">runtime/vm/compiler</a> directory.
-Compilation pipeline entry point is <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/jit/compiler.cc#L476" target="blank">dart::CompileParsedFunctionHelper::Compile</a>. IL is defined in <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lruntime/vm/compiler/backend/il.h" target="blank">runtime/vm/compiler/backend/il.h</a>. Kernel-to-IL translation starts in <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/frontend/kernel_binary_flowgraph.cc#L978" target="blank">dart::kernel::StreamingFlowGraphBuilder::BuildGraph</a>, and this function also handles construction of IL for various artificial functions. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/stub_code_compiler_x64.cc#L2185" target="blank">dart::compiler::StubCodeCompiler::GenerateNArgsCheckInlineCacheStub</a> generates machine code for inline-cache stub, while <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/runtime_entry.cc#L2185" target="blank">InlineCacheMissHandler</a> handles IC misses. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lruntime/vm/compiler/compiler_pass.cc" target="blank">runtime/vm/compiler/compiler_pass.cc</a> defines optimizing compiler passes and their order. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/jit/jit_call_specializer.h#L16" target="blank">dart::JitCallSpecializer</a> does most of the type-feedback based specializations.</p>
+<p>Compiler sources are in the <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler" target="_blank"><code>runtime/vm/compiler</code></a> directory.
+ Compilation pipeline entry point is <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/jit/compiler.cc#L472" target="_blank"><code>CompileParsedFunctionHelper::Compile</code></a>. IL is defined in <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/backend/il.h" target="_blank"><code>runtime/vm/compiler/backend/il.h</code></a>. Kernel-to-IL translation starts in <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/frontend/kernel_binary_flowgraph.cc#L891" target="_blank"><code>kernel::StreamingFlowGraphBuilder::BuildGraph</code></a>, and this function also handles construction of IL for various artificial functions. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/stub_code_compiler_arm64.cc#L2473" target="_blank"><code>compiler::StubCodeCompiler::GenerateNArgsCheckInlineCacheStub</code></a> generates machine code for inline-cache stub, while <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/runtime_entry.cc#L2466" target="_blank"><code>InlineCacheMissHandler</code></a> handles IC misses. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/compiler_pass.cc" target="_blank"><code>runtime/vm/compiler/compiler_pass.cc</code></a> defines optimizing compiler passes and their order. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/jit/jit_call_specializer.h#L16" target="_blank"><code>JitCallSpecializer</code></a> does most of the type-feedback based specializations.</p>
 </div>
 <div class="admonition tryit">
 <p class="admonition-title">Trying it</p>
@@ -240,102 +400,135 @@ Compilation pipeline entry point is <a href="https://github.com/dart-lang/sdk/bl
 <td><code>--no-background-compilation</code></td>
 <td>Disable background compilation, and compile all hot functions on the main thread. Useful for experimentation, otherwise short running programs might finish before background compiler compiles hot function</td>
 </tr>
+<tr>
+<td><code>--deterministic</code></td>
+<td>Disable various sources of non-determinism in the VM (concurrent GC and compiler).</td>
+</tr>
 </tbody>
 </table>
-<p>For example</p>
-<div class="highlight"><pre><span></span><code><span class="c"># Run test.dart and dump optimized IL and machine code for</span>
-<span class="c"># function(s) that contain(s) &quot;myFunction&quot; in its name.</span>
-<span class="c"># Disable background compilation for determinism.</span>
-<span class="k">$</span><span class="g g-Text"> dart --print-flow-graph-optimized         \</span>
-<span class="g g-Text">       --disassemble-optimized              \</span>
-<span class="g g-Text">       --print-flow-graph-filter=myFunction \</span>
-<span class="g g-Text">       --no-background-compilation          \</span>
-<span class="g g-Text">       test.dart</span>
+<p>For example the following command will run <code>test.dart</code> and dump optimized IL and machine code for functions that contain <code>myFunction</code> in their names:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart --print-flow-graph-optimized         <span class="se">\</span>
+       --disassemble-optimized              <span class="se">\</span>
+       --print-flow-graph-filter<span class="o">=</span>myFunction <span class="se">\</span>
+       --no-background-compilation          <span class="se">\</span>
+       test.dart
 </code></pre></div>
 </div>
-<p>It is important to highlight that the code generated by optimizing compiler is specialized under speculative assumptions based on the execution profile of the application. For example, a dynamic call site that only observed instances of a single class <code>C</code> as a receiver will be converted into a direct call preceeded by a check verifying that receiver has an expected class <code>C</code>. However these assumptions might be violated later during execution of the program:</p>
-<div class="highlight"><pre><span></span><code><span class="kt">void</span> <span class="n">printAnimal</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">print</span><span class="p">(</span><span class="s1">&#39;Animal {&#39;</span><span class="p">);</span>
-  <span class="n">print</span><span class="p">(</span><span class="s1">&#39;  </span><span class="si">${</span><span class="n">obj</span><span class="p">.</span><span class="n">toString</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">);</span>
-  <span class="n">print</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">);</span>
-<span class="p">}</span>
+<p>It is important to highlight that the code generated by optimizing compiler is specialized under speculative assumptions based on the execution profile of the application. For example, a dynamic call site that only observed instances of a single class <code>C</code> as a receiver will be converted into a direct call preceded by a check verifying that receiver has an expected class <code>C</code>. However these assumptions might be violated later during execution of the program:</p>
+<div class="highlight"><pre><span></span><code><span class="kt">void</span><span class="w"> </span><span class="n">printAnimal</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;Animal {&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;  </span><span class="si">${</span><span class="n">obj</span><span class="p">.</span><span class="n">toString</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">);</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 
-<span class="c1">// Call printAnimal(...) a lot of times with an intance of Cat.</span>
-<span class="c1">// As a result printAnimal(...) will be optimized under the</span>
-<span class="c1">// assumption that obj is always a Cat.</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="n">i</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="m">50000</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
-  <span class="n">printAnimal</span><span class="p">(</span><span class="n">Cat</span><span class="p">());</span>
+<span class="c1">// Call printAnimal(...) a lot of times with an intance of Cat.</span><span class="w"></span>
+<span class="c1">// As a result printAnimal(...) will be optimized under the</span><span class="w"></span>
+<span class="c1">// assumption that obj is always a Cat.</span><span class="w"></span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">var</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="m">50000</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">  </span><span class="n">printAnimal</span><span class="p">(</span><span class="n">Cat</span><span class="p">());</span><span class="w"></span>
 
-<span class="c1">// Now call printAnimal(...) with a Dog - optimized version</span>
-<span class="c1">// can not handle such an object, because it was</span>
-<span class="c1">// compiled under assumption that obj is always a Cat.</span>
-<span class="c1">// This leads to deoptimization.</span>
-<span class="n">printAnimal</span><span class="p">(</span><span class="n">Dog</span><span class="p">());</span>
+<span class="c1">// Now call printAnimal(...) with a Dog - optimized version</span><span class="w"></span>
+<span class="c1">// can not handle such an object, because it was</span><span class="w"></span>
+<span class="c1">// compiled under assumption that obj is always a Cat.</span><span class="w"></span>
+<span class="c1">// This leads to deoptimization.</span><span class="w"></span>
+<span class="n">printAnimal</span><span class="p">(</span><span class="n">Dog</span><span class="p">());</span><span class="w"></span>
 </code></pre></div>
 <p>Whenever optimized code is making some optimistic assumptions, which might be
 violated during the execution, it needs to guard against such violations and
 be able to recover if they occur.</p>
-<p>This process of recovery is known as <em>deoptimization</em>: whenever optimized version hits a case which it can't handle, it simply transfers execution into the matching point of unoptimized function and continues execution there. Unoptimized version of a function does not make any assumptions and can handle all possible inputs.<span class="aside">Entering unoptimized function at the right spot is absolutely crucial because code has side-effects (e.g. in the function above deoptimization happens after we already executed the first <code>print</code>). Matching instructions that deoptimize to positions in the unoptimized code in VM is done using <em>deopt ids</em></span></p>
+<p>This process of recovery is known as <em>deoptimization</em>: whenever optimized version hits a case which it can't handle, it simply transfers execution into the matching point of unoptimized function and continues execution there. Unoptimized version of a function does not make any assumptions and can handle all possible inputs. <span class="aside" markdown=1> Entering unoptimized function at the right spot is absolutely crucial because code has side-effects (e.g. in the function above deoptimization happens after we already executed the first <code>print</code>). Matching instructions that deoptimize to positions in the unoptimized code in VM is done using <em>deopt ids</em></span></p>
 <p>VM usually discards optimized version of the function after deoptimization and
 then reoptimizes it again later - using updated type feedback.</p>
 <p>There are two ways VM guards speculative assumptions made by the compiler:</p>
 <ul>
 <li>Inline checks (e.g. <code>CheckSmi</code>, <code>CheckClass</code> IL instructions) that verify if assumption holds at <em>use</em> site where compiler made this assumption. For example, when turning dynamic calls into direct calls compiler adds these checks right before a direct call. Deoptimization that happens on such checks is called <em>eager deoptimization</em>, because it occurs eagerly as the check is reached.</li>
-<li>Global guards which instruct runtime to discard optimized code when it changes something that optimized code relies on. For example, optimizing compiler might observe that some class <code>C</code> is never extended and use this information during type propagation pass. However subsequent dynamic code loading or class finalization can introduce a subclass of <code>C</code> - which invalidates the assumption. At this point runtime needs to find and discard all optimized code that was compiled under the assumption that <code>C</code> has no subclasses. It is possible that runtime would find some of the now invalid optimized code on the execution stack - in which case affected frames would be marked for deoptimization and will deoptimize when execution returns to them.  This sort of deoptimization is called <em>lazy deoptimization</em>: because it is delayed until control returns back to the optimized code.</li>
+<li>Global guards which instruct runtime to discard optimized code when it changes something that optimized code relies on. For example, optimizing compiler might observe that some class <code>C</code> is never extended and use this information during type propagation pass. However subsequent dynamic code loading or class finalization can introduce a subclass of <code>C</code> - which invalidates the assumption. At this point runtime needs to find and discard all optimized code that was compiled under the assumption that <code>C</code> has no subclasses. It is possible that runtime finds some of the now invalid optimized code on the execution stack - in which case affected frames are marked for deoptimization and will deoptimize when execution returns to them.  This sort of deoptimization is called <em>lazy deoptimization</em>: because it is delayed until control returns back to the optimized code.</li>
 </ul>
 <div class="admonition sourcecode">
 <p class="admonition-title">Source to read</p>
-<p>Deoptimizer machinery resides in <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lruntime/vm/deopt_instructions.cc" target="blank">runtime/vm/deopt_instructions.cc</a>. It is essentially a mini-interpreter for <em>deoptimization instructions</em> which describe how to reconstruct needed state of the unoptimized code from the state of optimized code. Deoptimization instructions are generated by <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/backend/flow_graph_compiler_x64.cc#L97" target="blank">dart::CompilerDeoptInfo::CreateDeoptInfo</a> for every potential deoptimization location in optimized code during compilation.</p>
+<p>Deoptimizer machinery resides in <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/deopt_instructions.cc" target="_blank"><code>runtime/vm/deopt_instructions.cc</code></a>. It is essentially a mini-interpreter for <em>deoptimization instructions</em> which describe how to reconstruct needed state of the unoptimized code from the state of optimized code. Deoptimization instructions are generated by <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/backend/flow_graph_compiler_arm64.cc#L87" target="_blank"><code>CompilerDeoptInfo::CreateDeoptInfo</code></a> for every potential deoptimization location in optimized code during compilation.</p>
 </div>
 <div class="admonition tryit">
 <p class="admonition-title">Trying it</p>
 <p>Flag <code>--trace-deoptimization</code> makes VM print information about the cause and location of every deoptimization that occurs. <code>--trace-deoptimization-verbose</code> makes VM print a line for every deoptimization instruction it executes during deoptimization.</p>
 </div>
-<h3>Running from Snapshots</h3>
+<h3 id="running-from-snapshots">Running from Snapshots</h3>
 <p>VM has the ability to serialize isolate's heap or more precisely object graph residing in the heap into a binary <em>snapshot</em>. Snapshot then can be used to recreate the same state when starting VM isolates.</p>
-<p><img alt="Snapshots" src="images/snapshot.png" /></p>
-<p>Snapshot's format is low level and optimized for fast startup - it is essentially a list of objects to create and instructions on how to connect them together. That was the original idea behind snapshots: instead of parsing Dart source and gradually creating internal VM data structures, VM can just spin an isolate up with all necessary data structures quickly unpacked from the snapshot.<span class="aside">The idea of a snapshots has roots in Smalltalk <a href="https://en.wikipedia.org/wiki/Smalltalk#Image-based_persistence">images</a> which were in turn inspired by <a href="https://www.mprove.de/visionreality/media/kay68.html">Alan Kay's M.Sc thesis</a>. Dart VM is using clustered serialization format which is similar to techniques described in <a href="http://scg.unibe.ch/archive/papers/Mira05aParcels.pdf">Parcels: a Fast and Feature-Rich Binary Deployment Technology</a> and <a href="https://rmod.inria.fr/archives/workshops/Dia11a-IWST11-Fuel.pdf">Clustered serialization with Fuel</a> papers.</span></p>
+<div class="highlight"><pre><span></span><code>                                                   ┌──────────────┐
+                            SNAPSHOT              ┌──────────────┐│
+┌──────────────┐           ╭─────────╮           ┌──────────────┐││
+│ HEAP         │           │ 0101110 │           │ HEAP         │││
+│     ██       │           │ 1011010 │           │     ██       │││
+│    ╱  ╲      │           │ 1010110 │           │    ╱  ╲      │││
+│  ██╲   ██    │           │ 1101010 │           │  ██╲   ██    │││
+│     ╲ ╱  ╲   │┣━━━━━━━━━▶│ 0010101 │┣━━━━━━━━━▶│     ╲ ╱  ╲   │││
+│      ╳   ██  │ serialize │ 0101011 │deserialize│      ╳   ██  │││
+│     ╱ ╲  ╱   │           │ 1111010 │           │     ╱ ╲  ╱   │││
+│   ██   ██    │           │ 0010110 │           │   ██   ██    ││┘
+│              │           │ 0001011 │           │              │┘
+└──────────────┘           ╰─────────╯           └──────────────┘
+</code></pre></div>
+<p>Snapshot's format is low level and optimized for fast startup - it is essentially a list of objects to create and instructions on how to connect them together. That was the original idea behind snapshots: instead of parsing Dart source and gradually creating internal VM data structures, VM can just spin an isolate up with all necessary data structures quickly unpacked from the snapshot. <span class="aside" markdown=1> The idea of a snapshots has roots in Smalltalk <a href="https://en.wikipedia.org/wiki/Smalltalk#Image-based_persistence">images</a> which were in turn inspired by <a href="https://www.mprove.de/visionreality/media/kay68.html">Alan Kay's M.Sc thesis</a>. Dart VM is using clustered serialization format which is similar to techniques described in <a href="http://scg.unibe.ch/archive/papers/Mira05aParcels.pdf">Parcels: a Fast and Feature-Rich Binary Deployment Technology</a> and <a href="https://rmod.inria.fr/archives/workshops/Dia11a-IWST11-Fuel.pdf">Clustered serialization with Fuel</a> papers.</span></p>
 <p>Initially snapshots did not include machine code, however this capability was later added when AOT compiler was developed. Motivation for developing AOT compiler and snapshots-with-code was to allow VM to be used on the platforms where JITing is impossible due to platform level restrictions.</p>
 <p>Snapshots-with-code work almost in the same way as normal snapshots with a minor difference: they include a code section which unlike the rest of the snapshot does not require deserialization. This code section laid in way that allows it to directly become part of the heap after it was mapped into memory.</p>
-<p><img alt="Snapshots" src="images/snapshot-with-code.png" /></p>
+<div class="highlight"><pre><span></span><code>                                                    ┌──────────────┐
+                            SNAPSHOT               ┌──────────────┐│
+┌──────────────┐           ╭────╮╭────╮           ┌──────────────┐││
+│ HEAP         │           │ 01 ││    │           │ HEAP         │││
+│     ██       │           │ 10 ││ ░░◀──┐         │     ██       │││
+│    ╱  ╲      │           │ 10 ││    │ │         │    ╱  ╲      │││
+│  ██╲   ██    │           │ 11 ││    │ └────────────██╲   ██    │││
+│  ╱  ╲ ╱  ╲   │┣━━━━━━━━━▶│ 00 ││    │┣━━━━━━━━━▶│     ╲ ╱  ╲   │││
+│ ░░   ╳   ██  │ serialize │ 01 ││    │deserialize│      ╳   ██  │││
+│     ╱ ╲  ╱   │           │ 11 ││    │           │     ╱ ╲  ╱   │││
+│   ██   ██╲   │           │ 00 ││    │           │   ██   ██    ││┘
+│           ░░ │           │ 00 ││ ░░◀──────────────────────┘    │┘
+└──────────╱───┘           ╰────╯╰────╯           └──────────────┘
+         code               data  code
+</code></pre></div>
 <div class="admonition sourcecode">
 <p class="admonition-title">Source to read</p>
-<p><a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/2d064faf748d6c7700f08d223fb76c84c4335c5f
-#Lruntime/vm/clustered_snapshot.cc" target="blank">runtime/vm/clustered_snapshot.cc</a> handles serialization and deserialization of snapshots. A family of API functions <code>Dart_CreateXyzSnapshot[AsAssembly]</code> are responsible for writing out snapshots of the heap (e.g. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/dart_api_impl.cc#L7008" target="blank">Dart_CreateAppJITSnapshotAsBlobs</a> and <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/dart_api_impl.cc#L6706" target="blank">Dart_CreateAppAOTSnapshotAsAssembly</a>). On the other hand <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/dart_api_impl.cc#L1329" target="blank">Dart_CreateIsolateGroup</a> optionally takes snapshot data to start an isolate from.</p>
+<p><a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/app_snapshot.cc" target="_blank"><code>runtime/vm/app_snapshot.cc</code></a> handles serialization and deserialization of snapshots. A family of API functions <code>Dart_CreateXyzSnapshot[AsAssembly]</code> are responsible for writing out snapshots of the heap (e.g. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/dart_api_impl.cc#L6913" target="_blank"><code>Dart_CreateAppJITSnapshotAsBlobs</code></a> and <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/dart_api_impl.cc#L6621" target="_blank"><code>Dart_CreateAppAOTSnapshotAsAssembly</code></a>). On the other hand <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/dart_api_impl.cc#L1373" target="_blank"><code>Dart_CreateIsolateGroup</code></a> optionally takes snapshot data to start an isolate from.</p>
 </div>
-<h3>Running from AppJIT snapshots</h3>
+<h3 id="running-from-appjit-snapshots">Running from AppJIT snapshots</h3>
 <p>AppJIT snapshots were introduced to reduce JIT warm up time for large Dart applications like <code>dartanalyzer</code> or <code>dart2js</code>. When these tools are used on small projects they spent as much time doing actual work as VM spends JIT compiling these apps.</p>
 <p>AppJIT snapshots allow to address this problem: an application can be run on the VM using some mock training data and then all generated code and VM internal data structures are serialized into an AppJIT snapshot. This snapshot can then be distributed instead of distributing application in the source (or Kernel binary) form. VM starting from this snapshot can still JIT - if it turns out that execution profile on the real data does not match execution profile observed during training.</p>
-<p><img alt="Snapshots" src="images/snapshot-with-code.png" /></p>
+<div class="highlight"><pre><span></span><code>                                                    ┌──────────────┐
+                            SNAPSHOT               ┌──────────────┐│
+┌──────────────┐           ╭────╮╭────╮           ┌──────────────┐││
+│ HEAP         │           │ 01 ││    │           │ HEAP         │││
+│     ██       │           │ 10 ││ ░░◀──┐         │     ██       │││
+│    ╱  ╲      │           │ 10 ││    │ │         │    ╱  ╲      │││
+│  ██╲   ██    │           │ 11 ││    │ └────────────██╲   ██    │││
+│  ╱  ╲ ╱  ╲   │┣━━━━━━━━━▶│ 00 ││    │┣━━━━━━━━━▶│     ╲ ╱  ╲   │││
+│ ░░   ╳   ██  │ serialize │ 01 ││    │deserialize│      ╳   ██  │││
+│     ╱ ╲  ╱   │           │ 11 ││    │           │     ╱ ╲  ╱│  │││
+│   ██   ██╲   │           │ 00 ││    │           │   ██   ██ │  ││┘
+│           ░░ │           │ 00 ││ ░░◀──────────────────────┘ ░░ │┘
+└──────────╱───┘           ╰────╯╰────╯           └──────────╱───┘
+         code               data  code                 isolate can JIT more
+</code></pre></div>
 <div class="admonition tryit">
 <p class="admonition-title">Trying it</p>
 <p><code>dart</code> binary will generate AppJIT snapshot after running the application if you pass <code>--snapshot-kind=app-jit --snapshot=path-to-snapshot</code> to it. Here is an example of generating and using an AppJIT snapshot for <code>dart2js</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="c"># Run from source in JIT mode.</span>
-<span class="k">$</span><span class="g g-Text"> dart pkg/compiler/lib/src/dart2js.dart -o hello.js hello.dart</span>
-<span class="gp">Compiled 7,359,592 characters Dart to 10,620 characters JavaScript in 2.07 seconds</span>
-<span class="gp">Dart file (hello.dart) compiled to JavaScript: hello.js</span>
+<ul>
+<li>Run from source in JIT mode
+     <div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart pkg/compiler/lib/src/dart2js.dart -o hello.js hello.dart
+<span class="go">Dart file (hello.dart) compiled to JavaScript: hello.js</span>
+</code></pre></div></li>
+<li>Create an app-jit snapshot trained by compiling <code>dart2js</code> with itself, then
+   run from this snapshot.
+     <div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart --snapshot-kind<span class="o">=</span>app-jit --snapshot<span class="o">=</span>dart2js.snapshot <span class="se">\</span>
+   pkg/compiler/lib/src/dart2js.dart -o hello.js hello.dart
+<span class="go">Dart file (hello.dart) compiled to JavaScript: hello.js</span>
 
-<span class="c"># Training run to generate app-jit snapshot</span>
-<span class="k">$</span><span class="g g-Text"> dart --snapshot-kind=app-jit --snapshot=dart2js.snapshot \</span>
-<span class="g g-Text">       pkg/compiler/lib/src/dart2js.dart -o hello.js hello.dart</span>
-<span class="gp">Compiled 7,359,592 characters Dart to 10,620 characters JavaScript in 2.05 seconds</span>
-<span class="gp">Dart file (hello.dart) compiled to JavaScript: hello.js</span>
-
-<span class="c"># Run from app-jit snapshot.</span>
-<span class="k">$</span><span class="g g-Text"> dart dart2js.snapshot -o hello.js hello.dart</span>
-<span class="gp">Compiled 7,359,592 characters Dart to 10,620 characters JavaScript in 0.73 seconds</span>
-<span class="gp">Dart file (hello.dart) compiled to JavaScript: hello.js</span>
-</code></pre></div>
+<span class="gp">$ </span>dart dart2js.snapshot -o hello.js hello.dart
+<span class="go">Dart file (hello.dart) compiled to JavaScript: hello.js</span>
+</code></pre></div></li>
+</ul>
 </div>
-<h3>Running from AppAOT snapshots</h3>
-<p>AOT snapshots were originally introduced for platforms which make JIT compilation impossible, but they can also be used in situations where fast startup and consistent performance is worth potential peak performance penalty.<span class="aside">There is usually a lot of confusion around how performance characteristics of JIT and AOT compare. JIT has access to precise local type information and execution profile of the running application, however it has to pay for it with warmup. AOT can infer and prove various properties globally (for which it has to pay with compile time), but has no information of how the program will actually be executing - on the other hand AOT compiled code reaches its peak performance almost immediately with virtual no warmup. Currently Dart VM JIT has best peak performance, while Dart VM AOT has best startup time.</span></p>
+<h3 id="running-from-appaot-snapshots">Running from AppAOT snapshots</h3>
+<p>AOT snapshots were originally introduced for platforms which make JIT compilation impossible, but they can also be used in situations where fast startup and consistent performance is worth potential peak performance penalty. <span class="aside" markdown=1> There is usually a lot of confusion around how performance characteristics of JIT and AOT compare. JIT has access to precise local type information and execution profile of the running application, however it has to pay for it with warmup. AOT can infer and prove various properties globally (for which it has to pay with compile time), but has no information of how the program will actually be executing - on the other hand AOT compiled code reaches its peak performance almost immediately with virtual no warmup. Currently Dart VM JIT has best peak performance, while Dart VM AOT has best startup time.</span></p>
 <p>Inability to JIT implies that:</p>
 <ol>
 <li>AOT snapshot <em>must</em> contain executable code for each and every function that could be invoked during application execution;</li>
@@ -345,74 +538,252 @@ then reoptimizes it again later - using updated type feedback.</p>
 <p>All potentially reachable functions are then compiled to native code without any speculative optimizations. However type flow information is still used to specialize the code (e.g. devirtualize calls).</p>
 <p>Once all functions are compiled a snapshot of the heap can be taken.</p>
 <p>Resulting snapshot can then be run using <em>precompiled runtime</em>, a special variant of the Dart VM which excludes components like JIT and dynamic code loading facilities.</p>
-<p><img alt="AOT pipeline" src="images/aot.png" /></p>
+<div class="highlight"><pre><span></span><code> ╭─────────────╮                      ╭────────────╮
+ │╭─────────────╮       ╔═════╗       │ Kernel AST │
+ ││╭─────────────╮┣━━━▶ ║ CFE ║ ┣━━━▶ │            │
+ ┆││ Dart Source │      ╚═════╝       │ whole      │
+ ┆┆│             │                    │ program    │
+  ┆┆             ┆                    ╰────────────╯
+   ┆             ┆                          ┳
+                                            ┃
+                                            ▼
+                                         ╔═════╗ type-flow analysis
+                                         ║ TFA ║ propagates types globally
+                   VM contains an        ╚═════╝ through the whole program
+                  AOT compilation           ┳
+                  pipeline which            ┃
+                  reuses parts of           ▼
+                    JIT pipeline      ╭────────────╮
+     ╭────────────╮       ╲           │ Kernel AST │
+     │AOT Snapshot│      ╔════╗       │            │
+     │            │◀━━━┫ ║ VM ║ ◀━━━┫ │ inferred   │
+     │            │      ╚════╝       │ treeshaken │
+     ╰────────────╯                   ╰────────────╯
+</code></pre></div>
 <div class="admonition sourcecode">
 <p class="admonition-title">Source to read</p>
-<p><a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/pkg/vm/lib
-/transformations/type_flow/transformer.dart" target="blank">package:vm/transformations/type_flow/transformer.dart</a> is an entry point to the type flow analysis and transformation based on TFA results. <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/aot/precompiler.cc#L203" target="blank">dart::Precompiler::DoCompileAll</a> is an entry point to the AOT compilation loop in the VM.</p>
+<p><a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/vm/lib/transformations/type_flow/transformer.dart" target="_blank"><code>package:vm/transformations/type_flow/transformer.dart</code></a> is an entry point to the type flow analysis and transformation based on TFA results. <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/aot/precompiler.cc#L453" target="_blank"><code>Precompiler::DoCompileAll</code></a> is an entry point to the AOT compilation loop in the VM.</p>
 </div>
 <div class="admonition tryit">
 <p class="admonition-title">Trying it</p>
-<p>AOT compilation pipeline is currently packaged into Dart SDK as <a href="https://dart.dev/tools/dart2native"><code>dart2native</code> script</a>.</p>
-<div class="highlight"><pre><span></span><code><span class="k">$</span><span class="g g-Text"> dart2native hello.dart -o hello</span>
-<span class="k">$</span><span class="g g-Text"> ./hello</span>
-<span class="gp">Hello, World!</span>
+<p>AOT compilation pipeline is currently packaged into Dart SDK as <a href="https://dart.dev/tools/dart2native"><code>dart compile exe</code> command</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart compile exe -o hello hello.dart
+<span class="gp">$ </span>./hello
+<span class="go">Hello, World!</span>
 </code></pre></div>
-<p>Note that it is impossible to pass options like <code>--print-flow-graph-optimized</code> and <code>--disassemble-optimized</code> to the <code>dart2native</code> script so if you would like to inspect generated AOT code you will need to build compiler from source.</p>
-<div class="highlight"><pre><span></span><code><span class="c"># Need to build normal dart executable and runtime for running AOT code.</span>
-<span class="k">$</span><span class="g g-Text"> tool/build.py -m release -a x64 runtime dart_precompiled_runtime</span>
-
-<span class="c"># Now compile an application using AOT compiler</span>
-<span class="k">$</span><span class="g g-Text"> pkg/vm/tool/precompiler2 hello.dart hello.aot</span>
-
-<span class="c"># Execute AOT snapshot using runtime for AOT code</span>
-<span class="k">$</span><span class="g g-Text"> out/ReleaseX64/dart_precompiled_runtime hello.aot</span>
-<span class="gp">Hello, World!</span>
+<p>It is possible to pass options like <code>--print-flow-graph-optimized</code> and <code>--disassemble-optimized</code> to the <code>dart compile exe</code> via <code>--extra-gen-snapshot-options</code> flag. You also need to pass <code>--verbose</code> to see the output, otherwise it is silently swallowed by the tool.</p>
+<div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart compile exe --verbose                                  <span class="se">\</span>
+  --extra-gen-snapshot-options<span class="o">=</span>--print-flow-graph-optimized   <span class="se">\</span>
+  --extra-gen-snapshot-options<span class="o">=</span>--print-flow-graph-filter<span class="o">=</span>main <span class="se">\</span>
+  --extra-gen-snapshot-options<span class="o">=</span>--disassemble                  <span class="se">\</span>
+  hello.dart
 </code></pre></div>
 </div>
-<h4>Switchable Calls</h4>
-<p>Even with global and local analyses AOT compiled code might still contain call sites which could not be <em>devirtualized</em> (meaning they could not be statically resolved). To compensate for this AOT compiled code and runtime use an extension of inline caching technique utilized in JIT. This extended version is called <em>switchable calls</em>.</p>
-<p>JIT section already described that each inline cache associated with a call site consists of two pieces: a cache object (represented by an instance of <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/raw_object.h#L2103" target="blank">dart::UntaggedICData</a>) and a chunk of native code to invoke (e.g. a <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/stub_code_compiler_x64.cc#L2185" target="blank">InlineCacheStub</a>). In JIT mode runtime would only update the cache itself. However in AOT runtime can choose to replace both the cache and the native code to invoke depending on the state of the inline cache.</p>
-<p><img alt="AOT IC. Unlinked" src="images/aot-ic-unlinked.png" /></p>
-<p>Initially all dynamic calls start in the <em>unlinked</em> state. When such call-site is reached for the first time <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/stub_code_compiler_x64.cc#L3304" target="blank">SwitchableCallMissStub</a> is invoked, which simply calls into runtime helper <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/runtime_entry.cc#L2243" target="blank">DRT_SwitchableCallMiss</a> to link this call site.</p>
-<p>If possible <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/runtime_entry.cc#L2243" target="blank">DRT_SwitchableCallMiss</a> tries to transition the call site into a <em>monomorphic</em> state. In this state call site turns into a direct call, which enters method through a special entry point which verifies that receiver has expected class.</p>
-<p><img alt="AOT IC: Monomorphic" src="images/aot-ic-monomorphic.png" /></p>
-<p>In the example above we assume that when <code>obj.method()</code> was executed for the first time <code>obj</code> was an instance of <code>C</code> and <code>obj.method</code> resolved to <code>C.method</code>.</p>
-<p>Next time we execute the same call-site it will invoke <code>C.method</code> directly, bypassing any sort of method lookup process. However it will enter <code>C.method</code> through a special entry point, which will verify that <code>obj</code> is still an instance of <code>C</code>. If that is not the case <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/runtime_entry.cc#L2243" target="blank">DRT_SwitchableCallMiss</a> will be invoked and will try to select the next call site state.</p>
-<p><code>C.method</code> might still be a valid target for an invocation, e.g <code>obj</code> is an instance of the class <code>D</code> which extends <code>C</code> but does not override <code>C.method</code>. In this case we check if call site could transition into a <em>single target</em> state, implemented by <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/stub_code_compiler_x64.cc#L3331" target="blank">SingleTargetCallStub</a> (see also <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/raw_object.h#L2062" target="blank">dart::UntaggedSingleTargetCache</a>).</p>
-<p><img alt="AOT IC: Single Target" src="images/aot-ic-singletarget.png" /></p>
-<p>This stub is based on the fact that for AOT compilation most classes are assigned integer ids using depth-first traversal of the inheritance hierarchy. If <code>C</code> is a base class with subclasses <code>D0, ..., Dn</code> and none of those override <code>C.method</code> then <code>C.:cid &lt;= classId(obj) &lt;= max(D0.:cid, ..., Dn.:cid)</code> implies that <code>obj.method</code> resolves to <code>C.method</code>. In this circumstances instead of comparing to a single class (<em>monomorphic</em> state), we can use class id range check (<em>single target</em> state) which would work for all subclasses of <code>C</code>.</p>
-<p>Otherwise call site would be switched to use linear search inline cache, similar to the one used in JIT mode (see <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/stub_code_compiler_x64.cc#L3233" target="blank">ICCallThroughCodeStub</a>, <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/raw_object.h#L2103" target="blank">dart::UntaggedICData</a> and <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/runtime_entry.cc#L1918" target="blank">dart::PatchableCallHandler::DoMegamorphicMiss</a>).</p>
-<p><img alt="AOT IC: linear IC call" src="images/aot-ic-linear.png" /></p>
-<p>Finally if the number of checks in the linear array grows past threshold the call site is switched to use a dictionary like structure (see <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/compiler/stub_code_compiler_x64.cc#L3153" target="blank">MegamorphicCallStub</a>, <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/raw_object.h#L2132" target="blank">dart::UntaggedMegamorphicCache</a> and <a href="https://github.com/dart-lang/sdk/blob/2d064faf748d6c7700f08d223fb76c84c4335c5f
-/runtime/vm/runtime_entry.cc#L1918" target="blank">dart::PatchableCallHandler::DoMegamorphicMiss</a>).</p>
-<p><img alt="AOT IC: dictionary" src="images/aot-ic-dictionary.png" /></p>
-<h2>Runtime System</h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This section will be written next.</p>
+<h2 id="runtime-system">Runtime System</h2>
+<h3 id="object-model">Object Model</h3>
+<h3 id="representation-of-types">Representation of Types</h3>
+<p>See <a href="types.html">Representation of Types</a>.</p>
+<h3 id="gc">GC</h3>
+<p>See <a href="gc.html">GC</a>.</p>
+<h2 id="compiler">Compiler</h2>
+<h3 id="method-calls">Method Calls</h3>
+<p>There is currently large difference between how AOT and JIT optimize method invocation sequences.</p>
+<p>JIT keeps to its Dart 1 roots and largely ignores statically typed nature of Dart 2. In unoptimized code method calls by default go through an inline cache which collects type feedback. Optimizing compiler then speculatively specializes indirect method calls into direct calls guarded by <em>class checks</em>. This process is called <em>speculative devirtualization</em>. Those call sites which can't be devirtualized are divided into two categories. Those call sites which have not been executed yet are compiled to use inline caching and collect type feedback for subsequent reoptimizations. Those call sites which are highly polymorphic (megamorphic) are compiled to use metamorphic dispatch.</p>
+<p>On the other hand, AOT heavily leans onto the statically typed nature of Dart 2. The compiler uses results of global type flow analysis (TFA) to devirtualize as many call sites as it can. This devirtualization is not speculative: compiler only devirtualizes the call site if it can prove that it always invokes a specific method. If compiler can not devirtualize a call site, then it chooses a dispatch mechanism based on whether the receiver's static type is <code>dynamic</code> or not. Calls on <code>dynamic</code> receiver use switchable calls. All other calls go through a <em>global dispatch table</em>.</p>
+<h4 id="global-dispatch-table-gdt">Global Dispatch Table (GDT)</h4>
+<p><span class="aside" markdown=1> The approach adopted by Dart VM and described in this section is largely based on insights from <a href="https://dl.acm.org/doi/abs/10.1145/217839.217851">Minimizing row displacement dispatch tables</a> by Karel Driesen and Urs Holzle.</span></p>
+<p>Imagine for a moment that each class defined in the program added its methods to a global dictionary. For example, given the following class hierachy</p>
+<div class="highlight"><pre><span></span><code><span class="kd">class</span><span class="w"> </span><span class="nc">A</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">bar</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kd">class</span><span class="w"> </span><span class="nc">B</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">baz</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<p>This dictionary will contain the following:</p>
+<div class="highlight"><pre><span></span><code><span class="n">globalDispatchTable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Calling [foo] on an instance of [A] hits [A.foo].</span><span class="w"></span>
+<span class="w">  </span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="err">#</span><span class="n">foo</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="n">A</span><span class="p">.</span><span class="n">foo</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Calling [bar] on an instance of [A] hits [A.bar].</span><span class="w"></span>
+<span class="w">  </span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="err">#</span><span class="n">bar</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="n">A</span><span class="p">.</span><span class="n">bar</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Calling [foo] on an instance of [B] hits [B.foo].</span><span class="w"></span>
+<span class="w">  </span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="err">#</span><span class="n">foo</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="n">B</span><span class="p">.</span><span class="n">foo</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Calling [bar] on an instance of [B] hits [A.bar].</span><span class="w"></span>
+<span class="w">  </span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="err">#</span><span class="n">bar</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="n">A</span><span class="p">.</span><span class="n">bar</span><span class="p">,</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Calling [baz] on an instance of [B] hits [B.baz].</span><span class="w"></span>
+<span class="w">  </span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="err">#</span><span class="n">baz</span><span class="p">)</span><span class="o">:</span><span class="w"> </span><span class="n">B</span><span class="p">.</span><span class="n">baz</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+</code></pre></div>
+<p>Compiler could then use such a dictionary to dispatch invocations: a method call  <code>o.m(...)</code> will be  compiled into <code>globalDispatchTable[(classOf(o), #m)](o, ...)</code>.</p>
+<p>A naive approach to representing <code>globalDispatchTable</code> (or <code>gdt</code> for short) is to number all classes and all method selectors in the program sequentially and then use a two-dimensional array: <code>gdt[(classOf(o), #m)]</code> becomes <code>gdt[o.cid][#m.id]</code>. At this point we can choose to flatten this two-dimensional array either using selector-major order (<code>gdt[numClasses * #m.id + o.cid]</code>) or class-major order (<code>gdt[numSelectors * o.cid + #m.id]</code>) .</p>
+<p>Let us take a look at selector-major order. In this representation we say that <code>numClasses * #m.id</code> gives us <em>selector offset</em>: an offset into the GDT at which a row of entries (one per class) corresponding to this selector is stored. Consider the following class hierarchy:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">class</span><span class="w"> </span><span class="nc">A</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kd">class</span><span class="w"> </span><span class="nc">B</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">foo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kd">class</span><span class="w"> </span><span class="nc">C</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">bar</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+
+<span class="kd">class</span><span class="w"> </span><span class="nc">D</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">C</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="n">bar</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<p>Classes <code>A</code>, <code>B</code>, <code>C</code> and <code>D</code> will be numbered 0, 1, 2 and 3 respectively, while selectors <code>foo</code> and <code>bar</code> will be numbered <code>0</code> and <code>1</code>. This will lead to the following array:</p>
+<div class="highlight"><pre><span></span><code>offset  0                       4
+        │A     B     C     D    │
+        ┌─────┬─────┬─────┬─────┐
+foo row │A.foo│B.foo│ NSM │ NSM │
+        └─────┴─────┴─────┴─────┘
+                                │A     B     C     D
+                                ┌─────┬─────┬─────┬─────┐
+bar row                         │ NSM │ NSM │C.bar│D.bar│
+                                └─────┴─────┴─────┴─────┘
+        ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐
+GDT     │A.foo│B.foo│ NSM │ NSM │ NSM │ NSM │C.bar│D.bar│
+        └─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘
+</code></pre></div>
+<p>It's evident that such representation is rather memory inefficient: dispatch table ends up with a lot of NSM (<code>noSuchMethod</code>) entries.</p>
+<p>Fortunately, Dart 2 static type system provides us with a way to compress this table. In Dart 2 static type of the receiver constrains the list of selectors allowed by the compiler. This guarantees that any non-<code>dynamic</code> invocation calls an actual method rather than <code>Object.noSuchMethod</code>.  Consequently, if we only use dispatch table for non-<code>dynamic</code> call sites then we don't need to fill holes in the table with NSM entries.</p>
+<p>This leads to the following idea: instead of numbering selectors sequentially and using <code>numClasses * sid</code> as a selector offset, we could instead select selector offsets which causes selector rows to interleave and reuse available holes.</p>
+<p>Let us look back to the previous example with 4 classes. Instead of numbering <code>foo</code> with <code>0</code> and <code>bar</code> with <code>1</code> and using <code>0</code> and <code>4</code> as a selector offsets respectively,  we could simply assign both selectors an offset of <code>0</code> leading to the following compact table</p>
+<div class="highlight"><pre><span></span><code>offset  0
+        │A     B     C     D
+        ┌─────┬─────┬─────┬─────┐
+foo row │A.foo│B.foo│░░░░░│░░░░░│
+        └─────┴─────┴─────┴─────╲
+         A     B     C     D     hole
+        ┌─────┬─────┬─────┬─────┐
+bar row │░░░░░│░░░░░│C.bar│D.bar│
+        └─────┴─────┴─────┴─────┘
+        ┌─────┬─────┬─────┬─────┐
+GDT     │A.foo│B.foo│C.bar│D.bar│
+        └─────┴─────┴─────┴─────┘
+</code></pre></div>
+<p>This works because it is impossible to invoke <code>bar</code> on <code>A</code> or <code>B</code> and it's impossible to invoke <code>foo</code> on <code>C</code> or <code>D</code> - meaning, for example, that <code>A.foo</code> entry will never be hit with an instance of <code>C</code> as receiver. <span class="aside" markdown=1> Strictly speaking this technique does not actually require static typing and was originally applied to Smalltalk. This requires a small trick: each method should check in prologue whether its selector matches the selector of the invocation which led to this method being invoked. If selectors don't match this means we arrived to this method erroneously through a reused NSM entry. Static typing allows us to avoid this check.</span></p>
+<p>Calls through GDT compile to the following machine code in Dart VM (X64 example):</p>
+<div class="highlight"><pre><span></span><code><span class="nf">movzx</span><span class="w"> </span><span class="nv">cid</span><span class="p">,</span><span class="w"> </span><span class="kt">word</span><span class="w"> </span><span class="nv">ptr</span><span class="w"> </span><span class="p">[</span><span class="nv">obj</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">15</span><span class="p">]</span><span class="w"> </span><span class="c1">; load receiver&#39;s class id</span><span class="w"></span>
+<span class="nf">call</span><span class="w"> </span><span class="p">[</span><span class="nv">GDT</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nv">cid</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="nv">selectorOffset</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">16</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">8</span><span class="p">]</span><span class="w"></span>
+</code></pre></div>
+<p>Here <code>GDT</code> is a reserved register containing a biased pointer to the GDT (<code>&amp;GDT[16]</code> on X64) and <code>selectorOffset</code> is an offset of the selector we are invoking. The call looks similar across architectures, though concrete value of the bias (specified by <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/dispatch_table.h#L31" target="_blank"><code>DispatchTable::kOriginElement</code></a>) depends on the target architecture. We bias <code>GDT</code> pointer to have a more compact call sequence encoding for smaller selectors, e.g. on X64
+an indirect <code>call</code> has an encoding which allows for an 1 byte signed immediate offset. This means that imeddiate offsets in the range <code>-128</code> to <code>127</code> are represented as a single byte. With an unbiased GDT pointer we would only be able to utilize half of this range because <code>selectorOffset</code> is an unsigned value. With biased GDT we can use the full range:<code>selectorOffset</code> <code>15</code> still requires just one byte encoding.</p>
+<div class="admonition sourcecode">
+<p class="admonition-title">Source to read</p>
+<p>Computation of the global dispatch table is spread through different
+ parts of the toolchain.</p>
+<ul>
+<li><a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/vm/lib/transformations/type_flow/table_selector_assigner.dart" target="_blank"><code>TableSelectorAssigner</code></a> is responsible for assigning selector ids to methods in the program.</li>
+<li><a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/backend/il.h#L4744" target="_blank"><code>DispatchTableCallInstr</code></a> is an IL instruction representing a call through
+ GDT.</li>
+<li><a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/aot/aot_call_specializer.cc#L1145" target="_blank"><code>AotCallSpecializer::ReplaceInstanceCallsWithDispatchTableCalls</code></a> is a compiler pass
+ which replaces non-devirtualized method calls with GDT calls.</li>
+<li><a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/backend/flow_graph_compiler_arm64.cc#L690" target="_blank"><code>FlowGraphCompiler::EmitDispatchTableCall</code></a> emits architecture specific
+ call sequence for calls through GDT.</li>
+<li><a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/aot/dispatch_table_generator.h#L89" target="_blank"><code>compiler::DispatchTableGenerator</code></a> is responsible for assigning
+ selector offsets and computing final layout of the table.</li>
+</ul>
 </div>
-<h3>Object Model</h3>
-<h2>TODO</h2>
-<ol>
-<li>Document the difference between CoreJIT and AppJIT snapshots.</li>
-<li>Document that switchable calls are used in the unoptimized code as well.</li>
-</ol>
+<h4 id="switchable-calls">Switchable Calls</h4>
+<p>Switchable call is an extension of an inline caching originally developed for Dart 1 AOT - where they were used to compile all method calls. Current AOT only uses them when compiling calls with a <code>dynamic</code> receiver. They are also used in JIT to speedup calls from unoptimised code</p>
+<p>JIT section already described that each inline cache associated with a call site consists of two pieces: a cache object (represented by an instance of <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/raw_object.h#L2435" target="_blank"><code>UntaggedICData</code></a>) and a chunk of native code to invoke (e.g. an <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/stub_code_compiler_arm64.cc#L2473" target="_blank">inline cache stub</a>). Original implementation in JIT was only updating the cache itself, however this was later extended by allowing runtime system to update both the cache and the stub target depending on the types observed by the call site.</p>
+<div class="highlight"><pre><span></span><code>                 UnlinkedCall
+      cache      ┌────────────────────────────────────┐
+      ┌─────────▶│targetName: &quot;method&quot;                │
+      │          └────────────────────────────────────┘
+      ┴
+object.method()
+      ┬          SwitchableCallMissStub
+      │          ┌────────────────────────────────────┐
+      └─────────▶│ return DRT_SwitchableCallMiss(...);│
+      target     └────────────────────────────────────┘
+</code></pre></div>
+<p>Initially all <code>dynamic</code> calls in AOT start in the <em>unlinked</em> state. When such call-site is reached for the first time <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/stub_code_compiler_arm64.cc#L3630" target="_blank">SwitchableCallMissStub</a> is invoked, which simply calls into runtime helper <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/runtime_entry.cc#L2524" target="_blank"><code>DRT_SwitchableCallMiss</code></a> to link this call site.</p>
+<p>If possible <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/runtime_entry.cc#L2524" target="_blank"><code>DRT_SwitchableCallMiss</code></a> tries to transition the call site into a <em>monomorphic</em> state. In this state call site turns into a direct call, which enters method through a special entry point which verifies that receiver has expected class.</p>
+<div class="highlight"><pre><span></span><code>      cache      ┌────────────────────────────────────┐
+      ┌─────────▶│id of class C                       │
+      │          └────────────────────────────────────┘
+      ┴
+object.method()
+      ┬          C.method
+      │          ┌────────────────────────────────────┐
+      └─────────▶│ monomorphic_entry:                 │
+      target     │   // Check if receiver&#39;s cid       │
+                 │   // matches the cached one.       │
+                 │   if (this.cid != cache)           │
+                 │     return SwitchableCallMissStub()│
+ normal calls    │ // fall through to normal entry    │
+ enter here ────▶│ normal_entry:                      │
+                 │   // Body of C.method              │
+                 └────────────────────────────────────┘
+</code></pre></div>
+<p>In the example above we assume that <code>obj</code> was an instance of <code>C</code>  and that <code>obj.method</code> resolved to <code>C.method</code> when <code>obj.method()</code> was executed for the first time.</p>
+<p>Next time we execute the same call-site it will invoke <code>C.method</code> directly bypassing method lookup process. However it will enter <code>C.method</code> through a special entry point, which will verify that <code>obj</code> is still an instance of <code>C</code>. If that is not the case <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/runtime_entry.cc#L2524" target="_blank"><code>DRT_SwitchableCallMiss</code></a> will be invoked and will update call site state to reflect the miss.</p>
+<p><code>C.method</code> might still be a valid target for an invocation, e.g <code>obj</code> is an instance of the class <code>D</code> which extends <code>C</code> but does not override <code>C.method</code>. In this case we check if call site could transition into a <em>single target</em> state, implemented by <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/stub_code_compiler_arm64.cc#L3657" target="_blank">SingleTargetCallStub</a> (see also <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/raw_object.h#L2396" target="_blank"><code>UntaggedSingleTargetCache</code></a>).</p>
+<div class="highlight"><pre><span></span><code>                 SingleTargetCache
+      cache      ┌────────────────────────────────────┐
+      ┌─────────▶│fromCid, toCid, target              │
+      │          └────────────────────────────────────┘
+      ┴
+object.method()  SingleTargetCallStub
+      ┬          ┌────────────────────────────────────┐
+      └─────────▶│ if (cache.fromCid &lt;= this.cid &amp;&amp;   │
+      target     │     this.cid &lt;= cache.toCid )      │
+                 │     return cache.target(...);      │
+                 │ // Not found                       │
+                 │ return SwitchableCallMissStub(...);│
+                 └────────────────────────────────────┘
+</code></pre></div>
+<p>This stub benefits from depth-first class id assignment done by AOT compiler and during AppJIT snapshot training. In this mode most classes are assigned integer ids using depth-first traversal of the inheritance hierarchy. If <code>C</code> is a base class with subclasses <code>D0, ..., Dn</code> and none of those override <code>C.method</code> then <code>C.:cid &lt;= classId(obj) &lt;= max(D0.:cid, ..., Dn.:cid)</code> implies that <code>obj.method</code> resolves to <code>C.method</code>. In such cases instead of comparing for equality (which checks a for a specific class), we can instead compare if class id falls into a specific range and that will cover all subclasses of <code>C</code>. That's exactly what <code>SingleTargetCallStub</code> does.</p>
+<p>If single target case is not applicable call site is switched to use linear search inline cache. Which coincidentally is also the initial state for call-sites in JIT mode (see <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/stub_code_compiler_arm64.cc#L3552" target="_blank"><code>ICCallThroughCode</code></a> stub, <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/raw_object.h#L2435" target="_blank"><code>UntaggedICData</code></a> and <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/runtime_entry.cc#L2524" target="_blank"><code>DRT_SwitchableCallMiss</code></a>).</p>
+<div class="highlight"><pre><span></span><code>                 ICData
+      cache      ┌────────────────────────────────────┐
+      ┌─────────▶│{cid0: target0, cid1: target1, ... }│
+      │          └────────────────────────────────────┘
+      ┴
+object.method()  ICCallThroughCodeStub
+      ┬          ┌────────────────────────────────────┐
+      └─────────▶│ for (i = 0; i &lt; cache.length; i++) │
+      target     │   if (cache[i] == this.cid)        │
+                 │     return cache[i + 1](...);      │
+                 │ // Not found                       │
+                 │ return SwitchableCallMissStub(...);│
+                 └────────────────────────────────────┘
+</code></pre></div>
+<p>Finally if the number of checks in the linear array grows past threshold the call site is switched to use a dictionary like structure (see <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/compiler/stub_code_compiler_arm64.cc#L3470" target="_blank">MegamorphicCallStub</a>, <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/raw_object.h#L2463" target="_blank"><code>UntaggedMegamorphicCache</code></a> and <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/runtime/vm/runtime_entry.cc#L2524" target="_blank"><code>DRT_SwitchableCallMiss</code></a>).</p>
+<div class="highlight"><pre><span></span><code>                 MegamorphicCache
+      cache      ┌────────────────────────────────────┐
+      ┌─────────▶│{cid0: target0, cid1: target1, ... }│
+      │          └────────────────────────────────────┘
+      ┴
+object.method()  MegamorphicCallStub
+      ┬          ┌────────────────────────────────────┐
+      └─────────▶│ var target = cache[this.cid];      │
+      target     │ if (target != null)                │
+                 │   return target(...);              │
+                 │ // Not found                       │
+                 │ return SwitchableCallMissStub(...);│
+                 └────────────────────────────────────┘
+</code></pre></div>
+<h3 id="trycatch-in-il"><code>try</code>/<code>catch</code> in IL</h3>
+<p>See <a href="compiler/exceptions.html">Exceptions Implementation</a>.</p>
+<h3 id="async-async-and-sync-methods"><code>async</code>, <code>async*</code> and <code>sync*</code> methods</h3>
+<p>See <a href="async.html">Suspendable Functions</a>.</p>
+<h3 id="as-checks"><code>as</code> checks</h3>
+<p>See <a href="compiler/type_testing_stubs.html">Type Testing Stubs</a>.</p>
+<h1 id="miscellaneous">Miscellaneous</h1>
+<h2 id="pragmas">Pragmas</h2>
+<p>See <a href="pragmas.html">VM-Specific Pragma Annotations</a>.</p>
+<h2 id="dwarf-non-symbolic-stack-traces">DWARF (non-symbolic) stack traces</h2>
+<p>See <a href="dwarf_stack_traces.html">DWARF stack traces mode</a>.</p>
+<h1 id="glossary">Glossary</h1>
+<p>See <a href="glossary.html">Glossary</a></p>
     </div>
   </body>
 </html>

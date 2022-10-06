@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Dart VM</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css">
+<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" type="text/css">
+<link rel="apple-touch-icon" sizes="57x57" href="images/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="images/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="images/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="images/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="images/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="images/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="images/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="images/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="images/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">  </head>
+
+  <body>
+    <div class="content">
+      <h1 id="glossary">Glossary</h1>
+<h2 id="small-integer-smi-sma">Small integer, Smi (/smaɪ/)</h2>
+<p>A signed integer with one bit less than a full word (i.e., 31 or 63). An <a href="gc.html#object-representation">immediate object</a>.</p>
+<h2 id="medium-integer-mint">Medium integer, Mint</h2>
+<p>A signed 64-bit integer. A <a href="gc.html#object-representation">heap object</a>. Mints never represent a value that can be represented as a Smi.</p>
+<h2 id="class-id-class-index-cid">Class id, class index, CID</h2>
+<p>An integer that uniquely identifies a class within an isolate. It has the virtues of being smaller than a full pointer to the class, never changing due to GC, and being a build-time constant for well-known classes.</p>
+<p>An object's reference to its class, type feedback collected by ICData, and various optimizations are represented with CIDs instead of full pointers to classes.</p>
+<p>In other VMs, this is also called the <em>class tag</em>.</p>
+<h2 id="object-pool-literal-pool"><a href="../vm/object.h#:~:text=class%20ObjectPool">Object pool, literal pool</a></h2>
+<p>A set of objects and raw bits used by generated code as constants.</p>
+<h2 id="pool-pointer-pp">Pool pointer, PP</h2>
+<p>A fixed register containing the address of the current function's (JIT) or global (AOT) <a href="#object-pool-literal-pool">literal pool</a>.</p>
+<h2 id="instruction-pointer-ip-program-counter-pc"><a href="https://en.wikipedia.org/wiki/Program_counter">Instruction pointer, IP, program counter, PC</a></h2>
+<p>The address of the currently executing instruction.</p>
+<h2 id="garbage-collection-gc"><a href="gc.html">Garbage collection, GC</a></h2>
+<p>Automatic memory management that reclaims objects known to be unreachable via tracing.</p>
+<h2 id="safepoint"><a href="gc.html#safepoints">Safepoint</a></h2>
+<p>A point at which all pointers into the Dart heap can be precisely identified.</p>
+<h2 id="handle"><a href="gc.html#handles">Handle</a></h2>
+<p>An indirect pointer to a Dart object.</p>
+<h2 id="stack-map"><a href="../vm/object.h#:~:text=class%20CompressedStackMaps">Stack map</a></h2>
+<p>Identifies which slots in a stack frame contain objects (to be visited by the GC) and which contain raw bits (to be ignored by the GC) for each return address.</p>
+<h2 id="inline-cache-ic"><a href="https://en.wikipedia.org/wiki/Inline_caching">Inline cache, IC</a></h2>
+<p>A cache of method lookup results specific to one call-site. It both speeds up method invocation by avoiding repeated lookups and records type feedback that is used by the optimizer. In the Dart VM,
+these are not literally inline in the machine code as they were in <a href="https://dl.acm.org/doi/10.1145/800017.800542">early Smalltalk JITs</a>, but the name has stuck.</p>
+<h2 id="monomorphic">Monomorphic</h2>
+<p>Having exactly one possible type (in the context of a conservative optimization) or one observed type (in the context of a speculative optimization).</p>
+<h2 id="polymorphic">Polymorphic</h2>
+<p>Having a small number of possible types.</p>
+<h2 id="megamorphic">Megamorphic</h2>
+<p>Having a large number of possible types.</p>
+<h2 id="ahead-of-time-compilation-aot"><a href="https://en.wikipedia.org/wiki/Ahead-of-time_compilation">Ahead-of-time compilation, AOT</a></h2>
+<p>Compiling an program in a separate process from its execution. Uses conservative optimizations based on a closed-world assumption and whole-program analysis.</p>
+<h2 id="just-in-time-compilation-jit"><a href="https://en.wikipedia.org/wiki/Just-in-time_compilation">Just-in-time compilation, JIT</a></h2>
+<p>Compiling a program as it executes in the same process. Uses speculative optimizations based on type feedback and usage feedback.</p>
+<h2 id="conservative-optimization">Conservative optimization</h2>
+<p>An optimization based on some property that is true for all possible executions of a program.</p>
+<h2 id="speculative-optimization">Speculative optimization</h2>
+<p>An optimization based on some property that has held so far in the execution of a program, but may fail to hold as part of future execution. Speculative optimizations must add checks that their assumptions continue to hold and be able deoptimize if and when their assumptions no longer hold.</p>
+<h2 id="deoptimization">Deoptimization</h2>
+<p>Transitioning from a stack frame running optimized code to a frame or multiple frames running the corresponding unoptimized code. Usually because a speculative assumption made by the optimized code has been discovered to no longer hold.</p>
+<h2 id="deopt-id">Deopt id</h2>
+<p>An identifier that matches a position in optimized code to a position in unoptimized code.</p>
+<h2 id="on-stack-replacement-osr">On-stack replacement, OSR</h2>
+<p>Switching an active stack frame from unoptimized code to optimize code. This is an uncommon case; the common case of optimization only causes new invocations of the function to run the new,
+optimized code.</p>
+<h2 id="token-position">Token position</h2>
+<p>A source position within a script, usually a file. It is a UTF-8 offset unrelated to tokenization. The name dates from the VM's frontend, where it was an index into a <a href="https://en.wikipedia.org/wiki/Lexical_analysis#Token">token</a> list.</p>
+<h2 id="executable-and-linkable-format-elf"><a href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">Executable and Linkable Format, ELF</a></h2>
+<p>The format of executables on Linux, Android and Fuchsia. The Dart AOT compiler can directly produce an ELF shared library as output.</p>
+<h2 id="mach-o"><a href="https://en.wikipedia.org/wiki/Mach-O">Mach-O</a></h2>
+<p>The format of executables on macOS and iOS. The Dart AOT compiler can produce assembly that the GCC or LLVM assemblers can translate into Mach-O.</p>
+<h2 id="dwarf"><a href="https://en.wikipedia.org/wiki/DWARF">DWARF</a></h2>
+<p>The format of debugging information included in <a href="#elf">ELF</a> or <a href="#mach-o">Mach-O</a> files. The Dart AOT compiler can directly produce DWARF, which contains information on how to unwind Dart frames and how to map machine code addresses back to source positions.</p>
+<h2 id="isolate">Isolate</h2>
+<p>The unit of concurrency in Dart. Each isolate has an independent set of globals and message queue. Isolates communicate with each other via <a href="https://en.wikipedia.org/wiki/Actor_model">asynchronous message passing</a> rather than shared mutable memory like threads do.</p>
+<h2 id="isolate-group">Isolate group</h2>
+<p>A set of isolates that are sharing the same program and the same heap. Isolates in the same isolate group can send more types of objects to each other because the sender can rely on the receiver having the classes needed to represent any object it might send. Messages sent within an isolate group can also be more efficient because they are in the same heap.</p>
+<h2 id="out-of-band-message-oob-message">Out-of-band message, OOB message</h2>
+<p>A message that is deliveried at any interrupt check, such as at function entry or the back-edge of a loop, rather than only when returning to the message loop.</p>
+<h2 id="hot-reload"><a href="https://github.com/dart-lang/sdk/wiki/Hot-reload">Hot reload</a></h2>
+<p>Changing a running program while retaining its current state: globals, frames, and objects transitively reachable from such.</p>
+<h2 id="addresssanitizer-asan"><a href="https://github.com/dart-lang/sdk/wiki/Debugging-Dart-VM-with-AddressSanitizer">AddressSanitizer, ASAN</a></h2>
+<p>Instrumentation to detect use-after-free and other similar issues.</p>
+<h2 id="memorysanitizer-msan"><a href="https://github.com/dart-lang/sdk/wiki/Debugging-Dart-VM-with-AddressSanitizer">MemorySanitizer, MSAN</a></h2>
+<p>Instrumentation to detect use of uninitialized memory and other similar issues.</p>
+<h2 id="threadsanitizer-tsan"><a href="https://github.com/dart-lang/sdk/wiki/Debugging-Dart-VM-with-AddressSanitizer">ThreadSanitizer, TSAN</a></h2>
+<p>Instrumentation to detect use of data races and other similar issues.</p>
+<h2 id="undefinedbehaviorsanitizer-ubsan"><a href="https://github.com/dart-lang/sdk/wiki/Debugging-Dart-VM-with-AddressSanitizer">UndefinedBehaviorSanitizer, UBSAN</a></h2>
+<p>Instrumentation to detect undefined behavior such as signed integer overflow.</p>
+<h2 id="common-front-end-cfe-dart-front-end-dfe"><a href="../../pkg/front_end/README.html">Common front end, CFE, Dart front end, DFE</a></h2>
+<p>A tool that handles the early phases of compilation, shared between the Dart VM and dart2js. It takes Dart source as input and produces <a href="#kernel-dart-intermediate-language-dil-dill">kernel</a>.</p>
+<h2 id="kernel-dart-intermediate-language-dil-dill"><a href="../../pkg/kernel/README.html">Kernel, Dart intermediate language, DIL, DILL</a></h2>
+<p>A representation of a Dart program at the level of a resolved <a href="https://en.wikipedia.org/wiki/Abstract_syntax_tree">AST</a>.</p>
+<h2 id="intermediate-language-il-intermediate-representation-ir"><a href="../vm/compiler/backend/il.h">Intermediate Language, IL, intermediate representation, IR</a></h2>
+<p>A representation of a Dart function between kernel and machine code. Most optimizations happen at this level.</p>
+<p>Not to be confused with <a href="#kernel-dart-intermediate-language-dil-dill">DIL</a>.</p>
+<h2 id="control-flow-graph-cfg-flow-graph"><a href="https://en.wikipedia.org/wiki/Control-flow_graph">Control flow graph, CFG, flow graph</a></h2>
+<h2 id="loop-invariant-code-mode-licm"><a href="../vm/compiler/backend/redundancy_elimination.h#:~:text=class%20LICM">Loop-invariant code mode, LICM</a></h2>
+<h2 id="common-subexpression-elimination-cse">Common subexpression elimination, CSE</h2>
+<h2 id="static-single-assignment-form-ssa"><a href="https://en.wikipedia.org/wiki/Static_single-assignment_form">Static single-assignment form, SSA</a></h2>
+<h2 id="class-hierarchy-analysis-cha"><a href="../vm/compiler/cha.h">Class hierarchy analysis, CHA</a></h2>
+<h2 id="simulator-simarm-simarm64-simriscv32-simriscv64">Simulator, SIMARM, SIMARM64, SIMRISCV32, SIMRISCV64</h2>
+<p>An interpreter to enable running Dart code compiled for some target architecture on hardware of a different architecture. For example, one can run Dart code compiled for ARM64 on a X64 host machine. This allows compiler developers to test changes without needing hardware for each architecture.</p>
+<p>The Dart VM has simulators for ARM, ARM64, RV32GC and RV64GC, but not for IA32 or X64.</p>
+<h2 id="stub">Stub</h2>
+<p>A commonly used sequence of machine code that has been factored out into a separate procedure to be called when needed instead of being repeated inline.</p>
+<h2 id="type-arguments-type-argument-vector"><a href="types.html#typearguments">Type arguments, type argument vector</a></h2>
+    </div>
+  </body>
+</html>

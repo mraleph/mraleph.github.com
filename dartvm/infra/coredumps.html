@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
     <title>Dart VM</title>
     <link rel="stylesheet" href="/css/style.css" type="text/css">
 <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
@@ -22,7 +23,7 @@
 
   <body>
     <div class="content">
-      <h1>Crash Dumps Archiving</h1>
+      <h1 id="crash-dumps-archiving">Crash Dumps Archiving</h1>
 <p>Testing framework and buildbot/LUCI infrastructure have support for archiving
 crash dumps and crashed binaries for unexpected crashes for postmortem
 debugging.</p>
@@ -30,19 +31,19 @@ debugging.</p>
 is supported on all three major OSes we run our tests on.</p>
 <p>Currently crash dump archiving should be enabled on the majority of the VM
 bots, including those running in CQ.</p>
-<h3>Known limitations</h3>
+<h3 id="known-limitations">Known limitations</h3>
 <ul>
 <li>We don't archive crash dumps produced by subprocesses (e.g. service tests);</li>
 <li>We don't produce and archive crash dumps for hanged processes.</li>
 </ul>
-<h3>Maintainers</h3>
+<h3 id="maintainers">Maintainers</h3>
 <p>For any questions about this infrastructure contact vegorov@, kustermann@ or
 athom@.</p>
-<h2>Downloading dumps</h2>
+<h2 id="downloading-dumps">Downloading dumps</h2>
 <p>To find if a bot managed to upload any crashdumps open its log and search for
 <code>Archiving coredumps for crash</code>. Depending on the bot configuration you
 might need to look for uploaded artifacts in two different locations.</p>
-<h3>Isolate Server</h3>
+<h3 id="isolate-server">Isolate Server</h3>
 <p>Swarming bots upload dumps to the isolate server. In this case you will see
 something like this in the log:</p>
 <div class="highlight"><pre><span></span><code>INFO: Core dump archiving is activated
@@ -55,10 +56,17 @@ Archiving coredumps for crash (if possible):
 is using isolate storage. In this case you need to look for
 <code>shard #... isolated out</code> link under the failed step.</p>
 <p><img alt="shard isolate out" src="images/isolated-out-link.png" /></p>
-<p>This link would bring you to isolate server file browser where you will be
-able to download archived artifacts.</p>
+<p>This link would bring you to isolate server file browser where you can see the artifacts you can download.</p>
 <p><img alt="Isolate Server Browser" src="images/isolated-out-browser.png" /></p>
-<h3>Cloud Storage</h3>
+<p>One caveat is that file browser might fail to download large files, so you might need to use <code>cas</code> tool if you need to download those.</p>
+<p><code>cas</code> tool is installed using <code>cipd</code>:
+<div class="highlight"><pre><span></span><code>cipd install &quot;infra/tools/luci/cas/\${platform}&quot; -root ~/cas_tool
+</code></pre></div></p>
+<p>Then you point <code>cas</code> at digest hash for the directory to be downloaded:</p>
+<div class="highlight"><pre><span></span><code>~/cas_tool/cas download -cas-instance projects/chromium-swarm/instances/default_instance -digest &lt;digest_hash&gt; -dir downloaded
+</code></pre></div>
+<p>where <code>&lt;digest_hash&gt;</code> is 'Digest' value from the isolate server browser listing.</p>
+<h3 id="cloud-storage">Cloud Storage</h3>
 <p>Other bots upload collected artifacts into a <code>dart-temp-crash-archive</code> Cloud Storage bucket. In this case you will see
 <code>+++ Uploaded gs://dart-temp-crash-archive/...</code> in the output log. For example:</p>
 <div class="highlight"><pre><span></span><code>Archiving coredumps for crash (if possible):
@@ -75,8 +83,8 @@ Running command:  [&#39;C:\\b\\s\\w\\ir\\cache\\vpython\\2d366b\\Scripts\\python
 SDK) to download these artifacts:</p>
 <div class="highlight"><pre><span></span><code><span class="gp">$ </span>gsutil.py cp gs://dart-temp-crash-archive/&lt;src-path&gt; &lt;dst-path&gt;
 </code></pre></div>
-<h2>Analyzing Dumps</h2>
-<h3>Linux</h3>
+<h2 id="analyzing-dumps">Analyzing Dumps</h2>
+<h3 id="linux">Linux</h3>
 <div class="highlight"><pre><span></span><code><span class="gp">$ </span>gdb &lt;binary&gt; &lt;core&gt;
 </code></pre></div>
 <p>Because bots are running slightly different Linux versions that what is
@@ -89,15 +97,15 @@ on that instance;</li>
 <li>create a sysroot that matches operating system on the bots and tell gdb to
 use that sysroot with <code>set sysroot</code> command.</li>
 </ul>
-<h4>ARM/ARM64</h4>
+<h4 id="armarm64">ARM/ARM64</h4>
 <p>If you have a core produced on ARM or ARM64 bot and you would like to inspect
 it on a non-ARM development machine, then you will need <code>gdb-multiarch</code> and
 sysroot that matches OS version on the bot. Then you can use <code>set sysroot ...</code>
 and <code>set architecture ...</code> to configure <code>gdb-multiarch</code> before loading <code>core</code>.</p>
-<h3>Mac</h3>
+<h3 id="mac">Mac</h3>
 <div class="highlight"><pre><span></span><code><span class="gp">$ </span>lldb &lt;binary&gt; -c &lt;core&gt;
 </code></pre></div>
-<h3>Windows</h3>
+<h3 id="windows">Windows</h3>
 <p>Googlers can find WinDBG and CDB in <code>%depot_tools%\win_toolchain\vs_files\%toolchain_version%\win_sdk\Debuggers\x64\</code>.</p>
 <p>For quick investigation you can do</p>
 <div class="highlight"><pre><span></span><code><span class="go">&gt; cdb.exe -z &lt;coredump.dmp&gt;</span>
@@ -105,7 +113,7 @@ and <code>set architecture ...</code> to configure <code>gdb-multiarch</code> be
 <span class="go">0:000&gt; !uniqstack</span>
 <span class="go">...</span>
 </code></pre></div>
-<h2>Implementation details</h2>
+<h2 id="implementation-details">Implementation details</h2>
 <p>Implementation of crash dump archiving consists of two parts:</p>
 <ul>
 <li>Code in the testing framework (<code>UnexpectedCrashLogger</code> in
@@ -127,7 +135,7 @@ in <code>tools/utils.py</code>) is responsible for<ul>
 </ul>
 </li>
 </ul>
-<h3>Linux</h3>
+<h3 id="linux_1">Linux</h3>
 <p>We rely on builtin ability of the OS to generate core files (<code>man core</code>) when
 the program is terminated abnormally.</p>
 <p>We adjust core resource limits to <code>unlimited</code> before running tests. See <code>man setrlimit</code> for more information (search for <code>RLIMIT_CORE</code>).</p>
@@ -137,15 +145,15 @@ process.</p>
 <p>Core dump archiving code then uses pids to match unexpected crashes with core
 dumps.</p>
 <p>See <code>LinuxCoreDumpArchiver</code> and <code>LinuxCoreDumpEnabler</code> in <code>tools/utils.py</code>.</p>
-<h3>Mac</h3>
+<h3 id="mac_1">Mac</h3>
 <p>Just like on Linux we rely on OS to produce core files (<code>man core</code>) and
 similarly set core resource limits to <code>unlimited</code>.</p>
 <p>Core files are also mangled with PID of the crashing process.</p>
 <p>The only difference from Linux is that on Mac core files are written into
 <code>/cores</code> directory instead of current working directory.</p>
 <p>See <code>MacOSCoreDumpArchiver</code> and <code>PosixCoreDumpEnabler</code> in <code>tools/utils.py</code>.</p>
-<h3>Windows</h3>
-<p>On Windows we rely on <a href="https://chromium.googlesource.com/crashpad/crashpad/+/master/README.md">Crashpad</a>
+<h3 id="windows_1">Windows</h3>
+<p>On Windows we rely on <a href="https://chromium.googlesource.com/crashpad/crashpad/+/master/README.html">Crashpad</a>
 library to produce minidumps of the crashed process, because configuring
 builtin crash reporting functionality requires registry changes that are global,
 impossible without Administrator privileges and are overwritten by buildbot
