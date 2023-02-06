@@ -250,3 +250,20 @@ code.wrappable {
   line-break: anywhere;
   white-space: normal;
 }
+
+@media (max-width: 999px) {
+  div.sidebyside2 {
+    text-align: center;
+  }
+}
+
+@media (min-width: 1000px) {
+  div.sidebyside2 {
+    display: flex;
+  }
+
+  div.sidebyside2 > img {
+    flex: 50%;
+    max-width: 50%;
+  }
+}

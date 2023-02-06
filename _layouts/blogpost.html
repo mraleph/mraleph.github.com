@@ -25,7 +25,6 @@
 
     ga('create', 'UA-6701581-4', 'auto');
     ga('send', 'pageview');
-
   </script>
 
   <title> {{ page.title }} </title>
@@ -40,6 +39,7 @@
     {{ content }}
   </div>
 
+  {% unless page.nodisqus %}
   <div class="post-comments">
     <div id="disqus_thread"></div>
     <script>
@@ -52,5 +52,6 @@
     </script>
     <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
   </div>
+  {% endunless %}
 </body>
 </html>
