@@ -42,7 +42,7 @@ code.
 * **Color Themes**: currently [Everforest](https://github.com/sainnhe/everforest) across everything
     * I also like [gruvbox](https://github.com/morhetz/gruvbox), [Alabaster](https://github.com/tonsky/vscode-theme-alabaster) and [Ayu](https://github.com/ayu-theme).
 * **Fonts**: [Codelia][] (code editor), [IBM Plex Mono][] (terminal), [Inter](https://rsms.me/inter/) (when authoring text)
-    * I have a long list of favorite monospace fonts I alternate between whenever I need a bit of diversity in my day: [Cartograph CF][], [Cascadia Mono][], [Codelia][], [Comic Mono][], [Dank Mono][], [Fantasque Sans Mono][], [Fira Code][], [Fragment Mono][], [Gintronic][], [Hack][], [IBM Plex Mono][], [JetBrains Mono][], [JuliaMono][], [League Mono][], [Martian Mono Nr Lt][], [Monoid][], [MonoLisa][], [mononoki][], [Operator Mono][], [PragmataPro Mono Liga][], [Rec Mono Casual][], [Victor Mono][]
+    * I have a long list of favorite monospace fonts I alternate between whenever I need a bit of diversity in my day: [Cartograph CF][], [Cascadia Mono][], [Codelia][], [Comic Mono][], [Dank Mono][], [Fantasque Sans Mono][], [Fira Code][], [Fragment Mono][], [Gintronic][], [Hack][], [IBM Plex Mono][], [Input Mono][], [JetBrains Mono][], [JuliaMono][], [League Mono][], [Martian Mono Nr Lt][], [Monoid][], [MonoLisa][], [mononoki][], [Operator Mono][], [PragmataPro Mono Liga][], [Rec Mono Casual][], [Victor Mono][]
 * **Notes**: [LogSeq](https://logseq.com/)
 
 [Cartograph CF]: https://connary.com/cartograph.html
@@ -56,6 +56,7 @@ code.
 [Gintronic]: https://markfromberg.com/projects/gintronic/
 [Hack]: https://sourcefoundry.org/hack/
 [IBM Plex Mono]: https://www.ibm.com/plex/
+[Input Mono]: https://input.djr.com/
 [JetBrains Mono]: https://www.jetbrains.com/lp/mono/
 [JuliaMono]: https://juliamono.netlify.app/
 [League Mono]: https://www.theleagueofmoveabletype.com/league-mono
