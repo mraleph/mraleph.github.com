@@ -136,7 +136,7 @@
 <div class="highlight"><pre><span></span><code><span class="gp">$ </span>dart hello.dart
 <span class="go">Hello, World!</span>
 </code></pre></div>
-<p>Since Dart 2 VM no longer has the ability to directly execute Dart from raw source, instead VM expects to be given <em>Kernel binaries</em> (also called <em>dill files</em>) which contain serialized <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/kernel/README.html" target="_blank">Kernel ASTs</a>. The task of translating Dart source into Kernel AST is handled by the <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/front_end" target="_blank">common front-end (CFE)</a> written in Dart and shared between different Dart tools (e.g. VM, dart2js, Dart Dev Compiler).</p>
+<p>Since Dart 2 VM no longer has the ability to directly execute Dart from raw source, instead VM expects to be given <em>Kernel binaries</em> (also called <em>dill files</em>) which contain serialized <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/kernel/README.md" target="_blank">Kernel ASTs</a>. The task of translating Dart source into Kernel AST is handled by the <a href="https://github.com/dart-lang/sdk/blob/f83c6d5e999eed7318ab4e39c6e58b6062ba7ddd/pkg/front_end" target="_blank">common front-end (CFE)</a> written in Dart and shared between different Dart tools (e.g. VM, dart2js, Dart Dev Compiler).</p>
 <div class="highlight"><pre><span></span><code> ╭─────────────╮                       ╭────────────╮
  │╭─────────────╮       ╔═════╗        │╭────────────╮        ╔════╗
  ││╭─────────────╮┣━━━▶ ║ CFE ║ ┣━━━▶  ││╭────────────╮ ┣━━━▶ ║ VM ║
