@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Runtime that makes Dart tick</title>
+
+        <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+        <meta name="author" content="Hakim El Hattab">
+
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" href="https://mralephfonts.s3.us-east-2.amazonaws.com/pp-mono.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="dist/reset.css">
+        <link rel="stylesheet" href="dist/reveal.css">
+        <link rel="stylesheet" href="dist/theme/serif.css" id="theme">
+
+        <style>
+            .strikethrough {
+                position: relative;
+            }
+            .strikethrough:before {
+                position: absolute;
+                content: "";
+                left: 0;
+                top: 50%;
+                right: 0;
+                border-top: 3px solid;
+                border-color: inherit;
+
+                -webkit-transform:rotate(-5deg);
+                -moz-transform:rotate(-5deg);
+                -ms-transform:rotate(-5deg);
+                -o-transform:rotate(-5deg);
+                transform:rotate(-25deg);
+            }
+
+            .handwriting {
+                font-family: 'Caveat' !important;
+                color: #e94f58 !important;
+                font-weight: bold;
+                font-size: 1.2em;
+            }
+
+            mark, .attn, .reveal .slides section .fragment.highlight-mark.visible {
+  margin: 0 -0.4em;
+  padding: 0.1em 0.4em;
+  border-radius: 0.8em 0.3em;
+  background: transparent;
+  background-image: linear-gradient(to right, rgba(255, 225, 0, 0.1), rgba(255, 225, 0, 0.7) 4%, rgba(255, 225, 0, 0.3));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; }
+
+        </style>
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="plugin/highlight/mono-blue.css">
+    </head>
+
+    <body>
+
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1>Runtime that makes Dart tick</h1><code>by Slava Egorov</code><p><code>me@mrale.ph</code></p>
+                    <aside class="notes"></aside>
+                </section>
+                <section>
+                    <div style="padding-left: 5em; text-align: left;">
+                    <h3 style="text-align: left;">I am</h3>
+                    <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a SWE</h3>
+                    <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;on the Dart team</h3>
+                    </div>
+                    <aside class="notes">
+                    </aside>
+                </section>
+                <section>
+                    <div style="padding-left: 5em; text-align: left;">
+                    <h3 style="text-align: left;">I am</h3>
+                    <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a <span style="text-decoration: line-through;">SWE</span> TLM</h3>
+                    <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;on the Dart team</h3>
+                    </div>
+                    <aside class="notes">
+                    </aside>
+                </section>
+                <section>
+                    <div style="padding-left: 5em; text-align: left;">
+                    <h3 style="text-align: left;">I am</h3>
+                    <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a <span class="handwriting">DREAMER</span></h3>
+                    <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;on the Dart team</h3>
+                    </div>
+                    <aside class="notes">
+                    </aside>
+                </section>
+                <section>
+                    <h3 class="handwriting" style="text-align: left;">Disclaimer</h3>
+                    <p style="text-align: left;"><em>Nobody</em> have seen or reviewed this talk. The content of
+                    this talk is <em>aspirational</em> and does not necessarily reflect plans of
+                    the Dart or Flutter teams.</p>
+                    <aside class="notes">
+                    </aside>
+                </section>
+
+                <section>
+                    <img src="images/lego-brick-top.svg">
+                </section>
+
+                <section>
+                    <img src="images/lego-brick-side.svg">
+                </section>
+
+                <section data-background-image="images/lego-patent.png" data-background-size="contain">
+
+                </section>
+                <section>
+                    <h3 class="handwriting" style="text-align: left;">LEGO® System in Play</h3>
+                    <ol>
+                        <li>The toy has to be compact in its dimensions without limiting the free expression of imagination.</li>
+                        <li>It has to be reasonably priced.</li>
+                        <li>It has to be simple and durable and yet offer unlimited variety.</li>
+                        <li>It has to be suitable for children of all ages and for both boys and girls.</li>
+                        <li>It has to be classic in its presentation, i.e. a classic among toys, needing no renewal.</li>
+                        <li>It has to be easily distributed.</li>
+                    </ol>
+                    <aside class="notes">
+                    </aside>
+                </section>
+                <section>
+                    <h1>Dart <span class="handwriting">SDK</span></h1>
+                    <p>is a construction built out of smaller pieces</p>
+                </section>
+                <section>
+                    <h1 class="handwriting">Why bother?</h1>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape class="dart">
+                        // Which one is faster?
+
+                        // Classic indexed loop.
+                        for (var i = 0; i < list.length; i++) {
+                            final e = list[i];
+                        }
+
+                        // or this Dart 3.0 beauty?
+                        for (var (i, e) in list.indexed) {
+                            // ...
+                        }
+                    </code></pre>
+                    <aside class="notes">
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape class="dart">
+                        // Which one is faster? <mark>(On native)</mark>
+
+                        // Classic indexed loop.
+                        for (var i = 0; i < list.length; i++) {
+                            final e = list[i];
+                        }
+
+                        // or this Dart 3.0 beauty?
+                        for (var (i, e) in list.indexed) {
+                            // ...
+                        }
+                    </code></pre>
+                    <aside class="notes">
+                    </aside>
+                </section>
+                <section>
+                    <h3 style="text-align: left;">Easy to measure</h3>
+                    <pre><code data-trim class="shell">
+                        $ dart compile exe -o loops loops.dart
+                        $ ./loops
+
+                        $ flutter run --release -t lib/loops.dart
+                    </code></pre>
+                    <h3 style="text-align: left;" class="fragment">but we are not here for <em>easy</em></h3>
+                </section>
+                <section>
+                    <h1 class="handwriting">How does it work?</h1>
+                </section>
+                <section>
+                    <object type="image/svg+xml" data="images/aot-compilation.svg"></object>
+                </section>
+                <section>
+                    <object type="image/svg+xml" data="images/aot-runtime.svg"></object>
+                </section>
+                <section>
+                    <pre><code data-trim class="cpp">
+                        import 'dart:isolate';
+
+                        Isolate.spawnUri('my-aot-snapshot.aot');
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="cpp">
+                        #include "dart_api.h"
+
+                        Dart_Initialize(...);  // Init runtime system
+                        isolate = Dart_CreateIsolateGroup(
+                            // ...
+                            "main",  // isolate name
+                            snapshot_data,
+                            snapshot_code,
+                            // ...
+                        );
+                    </code></pre>
+                </section>
+                <section>
+                    <h1 class="handwriting">Practice time</h1>
+                </section>
+                <section>
+                    <h3>Dart SDK uses GN + Ninja</h3>
+                    <h4>but today I am using Bazel</h4>
+                </section>
+                <section>
+                    <pre><code data-trim class="shell">
+                        $ bazel build :gen_kernel    \
+                                      :platform.dill \
+                                      :gen_snapshot  \
+                                      :run_aot
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="shell">
+                        $ bazel-bin/gen_kernel --aot           \
+                            --platform bazel-bin/platform.dill \
+                            -o /tmp/loops.dill                 \
+                            dart/loops.dart
+                        $ bazel-bin/gen_snapshot               \
+                            --snapshot-kind=app-aot-assembly   \
+                            --snapshot=/tmp/loops.S            \
+                            /tmp/loops.dill
+                        $ gcc -shared -o /tmp/loops.dylib /tmp/loops.S
+                        $ bazel-bin/run_aot /tmp/loops.dylib
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="shell">
+                        $ bazel-bin/run_aot /tmp/loops.dylib
+                        ClassicLoop(RunTime): 63.10348942208462 us.
+                        ForInIndexedLoop(RunTime): 819.2325 us.
+                    </code></pre>
+                </section>
+                <section>
+                    <p>AOT compiler can generate DWARF debug info</p>
+                    <pre><code data-trim class="shell">
+                        $ bazel-bin/gen_snapshot               \
+                            --dwarf-stack-traces               \
+                            --resolve-dwarf-paths              \
+                            ...
+                    </code></pre>
+                </section>
+                <section>
+                    <p>AOT compiler can print its IL</p>
+                    <pre><code data-trim class="shell">
+                        $ bazel-bin/gen_snapshot               \
+                            --print-flow-graph-optimized       \
+                            --print-flow-graph-filter=...      \
+                            --disassemble-optimized            \
+                            ...
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="handwriting">Problem #1</h3>
+                    <p>Not enough inlining &rArr; not enough specialization</p>
+                    <pre class="smaller"><code data-trim data-noescape>
+                        B1:
+                            v2  &larr; Parameter(0)
+                            v5  &larr; LoadField(v2 . list)
+                            <mark>v63 &larr; StaticCall( IndexedIterable. v65, v5)</mark>
+                            <mark>v7  &larr; StaticCall( get:iterator v63)</mark>
+                            v49 &larr; LoadField(v7 . _source)
+                            v89 &larr; LoadField(v49 . _iterable)
+                        // ...
+                        B3:
+                            <mark>v98 &larr; DispatchTableCall( Iterable.elementAt, v89, v94)</mark>
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="handwriting">Solution #1</h3>
+                    <p>Use <code>@pragma('vm:prefer-inline')</code></p>
+                    <pre class="smaller"><code data-trim data-noescape class="dart">
+                        // In sdk/lib/internal/iterable.dart
+                        class IndexedIterable&lt;T&gt; extends Iterable&lt;(int, T)&gt; {
+                            // ...
+                            <mark>@pragma('vm:prefer-inline')</mark>
+                            factory IndexedIterable(Iterable&lt;T&gt; source, int start) {
+                                // ...
+                            }
+                            // ...
+                            <mark>@pragma('vm:prefer-inline')</mark>
+                            Iterator&lt;(int, T)&gt; get iterator =&gt; // ...
+                            }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="shell">
+                        $ bazel-bin/run_aot /tmp/loops.dylib
+                        ClassicLoop(RunTime): 62.95430732508757 us.
+                        ForInIndexedLoop(RunTime): 249.33367062990135 us
+                    </code></pre>
+                    <p><code>ForInIndexedLoop</code> improved by 3x</p>
+                </section>
+                <section>
+                    <h3 class="handwriting">Problem #2</h3>
+                    <p>Compiler did not inline <code>int.operator&</code></p>
+                    <pre class="smaller"><code data-trim data-noescape>
+                        B32:
+                            v20 &larr; StaticCall( & v242, v292, recognized_kind = Integer_bitAnd)
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="handwriting">Solution #2</h3>
+                    <p>Compiler got confused about the type of <code>e</code></p>
+                    <pre class="smaller"><code data-trim data-noescape class="dart">
+                        for (var (i, <mark>int</mark> e) in list.indexed) {
+                            // ...
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="handwriting">Solution #2</h3>
+                    <p>Fix the compiler!</p>
+                    <ul>
+                        <li>Force inline recognized arithmetic methods</li>
+                        <li>Fix a bug in the code that was supposed to figure out that <code>LoadIndexed(...)</code> from a <code>List&lt;int&gt;</code> returns <code>int</code></li>
+                    </ul>
+                </section>
+                <section>
+                    <pre><code data-trim class="shell">
+                        $ bazel-bin/run_aot /tmp/loops.dylib
+                        ClassicLoop(RunTime): 62.71734375 us.
+                        ForInIndexedLoop(RunTime): 109.20825648258652 us.
+                    </code></pre>
+                    <p><code>ForInIndexedLoop</code> improved by 2.5x</p>
+                </section>
+                <section>
+                    <h3 class="handwriting">Problem #3</h3>
+                    <p>Unfused and redundant comparison</p>
+                    <pre class="smaller"><code data-trim data-noescape>
+                            <mark>v44 &larr; RelationalOp(>=, v42, v263)</mark>
+                            Branch if StrictCompare(===, <mark>v44</mark>, v10) goto (37, 18)
+
+                        B37:
+                            Branch if RelationalOp(>=, v256, v235) goto (19, 3)
+
+                        B3:
+                            Branch if <mark>StrictCompare(===, v44, v10)</mark> goto (32, 11)
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="handwriting">Solution #3</h3>
+                    <p>Fix the compiler!</p>
+                    <ul>
+                        <li>Propagate <code>x === true</code> and <code>x === false</code> into blocks which comparison dominates</li>
+                    </ul>
+                </section>
+                <section>
+                    <pre><code data-trim class="shell">
+                        $ bazel-bin/run_aot /tmp/loops.dylib
+                        ClassicLoop(RunTime): 62.81853125 us.
+                        ForInIndexedLoop(RunTime): 93.52465990369782 us.
+                    </code></pre>
+                    <p><code>ForInIndexedLoop</code> improved by 15%</p>
+                </section>
+                <section>
+                    <h3 class="handwriting">Problem #4</h3>
+                    <p>Left over iteration variable, redundant comparison and a bounds check</p>
+                    <pre><code data-trim data-noescape class="dart">
+                        final l = list.length;
+                        for (var i = 0, <mark>j = -1</mark>;
+                                <mark>++j >= 0</mark> && i < l;
+                                i++) {
+                            <mark>if (i >= l) throw OutOfBoundsError();</mark>
+                            final e = list[i];
+                            result ^= i & e;
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <h3 class="handwriting">Solution #4 <span class="fragment">(TODO)</span></h3>
+                    <p>Need to fix issues with range analysis</p>
+                    <p>Much bigger project than other fixes</p>
+                </section>
+                <section>
+                    <h1 class="handwriting">What else <br/> could we do?</h1>
+                </section>
+                <section data-background-image="images/ios-dart.png" data-background-size="contain"></section>
+                <section>
+                    <pre><code data-trim data-noescape class="swift">
+                        struct HelloWorldView: View {
+                          @State private var name: String = ""
+
+                          var body: some View {
+                            VStack(alignment: .leading) {
+                              TextField("Your name?", text: $name)
+                              Text("Hello, \(name)")
+                            }
+                          }
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape class="swift">
+                        struct HelloWorldView: View {
+                          @State private var name: String = ""
+
+                          var body: some View {
+                            VStack(alignment: .leading) {
+                              TextField("Your name?", text: $name)
+                              <mark>Text("\(askDart(name))")</mark>
+                            }
+                          }
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape class="swift">
+                        func askDart(_ input : String) -&gt; String {
+                          <mark>// ???</mark>
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="smaller"><code data-trim data-noescape class="swift">
+                      func askDart(_ input : String) -&gt; String {
+                        let args : [Dart_Handle] = [
+                          Dart_NewStringFromCString(input)
+                        ]
+                        let result =
+                            args.withUnsafeBufferPointer { args in
+                          return Dart_Invoke(
+                            Dart_RootLibrary(),
+                            Dart_NewStringFromCString("askDart"),
+                            1,
+                            args
+                          )
+                        }
+                        // ...
+                      }
+                    </code></pre>
+                </section>
+                <section>
+                    <h1>😨 way too complicated</h1>
+                </section>
+                <section>
+                    <h1><code>dart:ffi</code>?</h1>
+                </section>
+                <section>
+                    <p>Accessing any C ABI code from Dart is <em>simple</em></p>
+                    <pre><code data-trim data-noescape class="dart">
+                      import 'dart:ffi';
+
+                      typedef CString = Pointer&lt;Utf8&gt;;
+
+                      @Native&lt;CString Function(CString input)&gt;()
+                      external CString askSwift(CString input);
+                    </code></pre>
+                </section>
+                <section>
+                    <p>What if it was just as simple to export?</p>
+                    <pre><code data-trim data-noescape class="dart">
+                      // hello.dart
+                      <mark>@ffi.Export()</mark>
+                      String askDart(String input) {
+                        return 'Dart says: Hi, $input';
+                      }
+                    </code></pre>
+                    <pre><code data-trim data-noescape class="dart">
+                        // HelloWorldView.swift
+                        import Hello
+                        // ...
+                        Text("\(Hello.askDart(input: name))")
+                    </code></pre>
+                </section>
+                <section>
+                    <h1 class="handwriting">How???</h1>
+                </section>
+                <section>
+                    <object type="image/svg+xml" data="images/aot-compilation.svg"></object>
+                </section>
+                <section>
+                    <object type="image/svg+xml" data="images/extended-aot-compilation.svg"></object>
+                </section>
+                <section>
+                    <pre class="smaller"><code data-trim data-noescape class="dart">
+                        // dart-sdk/pkg/vm/lib/transformations/ffi/export.dart
+                        void transformLibraries(...) {
+                            // ...
+                            mainLibrary.addProcedure(Procedure(
+                              Name('#ffiExports'),
+                              ProcedureKind.Method,
+                              FunctionNode(
+                                ReturnStatement(StaticInvocation(
+                                  allocateExports,
+                                  Arguments([
+                                    ListLiteral(elements,
+                                        typeArgument: transformer.pointerVoidType),
+                                    ConstantExpression(
+                                      (callocField.initializer as ConstantExpression).constant),
+                                    ]),
+                                  )),
+                                  returnType: coreTypes.intNonNullableRawType),
+                              isStatic: true,
+                              fileUri: mainLibrary.fileUri,
+                            ));
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <object type="image/svg+xml" data="images/ast.svg"></object>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape class="dart">
+                        // Injected in Dart
+                        CString _exported#askDart(CString input) =&gt;
+                          askDart(input.toDartString()).toNativeUtf8();
+
+                        @pragma('vm:ffi:exports-list', ...)
+                        @pragma('vm:entry-point')
+                        int #ffiExports() =&gt; ffi._allocateExports([
+                            Pointer&lt;...&gt;.fromFunction(_exported#askDart)
+                          ]);
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape class="cpp">
+                        // In C
+                        struct hello_Exports {
+                          char* (*askDart)(const char*);
+                          char* (*makeView)();
+                        };
+
+                        char* hello_askDart(const char* input) {
+                          return dart::embedder::
+                              Exports&lt;hello_Exports&gt;()-&gt;askDart(input);
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <h1 class="handwriting">IMAGINE</h1>
+                </section>
+                <section>
+                    <pre><code data-trim data-noescape class="swift">
+                        // In Swift
+                        DynamicView(factory: Hello.makeView)
+                    </code></pre>
+                    <pre><code data-trim data-noescape class="dart">
+                        // In Dart
+                        import 'swiftui.dart' as swiftui;
+
+                        @ffi.Export()
+                        swiftui.View makeView() => swiftui.VStack([
+                              swiftui.Text('Hello, World!'),
+                            ]).toSwift();
+                    </code></pre>
+                </section>
+                <section data-background-image="images/reloading.png" data-background-size="contain"></section>
+                <section>
+                    <h3>Not limited to Swift / iOS of course</h3>
+                </section>
+                <section>
+                    <h3>There were some <br/> <span class="handwriting">smoke and mirrors</span> <br/> involved</h3>
+                </section>
+                <section>
+                    <object type="image/svg+xml" data="images/call-simple.svg"></object>
+                </section>
+                <section>
+                    <object type="image/svg+xml" data="images/call-real.svg"></object>
+                </section>
+                <section>
+                    <h3>Dart concurrency model</h3>
+                    <h1 class="handwriting">VS</h1>
+                    <h3>Native concurrency model</h3>
+                </section>
+                <section>
+                    <div style="padding-left: 5em; text-align: left;">
+                    <h3 style="text-align: left;">I am</h3>
+                    <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a <span class="handwriting">DREAMER</span></h3>
+                    <h3>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;on the Dart team</h3>
+                    </div>
+                    <aside class="notes">
+                    </aside>
+                </section>
+                <section>
+                    <h3>I <span class="handwriting">dream</span> about Dart</h3>
+                    <h3>being everywhere.</h3>
+                </section>
+                <section>
+                    <h3>I <span class="handwriting">dream</span> about Dart</h3>
+                    <h3>being where <span class="handwriting">you</span> need it.</h3>
+                </section>
+                <section>
+                    <h3>Dart has all the bricks,</h3>
+                    <h3>You have the <span class="handwriting">imagination</span>!</h3>
+                </section>
+                <section>
+                    <h1 class="handwriting">Dream big!</h1>
+                </section>
+            </div>
+        </div>
+
+        <script src="dist/reveal.js"></script>
+        <script src="plugin/notes/notes.js"></script>
+        <script src="plugin/search/search.js"></script>
+        <script src="plugin/markdown/markdown.js"></script>
+        <script src="plugin/highlight/highlight.js"></script>
+        <script>
+
+            Reveal.initialize({
+                width: 1100,
+                height: 700,
+                hash: true,
+                transition: 'none',
+                backgroundTransition: 'none',
+                showNotes: false,
+
+                // Learn about plugins: https://revealjs.com/plugins/
+                plugins: [ RevealHighlight, RevealNotes ]
+            });
+
+        </script>
+
+    </body>
+</html>
