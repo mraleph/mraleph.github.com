@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>Runtime that makes Dart tick</title>
+
+        <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+        <meta name="author" content="Hakim El Hattab">
+
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" href="https://mralephfonts.s3.us-east-2.amazonaws.com/pp-mono.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="dist/reset.css">
+        <link rel="stylesheet" href="dist/reveal.css">
+        <link rel="stylesheet" href="dist/theme/serif.css" id="theme">
+
+        <style>
+            /* comic-mono-latin-400-normal */
+            @font-face {
+              font-family: 'Comic Mono';
+              font-style: normal;
+              font-display: swap;
+              font-weight: 400;
+              src: url(https://cdn.jsdelivr.net/fontsource/fonts/comic-mono@latest/latin-400-normal.woff2) format('woff2'), url(https://cdn.jsdelivr.net/fontsource/fonts/comic-mono@latest/latin-400-normal.woff) format('woff');
+            }
+
+            .strikethrough {
+                position: relative;
+            }
+            .strikethrough:before {
+                position: absolute;
+                content: "";
+                left: 0;
+                top: 50%;
+                right: 0;
+                border-top: 3px solid;
+                border-color: inherit;
+
+                -webkit-transform:rotate(-5deg);
+                -moz-transform:rotate(-5deg);
+                -ms-transform:rotate(-5deg);
+                -o-transform:rotate(-5deg);
+                transform:rotate(-25deg);
+            }
+
+            .handwriting {
+                font-family: 'Caveat' !important;
+                font-weight: bold;
+            }
+
+            pre.larger {
+                font-size: .9em;
+            }
+
+            mark, .attn, .reveal .slides section .fragment.highlight-mark.visible {
+  margin: 0 -0.4em;
+  padding: 0.1em 0.4em;
+  border-radius: 0.8em 0.3em;
+  background: transparent;
+  background-image: linear-gradient(to right, rgba(255, 225, 0, 0.1), rgba(255, 225, 0, 0.7) 4%, rgba(255, 225, 0, 0.3));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; }
+
+  mark.not-good, .reveal .slides section .fragment.highlight-mark-not-good.visible {
+  margin: 0 -0.4em;
+  padding: 0.1em 0.4em;
+  border-radius: 0.8em 0.3em;
+  background: transparent;
+  background-image: linear-gradient(to right, rgba(255, 0, 0, 0.1), rgba(255, 0, 0, 0.7) 4%, rgba(255, 0, 0, 0.3));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; }
+
+  mark.good {
+  margin: 0 -0.4em;
+  padding: 0.1em 0.4em;
+  border-radius: 0.8em 0.3em;
+  background: transparent;
+  background-image: linear-gradient(to right, rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0.7) 4%, rgba(0, 255, 0, 0.3));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; }
+
+
+        </style>
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="plugin/highlight/mono-blue.css">
+    </head>
+
+    <body>
+
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1 style="font-size: 2.5em;">Something <span class="handwriting">something</span> <code style="font-family: 'Comic Mono';">jsonDecode</code></h1>
+                    <em>by Slava Egorov</em>
+                    <aside class="notes">
+                        Hello everyone and welcome to my talk!
+                        First let me make some jokes about the fire alarm that
+                        just went off. Waaaait, how do I know it will?
+                        Well, that's because I am writing these notes after the
+                        talk and not <em>before</em>, like most speakers would.
+                        That's why my speaker notes are not an explanation of
+                        the slide but rather a standalone commentary.
+                    </aside>
+                </section>
+                <section data-background-image="images/cpp_programming_language_book.jpg" data-background-size="30%">
+                    <aside class="notes">
+                        Many speakers start by telling you some story about their childhood so that you could relate.
+                        I am not an exception: 20 years ago when I was young and naive I already knew that I am going
+                        to grow into a <em>programmer</em>. I could already write some <code>C</code> and was looking
+                        to level up. What did you do 20 years ago to level up? You bought a book - and that's what I
+                        did. Though I must admit I have never gotten past the first dozen pages. But...
+                    </aside>
+                </section>
+                <section>
+                    <div class="blockquote-wrapper">
+                        <div class="blockquote">
+                            <h1>
+                                Language shapes the way we think,
+                                and determines what we can think about.</h1>
+                            <h4>&mdash;&nbsp;Benjamin Lee Whorf</h4>
+                        </div>
+                    </div>
+                    <aside class="notes">
+                        But even on these first pages I have encountered something that captured my attention and
+                        stayed with me ever since. An epigraph to the introduction to the first edition. A quote
+                        from Benjamin Lee Whorf. Maybe this is what got me into programming languages to begin with?
+                    </aside>
+                </section>
+                <section>
+                    <h2><em>Sapir–Whorf hypothesis</em></h2>
+                    <h3>aka <em>linguistic relativity</em></h3>
+                    <aside class="notes">
+
+                    </aside>
+                </section>
+                <section>
+                    <div class="blockquote-wrapper">
+                        <div class="blockquote">
+                            <h1>
+                            I speak Spanish to God,<br>
+                            Italian to women,<br>
+                            French to men,<br>
+                            and German to my horse.</h1>
+                            <h4>&mdash;&nbsp;Charles V <em>(allegedly)</em></h4>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <div class="blockquote-wrapper">
+                        <div class="blockquote">
+                            <h1>
+                            I make my mobile apps in Dart,
+                            and my backends in JavaScript (Java, C#, C++, Rust, etc)<br>
+                            <h4>&mdash;&nbsp;modern developer</h4>
+                        </div>
+                    </div>
+                </section>
+                <section data-background-image="images/i_love_dart_but.jpg" data-background-size="contain">
+                    <aside class="notes">
+                        This is a fake post artisanally crafted to represent an average sentiment I often encounter on social
+                        media. The averaging was proudly done manually - no GPUs were involved.
+                    </aside>
+                </section>
+                <section>
+                    <h2>🤬 <code>jsonDecode</code></h2>
+                    <aside class="notes">
+                        We should not prioritize work based on the negative sentiment on Reddit, but we should certainly
+                        pay attention to the signal. <code>jsonDecode</code> should not be 1000x slower.
+                    </aside>
+                </section>
+                <section>
+                    <h2>What are we comparing?</h2>
+                </section>
+                <section>
+                    <pre class="larger"><code data-trim class="javascript">
+                    // JavaScript
+                    let obj = JSON.parse(str);
+                    // String into an Object/Array/...
+                    // Implemented in C++, e.g. in V8:
+                    //    src/json/json-parser.{h,cc}
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="larger"><code data-trim class="dart" data-noescape>
+                    final map = jsonDecode(str);
+                    // String into an Map/List/...
+                    // Implemented in Dart, e.g.
+                    // sdk/lib/_internal/
+                    //   vm/lib/convert_patch.dart
+                    <span class="fragment">//   wasm/lib/convert_patch.dart</span>
+                    <span class="fragment">//   wasm_js_compatibility/lib/convert_patch.dart</span>
+                    <span class="fragment">//   js_runtime/lib/convert_patch.dart</span>
+                    <span class="fragment">//   js_dev_runtime/patch/convert_patch.dart</span>
+                    </code></pre>
+                    <aside class="notes">
+                        Multiplatform nature of Dart makes things <em>interesting</em> here:
+                        Web and native are still miles apart in some ways in terms of underlying
+                        capabilities and this leaks through levels of abstraction.
+                    </aside>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <h3>Web is complicated</h3>
+                        <ul>
+                            <li>Comes with fast <code>JSON.parse</code></li>
+                            <li>but that makes JS <code>Object</code>, not a <code>Map</code></li>
+                            <li>does not go into Wasm structs directly</li>
+                            <li>takes a JS <code>string</code> not bytes</li>
+                        </ul>
+                    </div>
+                </section>
+                <section>
+                    <h2>I will focus on <em>native</em> <small>(aka Dart VM, Dart Native Runtime)</small></h2>
+                    <aside class="notes">
+                        Ömer Sinan Ağacan who works on <code>dart2wasm</code> has ported some of optimizations
+                        described in this talk to <code>dart2wasm</code> and independently discoverd few more.
+                    </aside>
+                </section>
+
+                <section>
+                    <div style="text-align: left;">
+                        <h3>Optimize <em>anything</em> in 3 steps:</h3>
+                        <ol>
+                            <li class="fragment">Measure performance, if it is okay - you are <b>done</b>.</li>
+                            <li class="fragment">Identify and remove some unnecessary work.</li>
+                            <li class="fragment">Go to step 1.</li>
+                        </ol>
+                    </div>
+                    <aside class="notes">
+                        Here I am putting my cards straight on the table - for those who need to leave the talk
+                        earlier. The recipe on the slides have never failed me.
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart">
+                    // Measures JSON decoding speed in ns per byte
+                    double measureSpeed(int N, String input, int byteLength) {
+                      final sw = Stopwatch()..start();
+                      for (var i = 0; i < N; i++) {
+                        jsonDecode(input);
+                      }
+                      final usPerIteration = sw.elapsedMicroseconds / N;
+                      final nsPerByte = (usPerIteration * 1000) / byteLength;
+                      return nsPerByte;
+                    }
+                    </code></pre>
+                    <aside class="notes">
+                        This benchmark does not consider microarchitectural effects like training of the branch
+                        predictor. It <em>might</em> be good to vary <code>input</code> somewhat between iterations
+                        to make sure that the CPU does not memorize branches. I am leaving this to the reader.
+                        We should also teach `package:benchmark_harness` to generate this boilerplate for us, I am
+                        tired of writing this code from scratch all the time.
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim class="javascript">
+                    // Measure JSON decoding speed in ns per byte
+                    function measureSpeed(N, input, byteLength) {
+                      let start = performance.now();
+                      for (let i = 0; i < N; i++) {
+                        JSON.parse(input);
+                      }
+                      let end = performance.now();
+                      let usPerIteration = (end - start) * 1000 / N;
+                      let nsPerByte = (usPerIteration * 1000) / byteLength;
+                      return nsPerByte;
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                    $ du -h github_events.json
+                    64K github_event.json
+                    $ v8 json-benchmark.js -- github_events.json
+                    <mark class="good">JSON.parse: 2.28 ns/byte</mark>
+                    $ dart compile exe json-benchmark.dart
+                    $ json-benchmark.exe github_events.json
+                    <mark class="not-good">JsonDecoder: 8.79 ns/byte</mark>
+                    </code></pre>
+                    <aside class="notes">
+                        This result was obtained using V8 built in April. Since
+                        then Toon Verwaest has improved V8 results by another
+                        10-15% by using recursive parsing most of the time.
+
+                        Dart parser is not recursive - it expects to deal with
+                        incomplete chunked input, though most of the time it does
+                        not have to. That might be another optimization opportunity.
+                    </aside>
+                </section>
+                <section>
+                    <h2>should we rewrite <code>JsonDecoder</code> in C++?</h2>
+                </section>
+                <section>
+                    <h2>maybe not <em>yet</em></h2>
+                    <em>&laquo; I want to speak Dart to my horse! &raquo;</em>
+                </section>
+                <section>
+                    <h2><code>String</code> &rArr; <code>Map</code></h2>
+                    <em class="fragment">but where does <code>String</code> come from?</em>
+                </section>
+                <section>
+                    <h2><code>Uint8List</code> &rArr; <code>String</code> &rArr; <code>Map</code></h2>
+                    <p>usually it arrives from the network in form of UTF8 bytes</p>
+                </section>
+                <section>
+                    <h2><code>Uint8List</code> &rArr; <code>Map</code></h2>
+                    <em><code>JSON.parse</code> can only parse from <code>string</code>, but in Dart...</em>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        import 'dart:convert';
+
+                        print(const JsonDecoder());
+                        // Instance of '<mark>JsonDecoder</mark>'
+                        print(const Utf8Decoder().fuse(const JsonDecoder()));
+                        // Instance of '<mark>_JsonUtf8Decoder</mark>' (surprise!)
+                        </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    // Measures JSON decoding speed in ns per byte
+                    double measureSpeed(int N, <mark>Uint8List input</mark>) {
+                      <mark>final decoder =
+                          const Utf8Decoder().fuse(const JsonDecoder());</mark>
+                      // ...
+                      for (var i = 0; i &lt; N; i++) {
+                        <mark>decoder</mark>.convert(input);
+                      }
+                      // ...
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="javascript" data-noescape>
+                    // Measure JSON decoding speed in ns per byte
+                    function measureSpeed(N, input /* ArrayBuffer */) {
+                      // ...
+                      for (let i = 0; i &lt; N; i++) {
+                        JSON.parse(<mark>decodeUtf8(input)</mark>);
+                        // decodeUtf8 just calls V8's String::NewFromUtf8
+                      }
+                      // ...
+                    }
+                    </code></pre>
+                    <aside class="notes">
+                        I patched <code>d8</code> shell to expose <code>String::NewFromUtf8</code> as a <code>decodeUtf8</code>.
+                        I also briefly played with <code>node</code> and it was wild to see that it has several different ways
+                        to create a string from bytes - all with wildly different performance characteristics.
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                    $ v8 json-benchmark.js -- github_events.json
+                    <mark class="good">UTF8Decode+JSON.parse: 2.78 ns/byte</mark>
+                    $ dart compile exe json-benchmark.dart
+                    $ json-benchmark.exe github_events.json
+                    <mark class="not-good">JsonUtf8Decoder: 8.53 ns/byte</mark>
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>time to looks closer</h2>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                    $ dart compile <mark>aot-snapshot</mark> json-benchmark.dart
+                    $ <mark>perf record -g dartaotruntime json-benchmark.aot</mark> \
+                        github_events.json
+                    $ <mark>perf report</mark>
+                    </code></pre>
+                </section>
+                <section>
+                    <pre>
+41.82% _ChunkedJsonParser.parseString
+19.27% _ChunkedJsonParser.parse
+<span class="fragment custom highlight-mark-not-good"> 6.84% Uint8List.[]</span>
+ 5.44% _ChunkedJsonParser.parseStringToBuffer
+ 3.01% String.hashCode
+ 2.83% _LinkedHashMapMixin._insert
+ 2.40% _StringBase._createOneByteString
+ 2.10% _LinkedHashMapMixin._set
+ 1.90% _LinkedHashMapMixin._findValueOrInsertPoint
+ 1.77% _StringBase.createFromCharCodes
+ 1.46% allocateOneByteString
+ 1.13% _LinkedHashMapMixin.[]=
+ 1.02% _LinkedHashMapMixin._init
+ 0.95% _ChunkedJsonParser.parseNumber
+                    </pre>
+                    <aside class="notes">
+                        That <code>Uint8List.[]</code> entry in the profile jumps out immediately. If you have to deal with bytes in Flutter/Dart check your profiles - if you see that, something is really-really-really wrong.
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        Uint8List bytes;
+
+                        bytes[index];
+
+                        // The expectation is that this is just a few
+                        // CPU instructions: check index in bounds,
+                        // load memory. Not a call!
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        import 'dart:typed_data';
+
+                        @pragma('vm:never-inline')
+                        int foo(Uint8List bytes) => bytes[0];
+
+                        void main() {
+                          foo(Uint8List(1));
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                    $ dart compile exe                                         \
+                        --extra-gen-snapshot-options                           \
+                          --disassemble-optimized                              \
+                        --extra-gen-snapshot-options                           \
+                          --code-comments                                      \
+                        --extra-gen-snapshot-options                           \
+                          --print-flow-graph-filter=foo                        \
+                        -v test.dart
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="arm" data-noescape>
+                        mov r2, r1         ;; r1: bytes
+                        ldr r3, [r2, #15]  ;; load length
+                        asr r0, r3, #1
+                        movz r1, #0x0
+                        cmp r1, r0         ;; length &le; 0?
+                        bcs ->oob
+                        ldrb r0, [r2, #23] ;; load byte
+                        ret                ;; return
+
+                   oob: stp fp, lr, [sp, #-16]!
+                        mov fp, sp
+                        bl 0x101232568
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="arm" data-noescape>
+                   <mark>     mov r2, r1         ;; r1: bytes  </mark>
+                   <mark>     ldr r3, [r2, #15]  ;; load length</mark>
+                   <mark>     asr r0, r3, #1                   </mark>
+                   <mark>     movz r1, #0x0                    </mark>
+                   <mark>     cmp r1, r0         ;; length &le; 0?</mark>
+                   <mark>     bcs ->oob                        </mark>
+                        ldrb r0, [r2, #23] ;; load byte
+                        ret                ;; return
+
+                   <mark>oob: stp fp, lr, [sp, #-16]!          </mark>
+                   <mark>     mov fp, sp                       </mark>
+                   <mark>     bl 0x101232568                   </mark>
+                    </code></pre>
+                    <aside class="notes">
+                        Bounds checks generate a lot of code. There an additional problem with them: for various reasons
+                        they have pinned register inputs (<code>r1</code> for index, <code>r0</code> for length) which
+                        really messes up code quality.
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                    $ dart compile aot-snapshot                                \
+                        <mark>--extra-gen-snapshot-options                           \
+                          --dwarf-stack-traces                                 \
+                        --extra-gen-snapshot-options                           \
+                          --code-comments                                      \
+                        --extra-gen-snapshot-options                           \
+                          --write-code-comments-as-synthetic-source-to=code.il \</mark>
+                        json-benchmark.dart
+                    </code></pre>
+                </section>
+                <section>
+                    <pre style="font-size: .5em;">
+       │     <em class="hljs-comment">B61</em>
+       │     <em class="hljs-comment">Loop 0</em>
+       │     <em class="hljs-comment">v183 &lt;- LoadField(v2 T{_JsonUtf8Parser} . chunk)</em>
+  1.49%│       mov  r12, QWORD PTR [rdx+0x3f]
+       │     <em class="hljs-comment">v323 &lt;- BoxInt64(v6)</em>
+       │       mov  rax, rcx
+  0.99%│       add  rax, rax
+  2.36%│     ↓ jno  96
+       │     → call stub _iso_stub_AllocateMintSharedWithoutFPURegsStub
+       │       mov  QWORD PTR [rax+0x7],rcx
+       │     <em class="hljs-comment">v359 &lt;- LoadClassId(v183) int64</em>
+  3.59%│ 96:   mov  ecx, DWORD PTR [r12-0x1]
+  4.16%│       shr  ecx, 0xc
+       │     <em class="hljs-comment">MoveArgument(v183, SP+1)</em>
+  0.12%│       mov  QWORD PTR [rsp+0x8],r12
+       │     <em class="hljs-comment">MoveArgument(v323, SP+0)</em>
+  0.16%│       mov  QWORD PTR [rsp],rax
+       │     <em class="hljs-comment fragment custom highlight-mark">v184 &lt;- DispatchTableCall(cid=v359 List.[], v183, v323)</em>
+  0.16%│       mov  rax, QWORD PTR [r14+0x58]
+ <mark class="not-good">25.07%</mark>│     → call QWORD PTR [rax+rcx*8]
+       │     <em class="hljs-comment">v324 &lt;- UnboxInt64([non-speculative], v184)</em>
+  4.11%│       sar  rax,1
+       │     <em class="hljs-comment">goto:14 B67</em>
+  0.44%│     ↓ jmp  e8
+                    </pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        // `T` is the type of the character container.
+                        abstract class _ChunkedJsonParser&lt;T&gt; {
+                          int getChar(int index);
+
+                          // Various parsing methods written in terms of [getChar].
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        class _JsonStringParser extends _ChunkedJsonParser&lt;String&gt; {
+                          String chunk = '';
+                          int getChar(int position) => chunk.codeUnitAt(position);
+                        }
+
+                        class _JsonUtf8Parser extends _ChunkedJsonParser&lt;List&lt;int&gt;&gt; {
+                          static final Uint8List emptyChunk = Uint8List(0);
+                          List&lt;int&gt; chunk = emptyChunk;
+
+                          int getChar(int position) => chunk[position];
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <h3>Performance antipattern #1</h3>
+                        <p>Base class provides generic implementation which relies on small operation (<code>getChar</code>) overriden by subclasses.</p>
+                        <p><b>Why:</b> If more than one subclass is instantiated in the program then compiler will not be able to fully specialize the code.</p>
+                    </div>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <h3>Performance antipattern #2</h3>
+                        <p>Code which works with bytes is written in terms of <code>List&lt;int&gt;</code> instead of <code>Uint8List</code></p>
+                        <p><b>Why:</b> <code>List&lt;T&gt;</code> has many different implementations. If compiler can't narrow it down to a specific implementation it will be forced to generate virtual calls for things like <code>l[i]</code> and <code>l.length</code></p>
+                    </div>
+                </section>
+                <section>
+                    <pre>
+commit df80cf91404e8e3b0f0a4eb271467448d126199e
+Author: Slava Egorov &lt;vegorov@google.com&gt;
+Date:   Thu Mar 21 11:10:10 2024 +0000
+
+[core] Improve JSON decoding performance
+
+Avoid polymorphic character access by turning _ChunkedJsonParser
+into a mixin instead of the base class.
+
+TEST=ci
+
+Change-Id: Id2080724e07d16e96734a80629c8bd8906dc590b
+Reviewed-on: https://dart-review.googlesource.com/c/sdk/+/358445
+Reviewed-by: Daco Harkes &lt;dacoharkes@google.com&gt;
+Commit-Queue: Slava Egorov &lt;vegorov@google.com&gt;
+                    </pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        <mark>mixin</mark> _ChunkedJsonParser&lt;T&gt; on _JsonParserWithListener {
+                          // Generic implementation in terms of [getChar]
+                        }
+
+                        class _JsonUtf8Parser
+                          extends _JsonParserWithListener
+                          <mark>with _ChunkedJsonParser&lt;Uint8List&gt;</mark> {
+                          <mark>Uint8List</mark> chunk = emptyChunk;
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre style="font-size: .6em;"><code data-trim class="dart" data-noescape>
+                        // To maintain API compatibility we still need to
+                        // accept arbitrary List&lt;int&gt;
+                        void parseChunk(List&lt;int&gt; value, int start, int end) {
+                          if (value is Uint8List) {
+                            chunk = value;
+                          } else {
+                            // Slow-path: copy value into fresh Uint8List.
+                            // We assume this never happens.
+                            chunk = Uint8List(end - start);
+                            // ...
+                          }
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                    $ dart compile exe json-benchmark.dart
+                    $ json-benchmark.exe github_events.json
+                    <mark>JsonUtf8Decoder: 5.95 ns/byte</mark> (~30% faster)
+                    </code></pre>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <h3>Performance antipattern #3</h3>
+                        <p>Parsing from <code>String</code> rather than bytes</p>
+                        <p><b>Why:</b> For space savings <code>String</code> has two different implementations in Dart (one byte and two byte).
+                            Compiler <em>usually</em> does not know which reaches particulate place, so <code>s.codeUnitAt(i)</code> is a
+                            call or a <code>(s is _OneByteString ? ... : ...)</code> pattern.</p>
+                    </div>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        @pragma('vm:never-inline')
+                        int foo(String bytes) => bytes.codeUnitAt(0);
+
+                        void main() {
+                          foo("abcd");
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="arm" data-noescape>
+                        movz r0, #0x61 ;; 😂
+                        ret
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        @pragma('vm:never-inline')
+                        int foo(String bytes, <mark>int i</mark>) => bytes.codeUnitAt(<mark>i</mark>);
+
+                        void main(<mark>List&lt;String&gt; args</mark>) {
+                          foo("abcd", <mark>args.length</mark>);
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="arm" data-noescape>
+     ldr r2, [pp, #5960] ;; constant "abcd"
+     mov r3, r1
+     <b>movz</b> r0, #0x4
+     cmp r1, r0
+     bcs -&gt; oob
+     add tmp, r2, r3
+     <mark>ldrb r0, [tmp, #15]</mark>
+     <b>ret</b>
+
+oob: <b>stp</b> fp, lr, [sp, #-16]!
+     mov fp, sp
+     bl 0x105232578
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        @pragma('vm:never-inline')
+                        int foo(String bytes, int i) => bytes.codeUnitAt(i);
+
+                        void main(List&lt;String&gt; args) {
+                          foo(<mark>args.first</mark>, args.length);
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre style="font-size: .5em"><code data-trim class="arm" data-noescape>
+                        ;; load class id from string object
+                        ldr r1, [r3, #-1]
+                        ubfm r1, r1, #12, #31
+                        lsl r1, r1, #1
+                        cmp r1, #0xba ;; compare cid == kTwoByteStringCid
+                        bne -&gt;2
+                        ;; Load from _OneByteString
+                     1: add tmp, r3, r2
+                        ldrb r1, [tmp, #15]
+                        mov r0, r1
+                        b -&gt;done
+                        ;; Load from _TwoByteString
+                     2: add tmp, r3, r2 lsl #1
+                        ldrh r1, [tmp, #15]
+                        mov r0, r1
+                  done:
+                        ret</code></pre>
+                        <aside class="notes">
+                            Not shown here: bound checking - because it does not fit.
+                        </aside>
+                </section>
+                <section>
+                    <h2>parse bytes not strings!</h2>
+                    <em>Dart probably needs UTF-8 backed <code>String</code>,<br> but aaaaaanyway back to JSON.</em>
+                </section>
+                <section>
+                    <pre style="font-size: .5em;"><code data-trim class="dart" data-noescape>
+                        while (...) {                      <span style="font-family: 'PragmataPro Mono';">┌-&gt;███&lt;-┐</span>
+                          if (...) {                       <span style="font-family: 'PragmataPro Mono';">|  ███  |</span>
+                            continue;                      <span style="font-family: 'PragmataPro Mono';">|  ███--┘</span>
+                          }                                <span style="font-family: 'PragmataPro Mono';">|  ███</span>
+                          if (...) {                       <span style="font-family: 'PragmataPro Mono';">|┌-███</span>
+                            return /* ... */;              <span style="font-family: 'PragmataPro Mono';">|| ███--&gt;</span> return
+                          }                                <span style="font-family: 'PragmataPro Mono';">|└&gt;███</span>
+                          if (..) {                        <span style="font-family: 'PragmataPro Mono';">|  ███-┐</span>
+                            throw /* ... */;               <span style="font-family: 'PragmataPro Mono';">|  ... |</span>
+                          }                                <span style="font-family: 'PragmataPro Mono';">|  ███ |</span>
+                        }                                  <span style="font-family: 'PragmataPro Mono';">└--███ |</span>
+                                                           <span style="font-family: 'PragmataPro Mono';">       |</span>
+                                                           <span style="font-family: 'PragmataPro Mono';">   ███&lt;┘</span>
+                                                           <span style="font-family: 'PragmataPro Mono';">   ███--&gt;</span> throw
+                    </code></pre>
+                    <em>(AOT code emition block ordering was suboptimal)</em>
+                    <aside class="notes">
+                        I knew this for a while already - because I have encountered this in other microbenchmarks. It always
+                        annoyed me to see blocks which do not belong to the loop to appear in the middle of it. But I never had
+                        time to fix it... Until now :)
+                    </aside>
+                </section>
+                <section>
+                    <pre style="font-size: .5em;"><code data-trim class="dart" data-noescape>
+                        while (...) {                      <span style="font-family: 'PragmataPro Mono';">┌-&gt;███&lt;-┐</span>
+                          if (...) {                       <span style="font-family: 'PragmataPro Mono';">|  ███  |</span>
+                            continue;                      <span style="font-family: 'PragmataPro Mono';">|  ███--┘</span>
+                          }                                <span style="font-family: 'PragmataPro Mono';">|  ███</span>
+                          if (...) {                       <span style="font-family: 'PragmataPro Mono';">|┌-███</span>
+                            return /* ... */;              <span style="font-family: 'PragmataPro Mono';">|| ░░░--&gt;</span> return
+                          }                                <span style="font-family: 'PragmataPro Mono';">|└&gt;███</span>
+                          if (..) {                        <span style="font-family: 'PragmataPro Mono';">|  ███-┐</span>
+                            throw /* ... */;               <span style="font-family: 'PragmataPro Mono';">|  ... |</span>
+                          }                                <span style="font-family: 'PragmataPro Mono';">|  ███ |</span>
+                        }                                  <span style="font-family: 'PragmataPro Mono';">└--███ |</span>
+                                                           <span style="font-family: 'PragmataPro Mono';">       |</span>
+                                                           <span style="font-family: 'PragmataPro Mono';">   ███&lt;┘</span>
+                                                           <span style="font-family: 'PragmataPro Mono';">   ███--&gt;</span> throw
+                    </code></pre>
+                </section>
+                <section>
+                    <pre>
+[vm] Use codegen block order in regalloc in AOT.
+[vm/compiler] Improve AOT block scheduler
+[vm/compiler] Move reorder_blocks onto the graph.
+                    </pre>
+                    <em>did not move the needle much (maybe ~5%)</em>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                      // In _ChunkedJsonParser.parse
+                      while (position &lt; length) {
+                        int char = getChar(position);
+                        switch (char) {
+                          case SPACE:
+                          case CARRIAGE_RETURN:
+                          case NEWLINE:
+                          case TAB:
+                            position++;
+                            break;
+                          // other characters
+                    </code></pre>
+                </section>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        // In _ChunkedJsonParser.parseString
+                        while (position < end) {
+                          int char = getChar(position++);
+                          bits |= char;
+                          if (char > BACKSLASH) continue;
+                          // Escape sequence? Use more complex parsing.
+                          if (char == BACKSLASH) return handleEscapes(...);
+                          if (char == QUOTE) return ...;  // end of string
+                          if (char < SPACE) fail(...);  // invalid json
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <h3>Similar pattern of code:</h3>
+                        <ol>
+                            <li>Read a character;</li>
+                            <li>Use a chain of <code>if</code>s to categorize it.</li>
+                        </ol>
+                        <h3 class="fragment">Idea: could use <em>lookup table</em> instead!</h3>
+                    </div>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                          do {
+                            char = getChar(position);
+                            position++;
+                            bits |= char;
+                            final attrs = <mark>_characterAttributes.codeUnitAt(char);</mark>
+                            <mark>if ((attrs & simpleStringEndBit) != 0) break;</mark>
+                          } while (position &lt; end);
+                          if (char == QUOTE) return ...; // end of string
+                          if (char == BACKSLASH) return handleEscapes(...);
+                          if (char < SPACE) fail(...); // invalid json
+                    </code></pre>
+                </section>
+                <section>
+                    <pre style="font-size: .6em;"><code data-trim class="dart" data-noescape>
+                      static const String _characterAttributes =
+                        '!!!!!!!!!##!!#!!!!!!!!!!!!!!!!!!" !                             '
+                        '                            !                                   '
+                        '                                                                '
+                        '                                                                ';
+                    </code></pre>
+                </section>
+                <section>
+                    <pre style="font-size: .6em;"><code data-trim class="dart" data-noescape>
+                      static const String _characterAttributes =
+                        // This string length is 256. If `ch` is end
+                        // a simple string (e.g. `ch` is QUOTE, BACKSLASH or a
+                        // control character, then `_characterAttributes.codeUnitAt(ch)`
+                        // will have [simpleStringEndBit] set.
+                        // Similarly if `ch` is a whitespace (SPACE, CR, LF, TAB)
+                        // then it has [whiteSpaceBit] set.
+                    </code></pre>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <h3>This helped a bit, but:</h3>
+                        <ol>
+                            <li><code>if ((attrs & simpleStringEndBit) != 0)</code> was producing bad code;</li>
+                            <li>Bounds checks on <code>getChar(position)</code> were causing code quality issues;</li>
+                            <li>Interupt checks in loop headers were eating time;</li>
+                        </ol>
+                        <h3 class="fragment">so I landed some changes first</h3>
+                    </div>
+                </section>
+                <section>
+                    <pre>
+[vm] Fix pragma vm:unsafe:no-interrupts
+[vm] Add pragma vm:unsafe:no-bounds-checks
+[vm] Enable test pattern (a&b == 0) fusion in AOT on X64/ARM64
+[vm/libs] Improve JsonUtf8Decoder performance.
+                    </pre>
+                    <em>(This improved benchmark by another ~30-40%)</em>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <pre>
+8.41% _ChunkedJsonParser.parseString
+8.36% _ChunkedJsonParser.parse
+8.07% String.hashCode
+7.14% _LinkedHashMapMixin._insert
+6.26% _ChunkedJsonParser.parseStringToBuffer
+4.56% _LinkedHashMapMixin._set
+4.36% _Utf8Decoder.convertChunked
+3.99% _JsonUtf8Parser.getString
+3.76% _LinkedHashMapMixin._findValueOrInsertPoint
+3.13% _LinkedHashMapMixin._init
+2.30% StringBuffer._addPart
+2.21% _ChunkedJsonParser.parseStringEscape
+2.19% allocateOneByteString
+1.65% dart::Instance::CheckedHandle(dart::Zone*, dart::ObjectPtr)
+1.60% dart::BootstrapNatives::DN_StringBuffer_createStringFromUint16Array(dart::Thread*, dart::Zone*, dart::NativeArguments*)
+1.58% _OperatorEqualsAndHashCode._hashCode
+1.55% _LinkedHashMapMixin.[]=
+                        </pre>
+                    </div>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <pre>
+8.41% _ChunkedJsonParser.parseString
+8.36% _ChunkedJsonParser.parse
+<mark>8.07% String.hashCode</mark>
+<mark>7.14% _LinkedHashMapMixin._insert</mark>
+6.26% _ChunkedJsonParser.parseStringToBuffer
+<mark>4.56% _LinkedHashMapMixin._set</mark>
+4.36% _Utf8Decoder.convertChunked
+3.99% _JsonUtf8Parser.getString
+<mark>3.76% _LinkedHashMapMixin._findValueOrInsertPoint</mark>
+<mark>3.13% _LinkedHashMapMixin._init</mark>
+2.30% StringBuffer._addPart
+2.21% _ChunkedJsonParser.parseStringEscape
+2.19% allocateOneByteString
+1.65% dart::Instance::CheckedHandle(dart::Zone*, dart::ObjectPtr)
+1.60% dart::BootstrapNatives::DN_StringBuffer_createStringFromUint16Array(dart::Thread*, dart::Zone*, dart::NativeArguments*)
+<mark>1.58% _OperatorEqualsAndHashCode._hashCode</mark>
+<mark>1.55% _LinkedHashMapMixin.[]=</mark>
+                        </pre>
+                    </div>
+                </section>
+                <section><pre>
+commit d91679987930f4fd6b0a5b3a3f328b30841ceea1
+Author: Slava Egorov &lt;vegorov@google.com&gt;
+Date:   Tue Aug 13 12:00:48 2024 +0000
+
+[vm/corelib] Optimize building of Maps in JSON decoder.
+
+<mark>Instead of gradually adding key-value pairs into the Map as JSON
+is being parsed collect all key values first and then allocate
+the map with appropriate capacity.</mark>
+
+Issue https://github.com/dart-lang/sdk/issues/55522
+
+TEST=ci
+
+Reviewed-on: https://dart-review.googlesource.com/c/sdk/+/374564
+Commit-Queue: Slava Egorov &lt;vegorov@google.com&gt;
+Reviewed-by: Lasse Nielsen &lt;lrn@google.com&gt;
+                </pre></section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                        $ dart compile exe json-benchmark.dart
+                        $ json-benchmark.exe github_events.json
+                        <mark>JsonUtf8Decoder: 3.5 ns/byte</mark> (~30% slower than V8)
+                        </code></pre>
+                </section>
+                <section>
+
+                    <div style="display: flex;">
+
+                        <div style="flex: 1;">
+                            <table style="font-size: .4em;">
+                                <thead>
+                                <tr><th>Input JSON</th><th>ns/byte</th><th>vs V8</th></tr>
+                                </thead>
+                                <tbody>
+                                <tr><td><code>apache_builds.json</code></td><td>3.96</td><td>155.33%</td></tr>
+                                <tr><td><code>canada.json</code></td><td>12.78</td><td>171.56%</td></tr>
+                                <tr><td><code>citm_catalog.json</code></td><td>3.92</td><td><mark class="good">101.47%</mark></td></tr>
+                                <tr><td><code>github_events.json</code></td><td>3.58</td><td>129.16%</td></tr>
+                                <tr><td><code>google_maps_api_compact_response.json</code></td><td>8.83</td><td>143.74%</td></tr>
+                                <tr><td><code>google_maps_api_response.json</code></td><td>4.97</td><td>152.82%</td></tr>
+                                <tr><td><code>gsoc-2018.json</code></td><td>2.66</td><td>133.21%</td></tr>
+                                <tr><td><code>instruments.json</code></td><td>4.67</td><td>157.52%</td></tr>
+                                <tr><td><code>marine_ik.json</code></td><td>8.01</td><td>159.51%</td></tr>
+                                <tr><td><code>mesh.json</code></td><td>6.28</td><td>137.00%</td></tr>
+                                <tr><td><code>mesh.pretty.json</code></td><td>6.16</td><td><mark class="not-good">189.29%</mark></td></tr>
+
+                                </tbody>
+                            </table>                        </div>
+
+                        <div style="flex: 1;">
+                            <table style="font-size: .4em;">
+                                <thead>
+                                <tr><th>Input JSON</th><th>ns/byte</th><th>vs V8</th></tr>
+                                </thead>
+                                <tbody>
+
+                                <tr><td><code>numbers.json</code></td><td>3.83</td><td><mark class="good">83.06%</mark></td></tr>
+                                <tr><td><code>random.json</code></td><td>7.83</td><td><mark class="good">112.51%</mark></td></tr>
+                                <tr><td><code>repeat.json</code></td><td>5.87</td><td>129.10%</td></tr>
+                                <tr><td><code>semanticscholar-corpus.json</code></td><td>6.61</td><td><mark class="good">104.84%</mark></td></tr>
+                                <tr><td><code>tree-pretty.json</code></td><td>4.93</td><td>165.25%</td></tr>
+                                <tr><td><code>twitter_api_compact_response.json</code></td><td>5.44</td><td>122.15%</td></tr>
+                                <tr><td><code>twitter_api_response.json</code></td><td>4.75</td><td>118.97%</td></tr>
+                                <tr><td><code>twitterescaped.json</code></td><td>6.51</td><td>167.86%</td></tr>
+                                <tr><td><code>twitter.json</code></td><td>5.35</td><td><mark class="good">101.65%</mark></td></tr>
+                                <tr><td><code>twitter_timeline.json</code></td><td>8.25</td><td><mark class="not-good">253.34%</mark></td></tr>
+                                <tr><td><code>update-center.json</code></td><td>5.05</td><td><mark class="good">84.21%</mark></td></tr>
+                                </tbody>
+                            </table>                        </div>
+
+                        </div>
+
+
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <p>More improvements <em>are</em> possible:</p>
+                        <ol>
+                            <li>Strings with escapes hit bad performance in <code>StringBuffer</code>;</li>
+                            <li>Can <em>intern</em> strings and speculate about the next possible <code>Map</code> key.</li>
+                        </ol>
+                        <p class="fragment">but what if we <em>rethink</em> this?</p>
+                    </div>
+                    <aside class="notes">
+                        V8 does this trick where it passes down hidden class of an array element, which allows
+                        the parser to speculate: e.g. instead of hashing a string and looking it up in some dictionary
+                        it could just compare the current key with an expected key and if they match then you have a
+                        canonical string for free.
+                    </aside>
+                </section>
+                <section>
+                    <div class="blockquote-wrapper">
+                        <div class="blockquote">
+                            <h1>
+                                Fastest piece of code is<br>
+                                the one which does not need to run.</h1>
+                            <h4>&mdash;&nbsp; zen of optimization</h4>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                    <pre><code data-trim class="cpp" data-noescape>
+                        #include "simdjson.h"
+
+                        // On-Demand JSON: A Better Way to Parse Documents?
+                        //       https://arxiv.org/abs/2312.17149
+                        // This library uses SIMD to blaze through the
+                        // document many characters at a time.
+
+                        ondemand::parser parser;
+                        ondemand::document doc = parser.iterate(json);
+                        // Extract "created_at" from 100th status.
+                        doc["statuses"][100]["created_at"]
+                        // This does not actually parse most of the document.
+                    </code></pre>
+                    <aside class="notes">
+                        I know I have said I don't want to rewrite the parser in
+                        C++ - but I also don't want to spend too much of my
+                        time reinventing the wheel :)
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                        $ dart create -t console dart_simdjson
+                        $ cd dart_simdjson
+                        $ mkdir -p src/third_party/simdjson
+                        $ curl ... # pull simdjson.{h,cpp}
+                        $ mkdir hook
+                        $ <span class="fragment custom highlight-mark">vi hook/build.dart</span>
+                    </code></pre>
+                    <aside class="notes">
+                        The code for this package is now available <a href="https://github.com/mraleph/dart_simdjson">https://github.com/mraleph/dart_simdjson</a> so you can read it there.
+                        See README.md for more information.
+                    </aside>
+                </section>
+                <section>
+                    <h1>Native Assets!</h1>
+                    <em>https://dart.dev/interop/c-interop#native-assets</em>
+                </section>
+                <section>
+                    <pre><code data-trim class="cpp" data-noescape>
+// src/simdjson_api.cpp
+extern "C" void* simdjson_parse(
+    const uint8_t* data, size_t size) {
+  ondemand::parser parser;
+  ondemand::document doc = parser.iterate(input_data, size);
+
+  // ...
+}</code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    // lib/simdjson_capi.dart
+                    @Native&lt;
+                      Pointer&lt;Void&gt; Function(Pointer&lt;Uint8&gt;, Size)
+                    &gt;()
+                    external Pointer&lt;Void&gt; simdjson_parse(
+                        Pointer&lt;Uint8&gt; buf, int len);
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        // hook/build.dart
+                        CBuilder.library(
+                          name: packageName,
+                          assetName: <mark>'simdjson_capi.dart'</mark>,
+                          language: Language.cpp,
+                          sources: [
+                            <mark>'src/simdjson_api.cpp'</mark>,
+                            'src/third_party/simdjson/simdjson.cpp',
+                          ],
+                          defines: {'SIMDJSON_EXCEPTIONS': '0'},
+                          flags: ['--std=c++20', '-O3'],
+                        );
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="bash" data-noescape>
+                        # Run in JIT mode. Will invoke build hook to build
+                        # necessary native dependencies.
+                    </code></pre>
+                    <pre><code data-trim class="console" data-noescape>
+                        $ dart --enable-experiment=native-assets run bin/benchmark.dart
+                    </code></pre>
+                    <pre><code data-trim class="bash" data-noescape>
+                        # Build in AOT mode. Will invoke build hook to build
+                        # necessary native dependencies.
+                    </code></pre>
+                    <pre><code data-trim class="console" data-noescape>
+                        $ dart --enable-experiment=native-assets build bin/benchmark.dart
+                        $ tree bin/benchmark/
+                        bin/benchmark/
+                        ├── benchmark.exe
+                        └── lib
+                            └── libdart_simdjson.so
+                    </code></pre>
+                </section>
+                <section>
+                    <div style="text-align: left;">
+                        <p>One possible way to use <code>simdjson</code>:</p>
+                        <ol>
+                            <li>Take schema and generate <em>layout descriptor</em>;</li>
+                            <li>Use <code>simdjson</code> to parse JSON and inflate it into a native object based on the descriptor.</li>
+                            <li>Dart can then takes data from native object by fixed offsets.</li>
+                        </ol>
+                    </div>
+                </section>
+                <section>
+                    <h2><code>Uint8List</code> &rArr; <code>String</code> &rArr; <code>Map</code></h2>
+                </section>
+                <section>
+                    <h2><code>Uint8List</code> &rArr; <code>Map</code></h2>
+                    <em>we removed intermediate <code>String</code></em>
+                </section>
+                <section>
+                    <h2><code>Uint8List</code> &rArr; <code>Map</code> &rArr; <code>X.fromJson</code></h2>
+                    <em><code>Map</code>s are often also just intermediary objects</em>
+                </section>
+                <section>
+                    <h2><code>Uint8List</code> &rArr; <s><code>Map</code> &rArr;</s> <code>X</code></h2>
+                    <em>So we would like to eliminate them</em>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    class Tweet {
+                      final String? created_at;
+                      final int id;
+                    }
+
+                    // binary layout:
+                    //   created_at  const char* at offset  0
+                    //   id          int64_t     at offset 16
+                    </code></pre>
+                    <aside class="notes">
+                        The slides don't fully match what was presented at the talk because I reworked the package a bit.
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    class Tweet {
+                      final Pointer&lt;Void&gt; ptr;
+
+                      Tweet._(this.ptr);
+
+                      String? get created_at =&gt; <mark>util.loadOptionalString(ptr, 0)</mark>;
+                      int get id =&gt; <mark>util.loadInt(ptr, 16)</mark>;
+
+                      factory Tweet.fromJsonBytes(Uint8List bytes) =>
+                        Tweet._(<mark>simdjson_parse(bytes, bytes.length, descriptor)</mark>);
+                      static final descriptor = 'created_at,s?,id,i!';
+                    }
+                    </code></pre>
+                    <aside class="notes">
+                        In the real package this is an extension type, but the idea is still the same.
+                    </aside>
+                </section>
+                <section>
+                    <p>Would be nice to generate with a macro!</p>
+                    <p>... but alas: you can't yet augment fields</p>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        'Tweet': {
+                          'created_at': Field.required(PrimitiveType('String')),
+                          'id': Field.required(PrimitiveType('int')),
+                          'text': Field.required(PrimitiveType('String')),
+                          'user': Field.required(CompoundType('User')),
+                           // ... 15 more fields
+                        },
+                        'User': {
+                          'id': Field.required(PrimitiveType('int')),
+                          'name': Field.required(PrimitiveType('String')),
+                          // ... 30 more fields
+                        }
+                    </code></pre>
+                    <aside class="notes">
+                        I did end up writing code generator using <code>build_runner</code> :)
+                    </aside>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                        $ dart --enable-experiment=native-assets build bin/benchmark.dart
+                        $ build/benchmark.exe twitter_timeline.json
+                        <mark>1.62 ns/byte</mark>
+                    </code></pre>
+                </section>
+                <section>
+                    <em>Program loads data which it does not access.</em>
+                </section>
+                <section>
+                    <h3>Tree shaker knows!</h3>
+                    <em>... but it can't prune descriptors</em>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        // runtime/docs/compiler/pragmas_recognized_by_compiler.md#declaring-a-static-weak-reference-intrinsic-method
+                        @pragma('weak-tearoff-reference')
+                        T Function()? weakRef&lt;T&gt;(T Function()? x) => x;
+
+                        // tldr: `weakRef(f)` will become `null` in AOT
+                        // if compiler figures out that `f` is not referenced
+                        // from anywhere else.
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                        class Tweet {
+                            static final String _descriptors = [
+                              if (<mark>_weakRef(_offsetOf$created_at) != null</mark>)
+                                'created_at,s!'
+                              else
+                                '.,s!',
+                              ...
+                            ].join(',');
+                            <mark>static int _offsetOf$created_at() =&gt; 0;</mark>
+                            String get created_at =>
+                              utils.loadString(_data, <mark>_offsetOf$created_at()</mark>);
+                        }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="console" data-noescape>
+                        $ dart --enable-experiment=native-assets build bin/benchmark.dart
+                        $ build/benchmark.exe twitter_timeline.json
+                        <mark class="good">0.70 ns/byte</mark>
+                    </code></pre>
+                    <em class="fragment">but not parsing much now: we don't access any fields :)</em>
+                </section>
+                <section>
+                    <h2>have a mental model</h2>
+                    <em>Can't improve performance if you don't understand the cost.</em>
+                </section>
+                <section>
+                    <h2>look for things to stop doing</h2>
+                    <em>That's the simplest way to optimize things.</em>
+                </section>
+                <section>
+                    <h2>Maybe <code>jsonDecode</code> is doing alright?</h2>
+                    <em>3ns/byte is ~300Mb/s. Give server-side Dart a try :)</em>
+                </section>
+                <section>
+                    <h2>pragmatic amalgamation</h2>
+                    <em>I want to write Dart but I don't want to reinvent the wheel.</em>
+                    <aside class="notes">
+                        We want Dart to interoperate as smoothly as possible with other languages so that you can have your cake (write Dart code) and eat it too (use whatever code others have already written for you).
+                    </aside>
+                </section>
+            </div>
+        </div>
+
+        <script src="dist/reveal.js"></script>
+        <script src="plugin/notes/notes.js"></script>
+        <script src="plugin/search/search.js"></script>
+        <script src="plugin/markdown/markdown.js"></script>
+        <script src="plugin/highlight/highlight.js"></script>
+        <script>
+
+            Reveal.initialize({
+                width: 1100,
+                height: 700,
+                hash: true,
+                transition: 'none',
+                backgroundTransition: 'none',
+                showNotes: true,
+
+                // Learn about plugins: https://revealjs.com/plugins/
+                plugins: [ RevealHighlight, RevealNotes ]
+            });
+
+        </script>
+
+    </body>
+</html>
