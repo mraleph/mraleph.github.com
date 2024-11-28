@@ -17,16 +17,6 @@
   <link rel="stylesheet" href="/css/blog.css" type="text/css">
   <link rel="stylesheet" href="/css/pygments.css" type="text/css">
 
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-    ga('create', 'UA-6701581-4', 'auto');
-    ga('send', 'pageview');
-  </script>
-
   <title> {{ page.title }} </title>
 </head>
 <body>
@@ -37,21 +27,13 @@
       <!-- <time datetime="{{ page.date }}">{{ page.date | date:'%d %b %Y' | downcase }}</time> -->
     </div>
     {{ content }}
-  </div>
 
-  {% unless page.nodisqus %}
-  <div class="post-comments">
-    <div id="disqus_thread"></div>
-    <script>
-    (function() {
-        var d = document, s = d.createElement('script');
-        s.src = 'https://mraleph-gh.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+    <p style="background: #f9f9f9; padding: 10px;">My blog no longer has
+    comments section. If you want to discuss
+    contents of this post you can send me an email at <code>me@mrale.ph</code>
+    or find me on <a href="https://mastodon.social/@mraleph">Mastodon</a> or
+    <a href="https://x.com/mraleph">X</a>.
+    </p>
   </div>
-  {% endunless %}
 </body>
 </html>
