@@ -238,7 +238,7 @@ compiled code.</small>
 
 It might be tempting to just plaster this pragma on the <code>main</code>, but that's
 exactly what one should <em>not</em> do. At least not when using this pragma in the
-real world (though you probably should <em>not</em> actually use it in the real world).</p>
+real world (though you probably should <em>not</em> actually use it in the real world).
 
 ```dart
 // no. NO. NO! Not a good idea.
