@@ -465,3 +465,23 @@ changed. Hopefully you, reader, too have changed and no longer believe that
 measuring a time it takes to perform 1000000000 of modulo operations and
 looking at that number alone somehow enlightens you about performance of
 some programming language.
+
+# Addendum: Is this a good benchmark?
+
+I want to highlight one important thing: **I think this is a very poor benchmark
+which does not demonstrate anything useful for the purpose of cross language
+performance comparison**. It might reveal something interesting if you dig deep
+but otherwise it is just useless garbage created to farm engagement capitalizing
+on people's emotions. People like to see their favorite languages do well on
+this sort of meaningless comparisons.
+
+The workload it performs it not meaningful: if this is the sort of workload
+you need to run in your program there are other ways to implement it which
+would be much more meaningful. You don't need these loops at all: _you can
+compute the result analytically using a formula_.
+
+When you see a benchmark like this you have two options:
+
+- walk past it and ignore it;
+- dig deep to understand what is happening, fix some serious issues (if any)
+and then ignore it;
