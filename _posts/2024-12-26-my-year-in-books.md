@@ -493,7 +493,7 @@ Game development is a famous for unsustainable schedules and people sleeping
 under desks to meet deadlines. I wanted to be a game programmer when I was
 a high-schooler - but then I discovered programming languages and never looked
 back. This book gave me a small opportunity to peak under the covers and see
-how games are made. <sidenote>For what it's worth people are also sleeping under desks in the <b>"The Soul of a New Machine"</b> or <b>"Show Stopper!: The Breakneck Race to Create Windows NT and the Next Generation at Microsoft"</b>. Things were different back in the day. Lots of passion. Unclaimed horizons.</sidenote>
+how games are made. <sidenote>For what it's worth people are also sleeping under desks in the <b>"The Soul of a New Machine"</b> or <b>"Show Stopper!: The Breakneck Race to Create Windows NT and the Next Generation at Microsoft"</b>. Things were different back in the day. Lots of passion. Unclaimed horizons. No work-life balance.</sidenote>
 
 I must admit that I have never played a single game of those described in the
 book but that did not make the book less enjoyable to read. Don't think I
@@ -781,8 +781,8 @@ distilling _Tabir_ of the world.
 
 ## Akutagawa Ryunosuke in translations by Natalia Feldman
 
-You probably heard about [Rashōmon][https://en.wikipedia.org/wiki/Rashomon]
-a famous film by [Akira Kurosava][https://en.wikipedia.org/wiki/Akira_Kurosawa],
+You probably heard about [Rashōmon](https://en.wikipedia.org/wiki/Rashomon)
+a famous film by [Akira Kurosava](https://en.wikipedia.org/wiki/Akira_Kurosawa),
 which presents that same murder story through eyes of four participants (dead
 samurai himself, his wife, bandit and a woodcutter). Their accounts are
 contradictory - obscured by lies and desire to present best versions of
