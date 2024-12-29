@@ -200,12 +200,13 @@ img.centered, .post-body > p > img:only-child {
 
 .sidenote-host { position: relative; }
 
-.sidenote {
+.sidenote, sidenote {
   color: gray;
+  font-style: normal;
 }
 
 @media (min-width: 1300px) {
-  .sidenote {
+  .sidenote, sidenote {
     margin-right: -260px;
     position: absolute;
     right: 0;
@@ -218,7 +219,7 @@ img.centered, .post-body > p > img:only-child {
 }
 
 @media (max-width: 1300px) {
-  .sidenote {
+  .sidenote, sidenote {
     display: block;
     margin-top: 0.2em;
     margin-bottom: 0.1em;
@@ -266,4 +267,24 @@ code.wrappable {
     flex: 50%;
     max-width: 50%;
   }
+}
+
+blockquote > p {
+  padding-left: 1em;
+  font-style: italic;
+}
+
+blockquote > p > em {
+  font-style: normal;
+}
+
+blockquote p:first-of-type:before {
+	content: '\201c';
+	position: absolute;
+	left: .5em;
+}
+
+blockquote p:last-of-type:after {
+	content: '\201d';
+	position: absolute;
 }
