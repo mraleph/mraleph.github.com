@@ -5,10 +5,10 @@ layout: nil
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title>mrale.ph</title>
-  <link href="http://mrale.ph"/>
-  <link type="application/atom+xml" rel="self" href="http://mrale.ph/atom.xml"/>
+  <link href="https://mrale.ph"/>
+  <link type="application/atom+xml" rel="self" href="https://mrale.ph/atom.xml"/>
   <updated>{{ site.time | date_to_xmlschema }}</updated>
-  <id>http://mrale.ph/</id>
+  <id>https://mrale.ph/</id>
   <author>
     <name>Vyacheslav Egorov</name>
     <email>me@mrale.ph</email>
@@ -16,16 +16,16 @@ layout: nil
 
   {% for post in site.posts %}
   <entry>
-    <id>http://mrale.ph{{ post.id }}</id>
-    <link type="text/html" rel="alternate" href="http://mrale.ph{{ post.url }}"/>
+    <id>https://mrale.ph{{ post.id }}</id>
+    <link type="text/html" rel="alternate" href="https://mrale.ph{{ post.url }}"/>
     <title>{{ post.title }}</title>
     <published>{{ post.date | date_to_xmlschema }}</published>
     <updated>{{ post.date | date_to_xmlschema }}</updated>
     <author>
       <name>Vyacheslav Egorov</name>
-      <uri>http://mrale.ph</uri>
+      <uri>https://mrale.ph</uri>
     </author>
-    <content type="html">&lt;a href="http://mrale.ph{{ post.url }}"&gt;read it here&lt;/a&gt;</content>
+    <content type="html">&lt;a href="https://mrale.ph{{ post.url }}"&gt;read it here&lt;/a&gt;</content>
   </entry>
   {% endfor %}
 </feed>
