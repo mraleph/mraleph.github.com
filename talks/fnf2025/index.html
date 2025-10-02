@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+
+        <title>What is an Isolate anyway?</title>
+
+        <meta name="description" content="What is an Isolate anyway?">
+        <meta name="author" content="Vyacheslav Egorov">
+
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" href="https://mralephfonts.s3.us-east-2.amazonaws.com/pp-mono-0901/pp-mono.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="dist/reset.css">
+        <link rel="stylesheet" href="dist/reveal.css">
+        <link rel="stylesheet" href="dist/theme/serif.css" id="theme">
+
+        <style>
+            .this-true {
+                color: white;
+                background: green;
+            }
+
+            .this-false {
+                color: white;
+                background: red;
+            }
+
+            .diagonal-strike {
+    /* This sets the background to a diagonal red line */
+    background-image: linear-gradient(
+      to top left,
+      transparent 47.75%,
+      red 49.5%,
+      red 50.5%,
+      transparent 52.25%
+    );
+    /* Ensures the line doesn't tile/repeat */
+    background-repeat: no-repeat;
+    /* Makes the text color black, as requested */
+    color: black;
+  }
+
+            .strikethrough {
+                position: relative;
+            }
+            .strikethrough:before {
+                position: absolute;
+                content: "";
+                left: 0;
+                top: 50%;
+                right: 0;
+                border-top: 3px solid;
+                border-color: red;
+
+                -webkit-transform:rotate(-5deg);
+                -moz-transform:rotate(-5deg);
+                -ms-transform:rotate(-5deg);
+                -o-transform:rotate(-5deg);
+                transform:rotate(-25deg);
+            }
+
+            .handwriting {
+                font-family: 'Caveat' !important;
+                font-weight: bold;
+                font-size: 1.25em;
+            }
+
+            pre.larger {
+                font-size: .9em;
+            }
+
+            mark, .attn, .reveal .slides section .fragment.highlight-mark.visible {
+  margin: 0 -0.4em;
+  padding: 0.1em 0.4em;
+  border-radius: 0.8em 0.3em;
+  background: transparent;
+  background-image: linear-gradient(to right, rgba(255, 225, 0, 0.1), rgba(255, 225, 0, 0.7) 4%, rgba(255, 225, 0, 0.3));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; }
+
+  mark.not-good, .reveal .slides section .fragment.highlight-mark-not-good.visible {
+  margin: 0 -0.4em;
+  padding: 0.1em 0.4em;
+  border-radius: 0.8em 0.3em;
+  background: transparent;
+  background-image: linear-gradient(to right, rgba(255, 0, 0, 0.1), rgba(255, 0, 0, 0.7) 4%, rgba(255, 0, 0, 0.3));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; }
+
+  mark.good {
+  margin: 0 -0.4em;
+  padding: 0.1em 0.4em;
+  border-radius: 0.8em 0.3em;
+  background: transparent;
+  background-image: linear-gradient(to right, rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0.7) 4%, rgba(0, 255, 0, 0.3));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone; }
+
+  .pp > code {
+    font-family: 'PP Mono' !important;
+    text-rendering: geometricPrecision !important;
+    line-height: 1.11em !important;
+    font-size: 1.1em;
+  }
+
+  .lefty {
+    text-align: left;
+  }
+
+  .righty {
+    text-align: right;
+  }
+
+
+        </style>
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="plugin/highlight/mono-blue.css">
+    </head>
+
+    <body>
+
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1 style="font-size: 2.5em;">What is an <code>Isolate</code> anyway?</h1>
+                    <em>by Slava Egorov (<code>@mraleph</code>)</em>
+                    <aside class="notes"></aside>
+                </section>
+                <section>
+                    <h1 style="font-size: 2.5em;">What is an <code style="transform: rotate(180deg); display: inline-block;">Isolate</code> anyway?</h1>
+                    <em>by Slava Egorov (<code>@mraleph</code>)</em>
+                    <aside class="notes"></aside>
+                </section>
+                <section>
+                    <h1 style="font-size: 2.5em;">What is an <code>Isolate</code> anyway?</h1>
+                    <em>by Slava Egorov (<code>@mraleph</code>)</em>
+                    <aside class="notes"></aside>
+                </section>
+                <section data-background-image="images/my-github.png" data-background-size="contain" data-background-position="20% 50%">
+                    <h2>👋</h2>
+                </section>
+                <section>
+                    <h2>&nbsp;</h2>
+                    <h2>I decide how Dart evolves!</h2>
+                </section>
+                <section>
+                    <h2 class="handwriting" style="color: red;">I direct creativity of the team</h2>
+                    <h2 style="text-decoration:line-through;">I decide how Dart evolves!</h2>
+                </section>
+                <section>
+                    <h2>Concurrency in Dart</h2>
+                </section>
+                <section>
+                    <h2>Dart is a single-threaded run-to-completion language.</h2>
+                </section>
+                <section>
+                    <h2>Concurrency 101</h2>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●──► CPU
+                                      ┌─────────────────────────┐
+                                    ▶ │       M e m o r y       │
+                                      └─────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ─◉─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●──► CPU
+                                      ┌─────────────────────────┐
+                                    ◀ │       M e m o r y       │
+                                      └─────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ─◉─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●──► CPU
+                                      ┌─────────────────────────┐
+                                    ▶ │       M e m o r y       │
+                                      └─────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ─●─◉─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●──► CPU
+                                      ┌─────────────────────────┐
+                                    ◀ │       M e m o r y       │
+                                      └─────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ─●─●─◉─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●──► CPU
+                                      ┌─────────────────────────┐
+                                    ▶ │       M e m o r y       │
+                                      └─────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ─●─●─●─◉─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●─●──► CPU
+                                      ┌─────────────────────────┐
+                                    ◀ │       M e m o r y       │
+                                      └─────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ├────────────────► Thread 1    ┌─────────────────────────┐
+                          <span class="fragment">├──────────────► Thread 2</span>    │       M e m o r y       │
+                            <span class="fragment">├────────────► Thread 3</span>    │                         │
+                               <span class="fragment">├─────────► Thread 4</span>    └─────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ─{Thread 1}<span class="fragment">{Thread 2}</span><span class="fragment">{Thread 3}</span><span class="fragment">{Thread 2}</span>─► CPU <span class="fragment">CORE #0</span>
+                        <span class="fragment">─{Thread 2}{Thread 3}{Thread 1}{Thread 1}─► CPU CORE #1
+                        ─────────────────────{Thread 2}───────────► CPU CORE #2
+                        ─{Thread 3}────────────────────{Thread 4}─► CPU CORE #3</span>
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ─{T1}{T2}{T3}{T2}─► CORE0  ┌─────────────────────────┐
+                        ─{T2}{T3}{T1}{T1}─► CORE1  │       M e m o r y       │
+                        ─────────{T2}─────► CORE2  │                         │
+                        ─{T3}────────{T4}─► CORE3  └─────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    var cnt = 0;
+                    void foo() {
+                      while (cnt < 100) {
+                        print('${cnt++}');
+                        sleep(const Duration(seconds: 1));
+                      }
+                    }
+                    </code></pre>
+
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        <span class="fragment" data-fragment-index="1">┌───────────────────────┐
+                        │ Isolate A             │
+                        | <span class="fragment" data-fragment-index="2">┌──────┐</span> <span class="fragment" data-fragment-index="3">┌────────┐</span>   │
+                        │ <span class="fragment" data-fragment-index="2">│ HEAP │</span> <span class="fragment" data-fragment-index="3">│ cnt: 1 │</span>   │
+                        │ <span class="fragment" data-fragment-index="2">└──────┘</span> <span class="fragment" data-fragment-index="3">└────────┘</span>   │
+                        └───────────────────────┘</span>
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    var cnt = 0;
+                    void foo() {
+                      while (cnt < 100) {
+                        print('${cnt++}');
+                        sleep(const Duration(seconds: 1));
+                      }
+                    }
+                    </code></pre>
+
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌───────────────────────┐
+                        │ Isolate A             │
+                        | ┌──────┐ ┌────────┐   │
+                        │ │ HEAP │ │ cnt: 1 │   │
+                        │ └──────┘ └────────┘   │
+                        └───────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    var cnt = 0;
+                    void foo() {
+                      while (cnt < 100) {
+                        print('${cnt++}');
+                        sleep(const Duration(seconds: 1));
+                      }
+                    }
+                    </code></pre>
+
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌───────────────────────┐
+                        │ Isolate A             │
+                        | ┌──────┐ ┌────────┐   │
+                        │ │ HEAP │ │ cnt: 2 │   │
+                        │ └──────┘ └────────┘   │
+                        └───────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    var cnt = 0;
+                    void foo() {
+                      while (cnt < 100) {
+                        print('${cnt++}');
+                        sleep(const Duration(seconds: 1));
+                      }
+                    }
+                    </code></pre>
+
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌───────────────────────┐   ┌───────────────────────┐
+                        │ Isolate A             │   │ Isolate A             │
+                        | ┌──────┐ ┌────────┐   │   | ┌──────┐ ┌────────┐   │
+                        │ │ HEAP │ │ cnt: 3 │   │   │ │ HEAP │ │ cnt: 0 │   │
+                        │ └──────┘ └────────┘   │   │ └──────┘ └────────┘   │
+                        └───────────────────────┘   └───────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    var cnt = 0;
+                    void foo() {
+                      while (cnt < 100) {
+                        print('${cnt++}');
+                        sleep(const Duration(seconds: 1));
+                      }
+                    }
+                    </code></pre>
+
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌───────────────────────┐   ┌───────────────────────┐
+                        │ Isolate A             │   │ Isolate A             │
+                        | ┌──────┐ ┌────────┐   │   | ┌──────┐ ┌────────┐   │
+                        │ │ HEAP │ │ cnt: 4 │   │   │ │ HEAP │ │ cnt: 1 │   │
+                        │ └──────┘ └────────┘   │   │ └──────┘ └────────┘   │
+                        └───────────────────────┘   └───────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    var cnt = 0;
+                    void foo() {
+                      while (cnt < 100) {
+                        print('${cnt++}');
+                        sleep(const Duration(seconds: 1));
+                      }
+                    }
+                    </code></pre>
+
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌───────────────────────┐   ┌───────────────────────┐
+                        │ Isolate A             │   │ Isolate A             │
+                        | ┌──────┐ ┌────────┐   │   | ┌──────┐ ┌────────┐   │
+                        │ │ HEAP │ │ cnt: 5 │   │   │ │ HEAP │ │ cnt: 2 │   │
+                        │ └──────┘ └────────┘   │   │ └──────┘ └────────┘   │
+                        └───────────────────────┘   └───────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌───────────┐ <span class="fragment" data-fragment-index="4">┌───────────┐</span>
+                        │ Isolate A │ <span class="fragment" data-fragment-index="4">│ Isolate B │</span>
+                        └───────────┘ <span class="fragment" data-fragment-index="4">└───────────┘</span>
+                                 <span class="fragment" data-fragment-index="2">􀇀────────────foo───────────􀇂</span>
+                        <span class="fragment" data-fragment-index="0">├───────────────────────────────────────────► Thread 1</span>
+                                 <span class="fragment" data-fragment-index="1">􀍯 enter A</span>                   <span class="fragment" data-fragment-index="3">􀍯 exit A</span>
+
+                                     <span class="fragment" data-fragment-index="4">􀇀────────────foo───────────􀇂
+                            ├────────────────────────────────────────────► Thread 2
+                                     􀍯 enter B                   􀍯 exit B</span>
+
+                    </code></pre>
+                </section>
+                <section class="lefty">
+                    <h2>Rules of Isolate Club</h2>
+                    <ol class="r-fit-text">
+                        <li class="fragment">You do not talk about Isolate Club</li>
+                        <li class="fragment">Each thread can enter at most one isolate.</li>
+                        <li class="fragment">At most one thread can enter specific isolate.</li>
+                        <li class="fragment">Isolates can't interact directly.</li>
+                    </ol>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌───────────────────────┐
+                        │ Isolate A             │
+                        |            ┌──────────┴──┐<span class="fragment" data-fragment-index="1">  􀍥Message to Port X</span>
+                        │   <span class="fragment" data-fragment-index="2">Ports ◄──</span>│ Message Box │<span class="fragment" data-fragment-index="1">◀􀏡╴Message to Port Y</span>
+                        │            └──────────┬──┘<span class="fragment" data-fragment-index="1">  􀍣Message to Port Z</span>
+                        └───────────────────────┘
+
+                                <span class="fragment" data-fragment-index="3">􀇀──────Handle Messages────􀇂
+                     ───────────────────────────────────────────► Thread
+                                􀍯 enter A                   􀍯 exit A</span>
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+
+                        ┌───────────┐────􀍱     ┌───────────┐
+                        │ Isolate A │◄──􀍱 􀍯───►│ Isolate B │
+                        └───────────┘    􀍯─────└───────────┘
+                              ▴▾     messages        ▴▾
+                          ┌───────────────────────────────┐
+                          │ Native World (e.g. async I/O) │
+                          └───────────────────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <h2 class="r-fit-text"><em>&laquo;Isolate design inspired by <b>Erlang</b>&raquo;</em></h2>
+                    <div>&mdash; Lars Bak in "Pushing the Limits of Web Browsers" (2012)</div>
+                </section>
+                <section>
+                    <h2><em>&laquo;Really?</em>  🤔 <em>&raquo;</em></h2>
+                    <div>&mdash; me, whenever I encounter that quote</div>
+                </section>
+                <section data-background-image="images/mona-lisa.png" data-background-size="contain">
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                            2010    2011    2012    2013
+                        ─────􀘁───────􀓢───────􀘁───────􀓢───────────────────────►
+                     Dart     ╲     0.x       ╲     1.0
+                               􀍯 I join V8     􀍯 I join Dart VM
+                    </code></pre>
+                    <em>design of Dart's core was complete by the time I joined the team</em>
+                </section>
+                <section data-background-image="images/what-is-dart.png" data-background-size="contain"></section>
+                <section data-background-image="images/what-is-dart-2.png" data-background-size="contain"></section>
+                <section>
+                    <h2 class="r-fit-text">JavaScript</h2>
+                </section>
+                <section>
+                    <pre><code data-trim class="javascript" data-noescape>
+                    const worker = new Worker("path/to/worker.js");
+
+                    worker.addEventListener("message", (event) => {
+                        // got message from worker: event.data
+                        worker.postMessage(responseMessage);
+                    });
+                    </code></pre>
+                </section>
+                <section>
+                    <h2 class="r-fit-text">Experience implementing VMs</h2>
+                    <p>Lars & Kasper had bad experience with Java VM (HotSpot), good experience with OOVM (aka Resilient Smalltalk) and V8</p>
+                </section>
+                <section data-background-image="images/isolate-api-docs.png" data-background-size="contain">
+                </section>
+                <section class="lefty">
+                    <h2>Problems with Isolates</h2>
+                    <ol>
+                        <li class="fragment">Developers often don't get them.</li>
+                        <li class="fragment">Issues with original design & implementation.</li>
+                    </ol>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    final HttpClient httpClient = ...;
+
+                    Future&lt;Map&lt;String, dynamic&gt;&gt; loadSomeData(Uri uri) async {
+                      return jsonDecode(await httpClient.get(uri));
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    final HttpClient httpClient = ...;
+
+                    Future&lt;Map&lt;String, dynamic&gt;&gt; loadSomeData(Uri uri) async {
+                      return <mark>jsonDecode</mark>(await httpClient.get(uri));
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    final HttpClient httpClient = ...;
+
+                    Future&lt;Map&lt;String, dynamic&gt;&gt; loadSomeData(Uri uri) async {
+                      return <mark>Isolate.run</mark>(() =>
+                          jsonDecode(await httpClient.get(uri)));
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    final HttpClient httpClient = ...;
+                    Future&lt;...&gt; loadSomeData1(Uri uri) async {
+                      return Isolate.run(() =>
+                          jsonDecode(<mark>await httpClient.get(uri)</mark>));
+                    }
+                    // PUZZLE: what is the difference?
+                    Future&lt;...&gt; loadSomeData2(Uri uri) async {
+                      <mark>final data = await httpClient.get(uri);</mark>
+                      return Isolate.run(() => jsonDecode(data));
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre style="font-size: .6em;"><code data-trim class="dart" data-noescape>
+                    <mark>final HttpClient httpClient = ...;</mark>
+                    Future&lt;...&gt; loadSomeData1(Uri uri) async {
+                      return Isolate.run(() =>
+                          jsonDecode(await httpClient.get(uri)));
+                    }
+                    // PUZZLE: what is the difference?
+                    class Foo {
+                      <mark>final HttpClient httpClient = ...;</mark>
+                      Future&lt;...&gt; loadSomeData2(Uri uri) async {
+                        return Isolate.run(() =>
+                            jsonDecode(await httpClient.get(uri)));
+                      }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre><code data-trim class="dart" data-noescape>
+                    final HttpClient httpClient = ...;
+
+                    Future&lt;Map&lt;String, dynamic&gt;&gt; loadSomeData(Uri uri) async {
+                      return <mark>Isolate.run</mark>(() =>
+                          jsonDecode(await httpClient.get(uri)));
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌────────────────┐          ┌────────────────┐
+                        │ UI Isolate     │          │ Temp Isolate   │
+                        |                │          |                │
+                        │                │ ◄─{Map}─ │                │
+                        |                │          |                │
+                        │                │          │                │
+                        │                │          │                │
+                        │                │          │                │
+                        └────────────────┘          └────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌────────────────┐          ┌────────────────┐
+                        │ UI Isolate     │          │ Temp Isolate   │
+                        | ┌─────────────┐│          | ┌─────────────┐│
+                        │ │ GC Heap     ││ ◄─{Map}─ │ │ GC Heap     ││
+                        | │             ││          | │             ││
+                        │ │             ││          │ │             ││
+                        │ │             ││          │ │             ││
+                        │ └─────────────┘│          │ └─────────────┘│
+                        └────────────────┘          └────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                        ┌────────────────┐          ┌────────────────┐
+                        │ UI Isolate     │          │ Temp Isolate   │
+                        | ┌─────────────┐│          | ┌─────────────┐│
+                        │ │ GC Heap     ││ ◄─{Map}─ │ │ GC Heap     ││
+                        | │ ┌──────────┐││          | │ ┌──────────┐││
+                        │ │ │Program   │││          │ │ │Program   │││
+                        │ │ └──────────┘││          │ │ └──────────┘││
+                        │ └─────────────┘│          │ └─────────────┘│
+                        └────────────────┘          └────────────────┘
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                                                       􀇀unpack msg􀇂
+                     ───􀔷─────────────────────────────────────────────►
+                         ╲                             ▲
+                       [spawn temp isolate]            􀍵
+                           􀍳                        {Map}
+                           ▼                         ╱
+                           ─────────────────────────􀔹─►
+                            􀇃spawning􀇅􀇃───running──􀇅
+                                          􀇃pack msg􀇅
+
+                      TotalTime = Spawn + Init + Run + Pack + Unpack
+                    </code></pre>
+                </section>
+                <section>
+                    <h1>Lightweight Isolates</h1>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+
+                        ┌────────────────┐          ┌────────────────┐
+                        │ Isolate A      │          │ Isolate B      │
+                        | ┌─────────────┐│          | ┌─────────────┐│
+                        │ │ GC Heap     ││          │ │ GC Heap     ││
+                        | │ ┌──────────┐││          | │ ┌──────────┐││
+                        │ │ │Program   │││          │ │ │Program   │││
+                        │ │ └──────────┘││          │ │ └──────────┘││
+                        │ └─────────────┘│          │ └─────────────┘│
+                        └────────────────┘          └────────────────┘
+
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                      ┌┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐
+                      ┆  Isolate Group                                  ┆
+                      ┆  ┌────────────────┐          ┌────────────────┐ ┆
+                      ┆  │ Isolate A      │          │ Isolate B      │ ┆
+                      ┆  | ┌─────────────────────────────────────────┐│ ┆
+                      ┆  │ │ GC Heap      ┌─────────┐                ││ ┆
+                      ┆  | │              │ Program │                ││ ┆
+                      ┆  │ │              └─────────┘                ││ ┆
+                      ┆  │ └─────────────────────────────────────────┘│ ┆
+                      ┆  └────────────────┘          └────────────────┘ ┆
+                      └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘
+                    </code></pre>
+                </section>
+                <section class="lefty">
+                   <h2>Isolate Groups</h2>
+                   <p>👍 Make isolates smaller and faster to start</p>
+                   <p>👍 Allow isolates to share <em>some</em> objects directly</p>
+                   <p>👍 Sending can implemented as cloning rather than serialization/deserialization.</p>
+                   <p>👍 Sending can avoid copying altogether is sender exits (<code>Isolate.exit</code> API) </p>
+                   <p>🤔 GCs are no longer independent</p>
+                   <p>🤔 There is limit on number of concurrently "running" mutators</p>
+                </section>
+                <section class="lefty">
+                   <h2>Sharing of objects</h2>
+                   <ul>
+                     <li>Compile time constants</li>
+                     <li>Deeply immutable objects (e.g. <code>String</code> or objects marked with <code>@pragma('vm:deeply-immutable')</code>)</li>
+                   </ul>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                                                       􀇀unpack msg􀇂
+                     ───􀔷─────────────────────────────────────────────►
+                         ╲                             ▲
+                       [spawn temp isolate]            􀍵
+                           􀍳                        {Map}
+                           ▼                         ╱
+                           ─────────────────────────􀔹─►
+                            􀇃spawning􀇅􀇃───running──􀇅
+                                          􀇃pack msg􀇅
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                    &nbsp;
+                     ───􀔷─────────────────────────────────────────────►
+                         ╲                     ▲
+                       [spawn temp isolate]    􀍵
+                           􀍳                {Map} [passed directly]
+                           ▼                 ╱
+                           ─────────────────􀔹─►
+                            􀇃􀇅􀇃───running──􀇅
+                                      􀇃exit􀇅
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>How do Isolates actually run?</h2>
+                </section>
+                <section class="lefty">
+                    <ul>
+                    <li>Isolates created by <code>Isolate.spawn/spawnUri</code> are running on a thread pool managed by Dart runtime</li>
+                    <li>Isolates created by the embedder (e.g. Flutter) run where it wants them to run.</li>
+                    </ul>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                      ─────────────────────────► flutter ui thread #1
+                       􀇃UI isolate #1 runs􀇅
+                    <span class="fragment">      ─────────────────────► flutter ui thread #2
+                           􀇃UI isolate #2 runs􀇅</span>
+
+                    <span class="fragment">───────────────────────────► platform (ui) thread</span>
+                    <span class="fragment"> 􀍯 Many OS APIs are "bound" to this thread.</span>
+                    <span class="fragment"> 􀍯 That's where platform channels handle messages (by default).</span>
+                    </code></pre>
+                </section>
+                <section class="lefty">
+                    <h3>Synchronous interoperability chasm</h3>
+                    <ul>
+                        <li>Some APIs are bound to the platform thread.</li>
+                        <li>Some APIs can call you back on arbitrary thread.</li>
+                        <li class="fragment">Isolates can't ignore existence of threads if we want better interop.</li>
+                    </ul>
+                </section>
+                <section class="lefty">
+                    <h3>Crossing the chasm</h3>
+                    <ul>
+                        <li>Some APIs are bound to the platform thread. <p style="padding-left: 1em;" class="fragment">&rArr; Bind UI isolate to this thread as well (aka <b>Issue #150525</b> <em>Merge the platform and UI threads</em>)</p></li>
+                        <li>Some APIs can call you back on arbitrary thread.
+                            <p style="padding-left: 1em;" class="fragment">&rArr; 🤔</p>
+                        </li>
+
+                    </ul>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                      ─────────────────────────► flutter ui thread #1
+                       􀇃UI isolate #1 runs􀇅
+                          ─────────────────────► flutter ui thread #2
+                           􀇃UI isolate #2 runs􀇅
+
+                    ───────────────────────────► platform (ui) thread
+                      􀍯 handles platform messages
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                      &nbsp;
+
+
+
+                       􀍲 runs all ui isolates
+                    ───────────────────────────► platform (ui) thread
+                      􀍯 handles platform messages
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>Merged threads is a WIP</h2>
+                    <h4>Though mostly done. Opt-outs will be removed this year.</h4>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                      ─────────────────────────► thread #1
+
+                      ──────􀔷──────────────────► thread #2
+                             􀍯 wants to call into Dart
+                      ─────────────────────────► thread #3
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>For async cases we have <code>NativeCallable.listener</code>.</h3>
+                    <small>(converts native invocation into a message to a target isolate)</small>
+                </section>
+                <section class="lefty">
+                    <h3>We need an <code>Isolate</code>! But which?</h3>
+                    <ul>
+                        <li class="fragment">🤔 Use specific isolate. <p style="padding-left: 1em;" class="fragment">&rArr; Need to wait and target isolate might be bound to specific thread, so can't just enter it</p></li>
+                        <li class="fragment">🤔 Use temporary ephemeral isolate
+                            <p style="padding-left: 1em;" class="fragment">&rArr; Everything works, but state resets between each call which is surprising.</p>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>🚨 experiments ahead 🚨</h2>
+                </section>
+                <section>
+                    <h2>shared memory multithreading</h2>
+                </section>
+                <section>
+                    <pre class="smaller" style=""><code data-trim class="dart" data-noescape>
+                    class Cup {  Drink? drink;  }
+                    class Drink { final int volume; Drink(this.volume); }
+
+                    void test() {
+                      final cup = Cup();
+                      final sharedCup = share(cup);
+                      Isolate.run(() => barista(sharedCup.value));
+                      drinker(cup);
+                    }
+                    </code></pre>
+                    <pre class="smaller" style="float: left; width: 50%"><code data-trim class="dart" data-noescape>
+                    void barista(Cup cup) {
+                      while (true) {
+                        cup.drink = Drink(42);
+
+                        // Spin until it is taken.
+                        while (cup.drink != null)
+                          microNap();
+                      }
+                    }</code></pre>
+                    <pre class="smaller" style="float: right; width: 50%"><code data-trim class="dart" data-noescape>
+                    void drinker(Cup cup) {
+                      while (true) {
+                        // Spin until we have a drink
+                        while (cup.drink == null)
+                          microNap();
+
+                        final drink = cup.drink!;
+                        cup.drink = null;
+                        if (drink.volume != 42) {
+                          throw "¯\_(ツ)_/¯";
+                        }
+                      }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="smaller" style=""><code data-trim class="dart" data-noescape>
+                    <mark>class Cup {  Drink? drink;  }
+                    class Drink { final int volume; Drink(this.volume); }</mark>
+
+                    void test() {
+                      final cup = Cup();
+                      final sharedCup = share(cup);
+                      Isolate.run(() => barista(sharedCup.value));
+                      drinker(cup);
+                    }
+                    </code></pre>
+                    <pre class="smaller" style="float: left; width: 50%"><code data-trim class="dart" data-noescape>
+                    void barista(Cup cup) {
+                      while (true) {
+                        cup.drink = Drink(42);
+
+                        // Spin until it is taken.
+                        while (cup.drink != null)
+                          microNap();
+                      }
+                    }</code></pre>
+                    <pre class="smaller" style="float: right; width: 50%"><code data-trim class="dart" data-noescape>
+                    void drinker(Cup cup) {
+                      while (true) {
+                        // Spin until we have a drink
+                        while (cup.drink == null)
+                          microNap();
+
+                        final drink = cup.drink!;
+                        cup.drink = null;
+                        if (drink.volume != 42) {
+                          throw "¯\_(ツ)_/¯";
+                        }
+                      }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="smaller" style=""><code data-trim class="dart" data-noescape>
+                    class Cup {  Drink? drink;  }
+                    class Drink { final int volume; Drink(this.volume); }
+
+                    void test() {
+                      <mark>final cup = Cup();
+                      final sharedCup = <u>share</u>(cup);  // puzzle: implement this
+                      Isolate.run(() => barista(sharedCup.value));
+                      drinker(cup);</mark>
+                    }
+                    </code></pre>
+                    <pre class="smaller" style="float: left; width: 50%"><code data-trim class="dart" data-noescape>
+                    void barista(Cup cup) {
+                      while (true) {
+                        cup.drink = Drink(42);
+
+                        // Spin until it is taken.
+                        while (cup.drink != null)
+                          microNap();
+                      }
+                    }</code></pre>
+                    <pre class="smaller" style="float: right; width: 50%"><code data-trim class="dart" data-noescape>
+                    void drinker(Cup cup) {
+                      while (true) {
+                        // Spin until we have a drink
+                        while (cup.drink == null)
+                          microNap();
+
+                        final drink = cup.drink!;
+                        cup.drink = null;
+                        if (drink.volume != 42) {
+                          throw "¯\_(ツ)_/¯";
+                        }
+                      }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="smaller" style=""><code data-trim class="dart" data-noescape>
+                    class Cup {  Drink? drink;  }
+                    class Drink { final int volume; Drink(this.volume); }
+
+                    void test() {
+                      final cup = Cup();
+                      final sharedCup = share(cup);
+                      Isolate.run(() => barista(sharedCup.value));
+                      drinker(cup);
+                    }
+                    </code></pre>
+                    <pre class="smaller" style="float: left; width: 50%"><code data-trim class="dart" data-noescape>
+                    void barista(Cup cup) {
+                      while (true) {
+                        <mark>cup.drink = Drink(42);
+
+                        // Spin until it is taken.
+                        while (cup.drink != null)
+                          microNap();</mark>
+                      }
+                    }</code></pre>
+                    <pre class="smaller" style="float: right; width: 50%"><code data-trim class="dart" data-noescape>
+                    void drinker(Cup cup) {
+                      while (true) {
+                        // Spin until we have a drink
+                        while (cup.drink == null)
+                          microNap();
+
+                        final drink = cup.drink!;
+                        cup.drink = null;
+                        if (drink.volume != 42) {
+                          throw "¯\_(ツ)_/¯";
+                        }
+                      }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="smaller" style=""><code data-trim class="dart" data-noescape>
+                    class Cup {  Drink? drink;  }
+                    class Drink { final int volume; Drink(this.volume); }
+
+                    void test() {
+                      final cup = Cup();
+                      final sharedCup = share(cup);
+                      Isolate.run(() => barista(sharedCup.value));
+                      drinker(cup);
+                    }
+                    </code></pre>
+                    <pre class="smaller" style="float: left; width: 50%"><code data-trim class="dart" data-noescape>
+                    void barista(Cup cup) {
+                      while (true) {
+                        cup.drink = Drink(42);
+
+                        // Spin until it is taken.
+                        while (cup.drink != null)
+                          microNap();
+                      }
+                    }</code></pre>
+                    <pre class="smaller" style="float: right; width: 50%"><code data-trim class="dart" data-noescape>
+                    void drinker(Cup cup) {
+                      while (true) {
+                        <mark>// Spin until we have a drink
+                        while (cup.drink == null)
+                          microNap();
+
+                        final drink = cup.drink!;
+                        cup.drink = null;
+                        if (drink.volume != 42) {
+                          throw "¯\_(ツ)_/¯";
+                        }</mark>
+                      }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <pre class="smaller" style=""><code data-trim class="dart" data-noescape>
+                    class Cup {  Drink? drink;  }
+                    class Drink { final int volume; Drink(this.volume); }
+
+                    void test() {
+                      final cup = Cup();
+                      final sharedCup = share(cup);
+                      Isolate.run(() => barista(sharedCup.value));
+                      drinker(cup);
+                    }
+                    </code></pre>
+                    <pre class="smaller" style="float: left; width: 50%"><code data-trim class="dart" data-noescape>
+                    void barista(Cup cup) {
+                      while (true) {
+                        cup.drink = <mark>Drink(42)</mark>;
+
+                        // Spin until it is taken.
+                        while (cup.drink != null)
+                          microNap();
+                      }
+                    }</code></pre>
+                    <pre class="smaller" style="float: right; width: 50%"><code data-trim class="dart" data-noescape>
+                    void drinker(Cup cup) {
+                      while (true) {
+                        // Spin until we have a drink
+                        while (cup.drink == null)
+                          microNap();
+
+                        final drink = cup.drink!;
+                        cup.drink = null;
+                        <mark>if (drink.volume != 42) {
+                          throw "¯\_(ツ)_/¯";
+                        }</mark>
+                      }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>Multithreading is hard.</h2>
+                </section>
+                <section>
+                    <h2>Ecosystem is not ready for it.</h2>
+                </section>
+                <section>
+                    <pre style="font-size: .5em"><code data-trim class="dart" data-noescape>
+                    // Something as innocent looking as [].toString():
+                    class Iterable&lt;E&gt; {
+                      static String iterableToFullString(...) {
+                        if (isToStringVisiting(iterable)) {
+                          return /* ... */;
+                        }
+                        toStringVisiting.add(iterable);
+                        try {
+                          // ...
+                        } finally {
+                          toStringVisiting.removeLast();
+                        }
+                      }
+                    }
+                    /// A collection used to identify cyclic lists during `toString` calls.
+                    <mark>final List&lt;Object&gt; toStringVisiting = [];</mark>
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>Small steps...</h2>
+                </section>
+                <section>
+                    <h2>shared <em>native</em> memory multithreading</h2>
+                </section>
+                <section>
+                    <pre class="pp"><code data-trim data-noescape class="console">
+                      ─────────────────────────► thread #1
+
+                      ──────􀔷──────────────────► thread #2
+                             􀍯 wants to call into Dart
+                      ─────────────────────────► thread #3
+                    </code></pre>
+                </section>
+                <section>
+                    <h3>💡 Don't use an isolate at all!</h3>
+                    <h4 class="fragment">Allow thread to enter <em>Isolate Group</em> instead</h4>
+                </section>
+                <section class="lefty">
+                    <h4><code>NativeCallable.isolateGroupBound(callback)</code></h4>
+                    <p><code>callback</code> executes almost like any other Dart code - but when you try to access global static state you get an exception.</p>
+                </section>
+                <section class="lefty">
+                    <h4><code>@pragma('vm:shared')</code></h4>
+                    <p>Allow static state to be shared across all isolates in a group - if it does not circumvent isolation boundaries (= no mutable Dart state yet).</p>
+                </section>
+                <section>
+                    <pre style=""><code data-trim class="dart" data-noescape>
+                    @pragma('vm:shared') Pointer&lt;SomeStruct&gt; data;
+
+                    void doSomething() {
+                      // Spawn 10 native threads all working on the same
+                      // data.
+                      for (var i = 0; i < 10; i++) {
+                        pthread_create(NativeCallable.isolateGroupBound((_) {
+                          doSomethingWith(data);
+                        }));
+                      }
+                    }
+                    </code></pre>
+                </section>
+                <section>
+                    <h2>We are still figuring out details...</h2>
+                </section>
+                <section class="lefty">
+                    <h3>What about the Web?</h3>
+                    <ul>
+                        <li class="fragment">Ironically <code>dart:isolate</code> support on the Web was removed in Dart 2.0</li>
+                        <li class="fragment">Not enough capabilities to fully replicate Isolate Groups on the Web.</li>
+                        <li class="fragment">We might be able to replicate shared <em>native</em> memory multithreading: JS has SABs</li>
+                        <li class="fragment">Real solution might arrive via WebAssembly's <em>Shared-Everything Threads Proposal</em></li>
+                    </ul>
+                </section>
+                <section>
+                    <h1>Thank you!</h1>
+                    <p>(Find me if you think you know answers to my puzzles)</p>
+                </section>
+            </div>
+        </div>
+
+        <script src="dist/reveal.js"></script>
+        <script src="plugin/notes/notes.js"></script>
+        <script src="plugin/search/search.js"></script>
+        <script src="plugin/markdown/markdown.js"></script>
+        <script src="plugin/highlight/highlight.js"></script>
+        <script>
+
+            Reveal.initialize({
+                width: 1100,
+                height: 700,
+                hash: true,
+                transition: 'none',
+                backgroundTransition: 'none',
+                showNotes: false,
+                controls: false,
+
+                // Learn about plugins: https://revealjs.com/plugins/
+                plugins: [ RevealHighlight, RevealNotes ]
+            });
+
+        </script>
+
+    </body>
+</html>
