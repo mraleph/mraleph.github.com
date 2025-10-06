@@ -1,10 +1,13 @@
 permalink: /blog/:year/:month/:day/:title.html
 markdown: kramdown
 highlighter: rouge
-exclude: ["js/MathJax-2.4-latest", "vendor"]
+exclude: ["js/MathJax-2.4-latest", "vendor", "README.md", "node_modules"]
+collections:
+  talks:
+    output: false
 plugins:
   - jekyll-redirect-from
   - jekyll-feed
-sass:
-  sass_dir: _sass
-  style: compact
+# sass:
+#  sass_dir: _sass
+#  style: compact

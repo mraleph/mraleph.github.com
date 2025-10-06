@@ -7,8 +7,8 @@
   line-height: initial;
 
   pre {
-    --bg: #fff;
-    --fg: #000;
+    --fg: #111111;
+    --bg: #fffff8;
     --comment: #6a737d;
     --punctuation: inherit;
     --operator: inherit;
@@ -19,6 +19,7 @@
     --numeric-constant: #005cc5;
 
     padding: 1em;
+    padding-top: 0em;
     background: var(--bg);
     color: var(--fg);
 

@@ -1,35 +1,20 @@
 ---
+layout: main
 ---
 
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-<html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link href="/atom.xml" rel="alternate" title="atom feed" type="application/atom+xml">
-<title>mraleph</title>
-<link rel="stylesheet" href="/css/main.css" type="text/css">
+{% assign allItems = site.posts | concat: site.talks | sort: "date" | reverse %}
+{% assign postsByYear = allItems | group_by_exp:"post", "post.date | date: '%Y'" %}
 
+{% for item in allItems %}
+  <div>{{item.path}} - {{item.date}} - {{ item.date | date: '%Y'}} - {{item.layout}}</div>
+{% endfor %}
 
-  <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-6701581-4']);
-    _gaq.push(['_trackPageview']);
+{% for year in postsByYear %}
+<h1 class="border-t-3 equity-caps font-bold text-2xl my-6">{{ year.name }}</h1>
+<div class="lg:grid lg:grid-cols-3 lg:gap-3">
+  {% for post in year.items %}
+    {% include post_ref.html post=post %}
+  {% endfor %}
+</div>
+{% endfor %}
 
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-  </script>
-</head>
-<body>
-  <div class="box">
-    <p style="font-size: 16pt;">My posts:</p>
-    {% for post in site.posts %}
-      <article>
-        <time datetime="{{ page.date }}" style="color: grey;">{{ post.date | date:'%d %b %Y' | downcase }}</time> <a href="{{ post.url }}">{{ post.title }}</a>
-      </article>
-    {% endfor %}
-  </div>
-</body>
-</html>

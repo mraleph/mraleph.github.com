@@ -156,7 +156,7 @@ and help them interpret the results.
 
 I have forked `benchmark_harness` package into [`mraleph/benchmark_harness`](https://github.com/mraleph/benchmark_harness) on GitHub. All of my <em>prototype</em> code is going to live in a new [`experimental-cli`](https://github.com/mraleph/benchmark_harness/tree/experimental-cli) branch in the fork.
 
-<p style="background: rgba(204, 0, 0, .2); padding: .5em;">From here on I will document an evolution of this experimental benchmarking CLI. I would like to stress a highly experimental nature of this tooling: as you will notice that some of its features will end up depending on a patches to Dart and Flutter SDK internals. It might be weeks or months before these patches land and it will become possible to just merge my changes into upstream version of the harness.</p>
+<p class="warn">From here on I will document an evolution of this experimental benchmarking CLI. I would like to stress a highly experimental nature of this tooling: as you will notice that some of its features will end up depending on a patches to Dart and Flutter SDK internals. It might be weeks or months before these patches land and it will become possible to just merge my changes into upstream version of the harness.</p>
 
 I started by adding a trivial `bin/benchmark_harness.dart` script which would
 serve as an entry point to our new benchmarking tooling.
@@ -558,9 +558,9 @@ Future<void> runBenchmarks(Map<String, void Function(int)> benchmarks) async {
 NDK also comes with a helper script `api_profiler.py`, which implements two
 commands:
 
-* `api_profiler.py prepare` configures your device for profiling - we are going
+1. `api_profiler.py prepare` configures your device for profiling - we are going
 to call it before running benchmarks;
-* `api_profiler.py collect` pulls collected profiles from the device - we
+2. `api_profiler.py collect` pulls collected profiles from the device - we
 are going to call it after all benchmarks finish running to pull all generated
 `perf-*.data` from the device.
 
@@ -763,10 +763,10 @@ IL from which a particular piece of machine code was produced.
 I have experimented with two different paths I considered taking to get this
 information out of the AOT compiler:
 
-- add a flag `--write-code-comments-to=output.json` which tells compiler to dump
+1. add a flag `--write-code-comments-to=output.json` which tells compiler to dump
 offset-to-comment mapping into a JSON file and then ingest this JSON in our
 benchmarking CLI.
-- add a flag `--write-code-comments-as-synthetic-source-to=comments.txt` which
+2. add a flag `--write-code-comments-as-synthetic-source-to=comments.txt` which
 tells compiler to synthesize one gigantic file out of all code comments and
 write offset-to-comment mapping as a DWARF line program into `.debug_line`
 section.
@@ -904,7 +904,7 @@ array allocations.
 The empty loop however is far from trivial. It seems to contain two sources of
 overhead by itself:
 
-* Variable `numIterations` seems to be  unboxed and reboxed on each loop iteration, as evident from the following sequence of instructions that implements `numIterations--`:
+1. Variable `numIterations` seems to be  unboxed and reboxed on each loop iteration, as evident from the following sequence of instructions that implements `numIterations--`:
     <div class="highlighter-rouge language-console highlight"><pre><code><span class="c">;; CheckNull:10(v3, NoSuchMethodError) T{int}</span>
 18: <span class="k">cmp</span> <span class="nv">x2</span>, <span class="nv">null</span>
 1c: <span class="k">b.eq</span> <span class="nb">-&gt;68</span>
@@ -920,7 +920,7 @@ overhead by itself:
 3c: <span class="k">b.vc</span> <span class="nb">-&gt;48</span>
 40: <span class="k">bl</span> <span class="nb">Stub::AllocateMintSharedWithoutFPURegsStub</span>
 44: <span class="k">stur</span> <span class="nv">x2</span>, [<span class="nv">x0</span>, <span class="mi">#7</span>]</code></pre></div>
-* Loop header contains a `CheckStackOverflow` instruction which performs a memory load and a comparison on each loop iteration.
+2. Loop header contains a `CheckStackOverflow` instruction which performs a memory load and a comparison on each loop iteration.
     <div class="highlighter-rouge language-console highlight"><pre><code><span class="c">;; CheckStackOverflow:30(stack=0, loop=1)</span>
 24: <span class="k">ldr</span> <span class="nv">x16</span>, [<span class="nv">thr</span>, <span class="mi">#64</span>]
 28: <span class="k">cmp</span> <span class="nv">sp</span>, <span class="nv">x16</span>
@@ -1119,13 +1119,13 @@ In the Part 2 of the series I am going to use benchmarking harness CLI, I have
 just implemented to answer more performance questions I have gotten on Twitter,
 for example:
 
-* how changing field initializer from `[]` to `List.filled(0, null)` can improve
+1. how changing field initializer from `[]` to `List.filled(0, null)` can improve
 performance of your code;
-* performance characteristics of `async` syntax sugar;
-* what happens when you call a closure through a dynamically typed variable;
+2. performance characteristics of `async` syntax sugar;
+3. what happens when you call a closure through a dynamically typed variable;
 
 Till next time.
 
-<p style="background: rgba(204, 0, 0, .2); padding: .5em;">I am always available
+<p class="warn">I am always available
 to help you with Dart related performance questions and concerns. Do not hesitate
 to reach out to me by mail or through other channels like Twitter.</p>

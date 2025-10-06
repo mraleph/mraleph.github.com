@@ -14,25 +14,34 @@
     <link href='{{ stylesheet }}' rel='stylesheet' type='text/css'>
   {% endfor %}
 
-  <link rel="stylesheet" href="/css/blog.css" type="text/css">
+  <!-- <link rel="stylesheet" href="/css/blog.css" type="text/css"> -->
+  <link rel="stylesheet" href="/assets/css/main.css" type="text/css">
   <link rel="stylesheet" href="/css/pygments.css" type="text/css">
+  <link rel="stylesheet" href="/assets/css/fonts/mbtype/equity-light.css" type="text/css">
+  <link rel="stylesheet" href="/assets/css/fonts/mbtype/concourse-index.css" type="text/css">
 
   <title> {{ page.title }} </title>
 </head>
-<body>
+<body class="bg-tw text-tb pt-6 w-full blogpost">
+  <div class="flex lg:justify-center max-lg:px-6 w-full max-w-full">
+    <div class="w-full lg:max-w-[800px] md:text-xl relative">
+      <div class="title">
+        <div class="border-t-3">
+          <div class="mb-2"> {{ page.title }} </div>
+          <time class="text-lg lowercase text-tbg" datetime="{{ page.date }}">{{ page.date | date:'%d %b %Y' | downcase }}</time>
 
-  <div class="post-body">
-    <div class="post-title">
-      <div> {{ page.title }} </div>
-      <!-- <time datetime="{{ page.date }}">{{ page.date | date:'%d %b %Y' | downcase }}</time> -->
+        </div>
+      </div>
+      {{ content }}
+
+      <p class="comments">
+        <span>Comments?</span>
+
+        Drop me a mail <code>me@mrale.ph</code> or find me on
+        <a href="https://mastodon.social/@mraleph">Mastodon</a>,
+        <a href="https://x.com/mraleph">X</a> or <a href="https://bsky.app/profile/mrale.ph">Bluesky</a>.
+      </p>
     </div>
-    {{ content }}
-
-    <p style="background: rgba(255, 229, 180, 0.5); padding: 10px;"><b>Want to discuss
-    contents of this post?</b> Drop me a mail <code>me@mrale.ph</code> or find me on
-    <a href="https://mastodon.social/@mraleph">Mastodon</a>,
-    <a href="https://x.com/mraleph">X</a> or <a href="https://bsky.app/profile/mrale.ph">Bluesky</a>.
-    </p>
   </div>
 </body>
 </html>

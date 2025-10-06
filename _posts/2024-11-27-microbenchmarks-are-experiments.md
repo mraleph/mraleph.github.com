@@ -20,12 +20,12 @@ lo and behold, these two numbers reveal you all you need to know about
 Dart and C performance. The rest of the day can be spent browsing numerological
 magazines for the meaning of your date of birth...
 
-<p class="sidenote-host">Benchmarks are not numerology. Their results are not a divine revelation.
-Benchmarks are <em>experiments</em>. Their results are meaningless without
+Benchmarks are not numerology. Their results are not a divine revelation.
+Benchmarks are _experiments_. Their results are meaningless without
 interpretation and validation. Our understanding of performance is
 driven by the same cyclic process that drives science in general:
 you formulate a hypothesis, you devise the experiment, you analyze the results,
-you adjust the hypothesis and repeat.<small class="sidenote"><a href="https://en.wikipedia.org/wiki/Zen_and_the_Art_of_Motorcycle_Maintenance">"Zen and The Art of Motorcycle Maintenance"</a> has a pretty good <a href="https://kkh.ltrr.arizona.edu/kkh/natsgc/PDFs-2013/Robert-Pirsig-On-Scientific-Method.pdf" target="_blank">description of scientific method</a>, which I think every programmer should read and will likely benefit from.</small></p>
+you adjust the hypothesis and repeat. <sidenote><a href="https://en.wikipedia.org/wiki/Zen_and_the_Art_of_Motorcycle_Maintenance">"Zen and The Art of Motorcycle Maintenance"</a> has a pretty good <a href="https://kkh.ltrr.arizona.edu/kkh/natsgc/PDFs-2013/Robert-Pirsig-On-Scientific-Method.pdf" target="_blank">description of scientific method</a>, which I think every programmer should read and will likely benefit from.</sidenote>
 
 I hope next time you see a cool benchmark animation on your favorite social
 network your first question will rather be _"Why have the author spent time
@@ -58,8 +58,7 @@ void main(List<String> args) {
 }
 ```
 
-<p class="sidenote-host">JavaScript version is:
-<small class="sidenote">The code is slightly modified compared to the original to make it directly runnable in JavaScriptCore shell: <code>console.log</code> became <code>print</code> and <code>process.argv[2]</code> became <code>arguments[0]</code></small></p>
+JavaScript version is: <sidenote>The code is slightly modified compared to the original to make it directly runnable in JavaScriptCore shell: <code>console.log</code> became <code>print</code> and <code>process.argv[2]</code> became <code>arguments[0]</code></sidenote>
 
 ```js
 var u = Number(arguments[0]);           // Get an input number from the command line
@@ -74,10 +73,10 @@ for (let i = 0; i < 10000; i++) {          // 10k outer loop iterations
 print(a[r]);                         // Print out a single element from the array
 ```
 
-<p class="sidenote-host">Running this on nightly versions of Dart and JavaScriptCore yields the
-following:<small class="sidenote">You might be surprised that a former V8 engineer
+Running this on nightly versions of Dart and JavaScriptCore yields the
+following: <sidenote>You might be surprised that a former V8 engineer
 like me is using JSC for benchmarking here, but that's simply because JSC was
-fastest of two runtimes. Thus it makes sense to look at what it does.</small></p>
+fastest of two runtimes. Thus it makes sense to look at what it does.</sidenote>
 
 ```console
 $ dart compile exe -o dart/code.exe dart/code.dart
@@ -178,7 +177,7 @@ loop:
   b ->loop
 ```
 
-<p class="sidenote-host">JavaScriptCore does this for comparison:<small class="sidenote">I have stripped information about DFG/B3/Air IL levels because it makes output too verbose for an unprepared eye. Full output for both Dart and JSC is available <a href="https://gist.github.com/mraleph/f0b7addc93b81b598c1b97088c9b1f14" target="_blank">here</a></small></p>
+JavaScriptCore does this for comparison:<sidenote>I have stripped information about DFG/B3/Air IL levels because it makes output too verbose for an unprepared eye. Full output for both Dart and JSC is available <a href="https://gist.github.com/mraleph/f0b7addc93b81b598c1b97088c9b1f14" target="_blank">here</a></sidenote>
 
 ```armasm
 loop:
@@ -218,7 +217,7 @@ DFG dump:
   interrupt checks are inserted to allow VM to interrupt long running code
   to perform various activities (e.g. OOB message delivery or GC).
 
-<p class="sidenote-host">The last item is the most interesting to me. I have always known that the cost
+The last item is the most interesting to me. I have always known that the cost
 of interrupt checks inserted into all loops tends to add up if these loops are
 very tight. I periodically come back to this and discuss with my colleagues
 various possible optimizations we could apply here, but so far we have not
@@ -226,15 +225,14 @@ come up with something that would be fairly simple to implement and would
 significantly improve the performance. Instead, I have added an escape hatch:
 <code>@pragma('vm:unsafe:no-interrupts')</code> can tell the compiler that it should
 omit interrupt checks on the loops inside the function.
-<small class="sidenote">JSC uses a combination of signals and code patching to
+<sidenote>JSC uses a combination of signals and code patching to
 interrupt JIT compiled code: a signal is sent to interrupt the thread, if thread
 is executing JIT compiled code that code will be patched to go into runtime
-system when signal handler completes. See <a href="https://github.com/WebKit/WebKit/blob/d4f357221ebcba32b6c44fe274654c3c387ec810/Source/JavaScriptCore/runtime/VMTraps.cpp" target="_blank"><code>VMTraps.cpp</code></a> and <a href="https://github.com/WebKit/WebKit/blob/d4f357221ebcba32b6c44fe274654c3c387ec810/Source/JavaScriptCore/dfg/DFGJumpReplacement.cpp#L44" target="_blank"><code>JumpReplacement::installVMTrapBreakpoint</code></a>.
+system when signal handler completes. See <a href="https://github.com/WebKit/WebKit/blob/d4f357221ebcba32b6c44fe274654c3c387ec810/Source/JavaScriptCore/runtime/VMTraps.cpp" target="_blank"><code>VMTraps.cpp</code></a> and <a href="https://github.com/WebKit/WebKit/blob/d4f357221ebcba32b6c44fe274654c3c387ec810/Source/JavaScriptCore/dfg/DFGJumpReplacement.cpp#L44" target="_blank"><code>JumpReplacement&ZeroWidthSpace;::&ZeroWidthSpace;installVMTrapBreakpoint</code></a>.
 For environments where code patching is not an option JSC also supports a
 <em>polling based</em>
 interruption mechanism which works by inserting explicit checks into the JIT
-compiled code.</small>
-</p>
+compiled code.</sidenote>
 
 It might be tempting to just plaster this pragma on the <code>main</code>, but that's
 exactly what one should <em>not</em> do. At least not when using this pragma in the
@@ -248,14 +246,14 @@ void main(List<String> args) {
 }
 ```
 
-<p class="sidenote-host"><small class="sidenote">Other Dart VM specific pragmas are documented <a href="https://github.com/dart-lang/sdk/blob/main/runtime/docs/pragmas.md" target="_blank">here</a>. Those with <code>unsafe</code> in their names are intended to be used with
-caution - only if you fully understand the <em>implications</em> associated with them.</small></p>
-
 Your reasoning should go like this: `main` has two nested loops, and executes
 for ~2seconds. Making it uninterruptible for the whole two seconds is not a
 good idea. What if VM needs to trigger a GC in some other isolate in the same
 isolate group? _That GC would have to wait whole 2 seconds, blocking the
 whole isolate group._ Not a good idea. Instead, you could do the following:
+
+<sidenote>Other Dart VM specific pragmas are documented <a href="https://github.com/dart-lang/sdk/blob/main/runtime/docs/pragmas.md" target="_blank">here</a>. Those with <code>unsafe</code> in their names are intended to be used with
+caution - only if you fully understand the <em>implications</em> associated with them.</sidenote>
 
 ```dart
 void main(List<String> args) {
@@ -277,9 +275,10 @@ void main(List<String> args) {
 }
 ```
 
-<p class="sidenote-host">This way <code>main</code> will still be interruptible in the outer loop, but there will
+This way <code>main</code> will still be interruptible in the outer loop, but there will
 be no interrupt checks in the inner loop reducing uninterruptible periods to
-0.2ms, which is probably just fine for most of the situations.<small class="sidenote">Note that inliner fully inlines and eliminates overhead of the <code>innerLoop</code>. It does not always happen - so when writing performance sensitive code and factoring it into various helpers you should always check the code which gets generated.</small></p>
+0.2ms, which is probably just fine for most of the situations.
+<sidenote>Note that inliner fully inlines and eliminates overhead of the <code>innerLoop</code>. It does not always happen - so when writing performance sensitive code and factoring it into various helpers you should always check the code which gets generated.</sidenote>
 
 This version of Dart code yields the following result:
 
@@ -405,10 +404,9 @@ void main(List<String> args) {
 I added `a[i];` right before the inner loop and that somehow made things
 massively faster. How did that happen?
 
-<p class="sidenote-host">What LLVM notices and what Dart does <em>not</em> is that a loop:
-<small class="sidenote">As far as I could see by inspecting output of
-<code>-mllvm --print-before-all</code> this happens in the LLVM's LICM pass, probably in <a href="https://github.com/llvm/llvm-project/blob/53326ee0cf45fce3f80e2e98638dd27edb20c516/llvm/lib/Transforms/Scalar/LICM.cpp#L1964-L1969" target="_blank"><code>promoteLoopAccessesToScalars</code></a>.</small>
-</p>
+What LLVM notices and what Dart does <em>not</em> is that a loop:
+<sidenote>As far as I could see by inspecting output of
+<code>-mllvm --print-before-all</code> this happens in the LLVM's LICM pass, probably in <a href="https://github.com/llvm/llvm-project/blob/53326ee0cf45fce3f80e2e98638dd27edb20c516/llvm/lib/Transforms/Scalar/LICM.cpp#L1964-L1969" target="_blank"><code>promoteLoopAccessesToScalars</code></a>.</sidenote>
 
 ```dart
 for (int j = 0; j < 100000; j++) {
@@ -428,10 +426,10 @@ a[i] = v;
 
 This means inner loop no longer touches any memory which makes it much faster.
 
-<p class="sidenote-host">Dart compiler is <em>relatively</em> good at forwarding loads, but it does not perform
+Dart compiler is <em>relatively</em> good at forwarding loads, but it does not perform
 any load hoisting. Once we manually added <code>a[i]</code> before the loop
 made <code>a[i]</code> inside the loop redundant. Compiler noticed that it has <code>a[i]</code>
-value flowing on all edges and eliminated <code>a[i]</code> load inside the loop:<small class="sidenote">You might be tempted to try combining <code>Int64List</code> change with <code>a[i];</code> hint but that would not work. It turns out that Dart's load forwarding pass is very shy around forwarding stores into typed lists. It is a bug I intend to fix.</small></p>
+value flowing on all edges and eliminated <code>a[i]</code> load inside the loop:<sidenote>You might be tempted to try combining <code>Int64List</code> change with <code>a[i];</code> hint but that would not work. It turns out that Dart's load forwarding pass is very shy around forwarding stores into typed lists. It is a bug I intend to fix.</sidenote>
 
 ```dart
 var v = a[i];
@@ -482,6 +480,6 @@ compute the result analytically using a formula_.
 
 When you see a benchmark like this you have two options:
 
-- walk past it and ignore it;
-- dig deep to understand what is happening, fix some serious issues (if any)
+1. walk past it and ignore it;
+2. dig deep to understand what is happening, fix some serious issues (if any)
 and then ignore it;

@@ -17,7 +17,7 @@ characteristics.
 So I checked out the library from GitHub and departed on a small performance
 investigation, which I am documenting here almost verbatim.
 
-* TOC
+1. TOC
 {:toc}
 
 # Getting the Code
@@ -39,8 +39,8 @@ v8_enable_disassembler = true
 
 Then I got a checkouts of [`source-map`](https://github.com/mozilla/source-map) package at:
 
-* [commit c97d38b](https://github.com/mozilla/source-map/commit/c97d38b70de088d87b051f81b95c138a74032a43), which was the last commit that updated `dist/source-map.js` before Rust/WASM started landed;
-* [commit 51cf770](https://github.com/mozilla/source-map/commit/51cf7708dd70d067dfe04ce36d546f3262b48da3)
+1. [commit c97d38b](https://github.com/mozilla/source-map/commit/c97d38b70de088d87b051f81b95c138a74032a43), which was the last commit that updated `dist/source-map.js` before Rust/WASM started landed;
+1. [commit 51cf770](https://github.com/mozilla/source-map/commit/51cf7708dd70d067dfe04ce36d546f3262b48da3)
 which was the most recent commit, when I did my investigation;
 
 # Profiling the Pure-JavaScript Version
@@ -857,10 +857,10 @@ Here are the results I've gotten by running my microbenchmark in Chrome Dev
 
 There are few things to notice here:
 
-* the version that uses caching is slower than anything else on both V8 and SpiderMonkey.
+1. the version that uses caching is slower than anything else on both V8 and SpiderMonkey.
 Its performance degrades steeply as number of cache entries grows - while
 performance of non-caching versions does not depend on that;
-* on SpiderMonkey it pays off to convert string into typed array as part of
+1. on SpiderMonkey it pays off to convert string into typed array as part of
 parsing, while on V8 character access is fast enough - so it only pays off
 to use array if you can move string-to-array conversion out of the benchmark
 (e.g. you load your data into typed arrays to begin with);
@@ -874,9 +874,9 @@ characters from strings slower than loading elements from typed arrays.
 
 I trawled V8 issue tracker and found few active issues like these:
 
-* [Issue 6391: StringCharCodeAt slower than Crankshaft](https://bugs.chromium.org/p/v8/issues/detail?id=6391);
-* [Issue 7092: High overhead of String.prototype.charCodeAt in typescript test](https://bugs.chromium.org/p/v8/issues/detail?id=7092);
-* [Issue 7326: Performance degradation when looping across character codes of a string](https://bugs.chromium.org/p/v8/issues/detail?id=7326);
+1. [Issue 6391: StringCharCodeAt slower than Crankshaft](https://bugs.chromium.org/p/v8/issues/detail?id=6391);
+1. [Issue 7092: High overhead of String.prototype.charCodeAt in typescript test](https://bugs.chromium.org/p/v8/issues/detail?id=7092);
+1. [Issue 7326: Performance degradation when looping across character codes of a string](https://bugs.chromium.org/p/v8/issues/detail?id=7326);
 
 Some of the comments on these issues reference commits from late January 2018
 and onward, which indicated to me that performance of `charCodeAt` is being
@@ -1416,9 +1416,9 @@ It might be also worth noting that we are still sorting all `originalMappings`
 arrays eagerly even though this is not really needed. There are only two
 operations that use `originalMappings`:
 
-* `allGeneratedPositionsFor` which returns all generated positions for the
+1. `allGeneratedPositionsFor` which returns all generated positions for the
 given line in the original source;
-* `eachMapping(..., ORIGINAL_ORDER)` which iterates over all mappings in
+1. `eachMapping(..., ORIGINAL_ORDER)` which iterates over all mappings in
 their original order.
 
 If we assume that `allGeneratedPositionsFor` is the most common operation and
@@ -1567,8 +1567,8 @@ languages, but just reimplementing the same algorithms in a "faster" language
 does not solve the problem even though it might alleviate the symptoms. Large
 part of the post is dedicated to optimizations from this group:
 
-* sorting improvements achieved by sorting subsequences rather than the whole array;
-* discussions of caching benefits or lack of them there-off.
+1. sorting improvements achieved by sorting subsequences rather than the whole array;
+1. discussions of caching benefits or lack of them there-off.
 
 The second group is represented by the monomorphisation trick. Performance suffering
 due to polymorphism is not a V8 specific issue. Neither it is a JS specific issue.
