@@ -109,7 +109,7 @@
   │    └─────────┘     └─────────┘   │            │    └─────────┘     └─────────┘   │
   └──────────────────────────────────┘            └──────────────────────────────────┘
 </code></pre></div>
-<p>Any Dart code within the VM is running within some <em>isolate</em>, which can be best described as an isolated Dart universe with its own global state and <em>usually</em> with its own thread of control (<em>mutator thread</em>). Isolates are grouped together into <em>isolate groups</em>. Isolate within the group share the same garbage collector managed <em>heap</em>, used as a storage for objects allocated by an isolate. Heap sharing between isolates in the same group is an implementation detail which is not observable from the Dart code. Even isolates within the same group can not share any mutable state directly and can only communicate by message passing through <em>ports</em> (not to be confused with network ports!).</p>
+<p>Any Dart code within the VM is running within some <em>isolate</em>, which can be best described as an isolated Dart universe with its own global state and <em>usually</em> with its own thread of control (<em>mutator thread</em>). Isolates are grouped together into <em>isolate groups</em>. Isolates within the group share the same garbage collector managed <em>heap</em>, used as a storage for objects allocated by an isolate. Heap sharing between isolates in the same group is an implementation detail which is not observable from the Dart code. Even isolates within the same group can not share any mutable state directly and can only communicate by message passing through <em>ports</em> (not to be confused with network ports!).</p>
 <p>Isolates within a group share the same Dart program. <a href="https://api.dart.dev/stable/dart-isolate/Isolate/spawn.html"><code>Isolate.spawn</code></a> spawns an isolate within the same group, while <a href="https://api.dart.dev/stable/2.18.2/dart-isolate/Isolate/spawnUri.html"><code>Isolate.spawnUri</code></a> starts a new group.</p>
 <p>The relationship between OS threads and isolates is a bit blurry and highly dependent on how VM is embedded into an application. Only the following is guaranteed:</p>
 <ul>
@@ -161,7 +161,7 @@
                     │         ╚═════════════════════════════════╝       │
                     └───────────────────────────────────────────────────┘
 </code></pre></div>
-<p>However this setup is not the only way to arrange CFE and VM to run Dart code. For example, Flutter completely separates <em>compilation to Kernel</em> and <em>execution from Kernel</em> by putting them onto different devices: compilation happens on the developer machine (<em>host</em>) and execution is handled on the target mobile <em>device</em>, which receives Kernel binaries send to it by <code>flutter</code> tool.</p>
+<p>However this setup is not the only way to arrange CFE and VM to run Dart code. For example, Flutter completely separates <em>compilation to Kernel</em> and <em>execution from Kernel</em> by putting them onto different devices: compilation happens on the developer machine (<em>host</em>) and execution is handled on the target mobile <em>device</em>, which receives Kernel binaries sent to it by <code>flutter</code> tool.</p>
 <div class="highlight"><pre><span></span><code>                                             HOST ┆ DEVICE
                                                   ┆
                          ┌──────────────────────┐ ┆ ┌────────────────┐
