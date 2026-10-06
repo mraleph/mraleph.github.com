@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"editor.rulers": [120],
+		"[dart]": {
+			"editor.rulers": [
+            	120
+        	],
+		}
+	}
+}

@@ -1,0 +1,242 @@
+# List of talks rendered by <ListOfTalks /> (see lib/layouts/front_page.dart).
+#
+# Each entry supports the following keys:
+#
+#   title:       title of the talk (required)
+#   date:        date of the talk in YYYY-MM-DD format (required)
+#   conference:  name of the conference or event
+#   slides:      link to the slides
+#   video:       link to the video recording
+#   description: description of the talk, each line is rendered as a separate
+#                paragraph. Inline HTML is allowed.
+
+- title: What is an Isolate anyway?
+  date: 2025-09-01
+  conference: Flutter&Friends
+  slides: /talks/fnf2025
+  description: |
+    This is a talk about the past, present and future of the Dart concurrency model. How and why did Dart end up with Isolates? How did they evolve over the years and where we are taking them in the future.
+
+- title: Learning something about Dart performance by optimizing jsonDecode
+  date: 2024-09-02
+  conference: Flutter&Friends
+  slides: /talks/fnf2024
+  video: https://www.youtube.com/watch?v=CbvRT9HObOw
+  description: |
+    This talk takes us on a journey through the layers of the cake called "Dart". We often hear that jsonDecode is slow in Dart - can we make it faster? Where do we start? We will look at the Dart core libraries and how they implement jsonDecode. We will take that code for a spin with a profiler and learn how to diagnose performance issues using low-level tools.
+
+- title: Runtime that makes Dart tick
+  date: 2023-09-04
+  conference: Flutter and Friends
+  slides: /talks/fnf2023
+  video: https://www.youtube.com/watch?v=jV2Zx3hjHPc
+  description: |
+    This talk is about how the Dart runtime works and how you can figure out low-level performance issues and how to apply optimisations.
+
+- title: 10 years of Dart
+  date: 2020-10-17
+  conference: VMIL
+  slides: /talks/vmil2020
+  video: https://www.youtube.com/watch?v=e-58C8aGBM4
+  description: |
+    Dart might be the only contemporary programming language that changed its core principles so radically between two major versions. 10 years ago, in 2010, it was born as a dynamically typed programming language with optional static types - ideas of Strongtalk wrapped into familiar C-like syntax. A language destined to be executed in a native VM with an adaptive JIT compiler. Yet over the years Dart has evolved into a language with a sound static type system, and is being deployed in contexts that require ahead-of-time compilation and prohibit JITing. Now, it is even trying to get rid of the “billion-dollar mistake” - null - and incrementally transition to non-nullable by default reference types. This talk focuses on the architecture of Dart Virtual Machine and how it followed the evolution of the Dart language, adapting to the new semantics and new execution environments, where users wanted to bring Dart to.
+
+- title: 6 Years Of Dart (VM engineer perspective)
+  date: 2018-09-26
+  conference: Strange Loop
+  slides: https://drive.google.com/open?id=1sswfb-Ly48IVr76EshnXTsWcA4K5fH4P
+  video: https://www.youtube.com/watch?v=WjdrUphF5l4
+  description: |
+    Dart might be the only contemporary programming language that changed its core principles so radically between two major versions. 10 years ago, in 2010, it was born as a dynamically typed programming language with optional static types - ideas of Strongtalk wrapped into familiar C-like syntax. A language destined to be executed in a native VM with an adaptive JIT compiler. Yet over the years Dart has evolved into a language with a sound static type system, and is being deployed in contexts that require ahead-of-time compilation and prohibit JITing. Now, it is even trying to get rid of the “billion-dollar mistake” - null - and incrementally transition to non-nullable by default reference types.
+    This talk focuses on the architecture of Dart Virtual Machine and how it followed the evolution of the Dart language, adapting to the new semantics and new execution environments, where users wanted to bring Dart to.
+
+- title: Making Dart Fast on Mobile
+  date: 2018-01-23
+  conference: Dart Conf
+  slides: https://docs.google.com/presentation/d/10cdRqXdiCFwNcW7Ih9E2tJU4aIPb0A-KbdI8FUfBq5w/edit?usp=sharing
+  video: https://www.youtube.com/watch?v=FUxV4MIhS3g
+  description: |
+    No matter whether you are developing or deploying your Flutter application it ends up running on the Dart VM. How does Dart VM run your code? Is there any difference between development and deployment configurations?
+    Learn about all the things Dart VM team is doing behind the scenes to ensure that your applications are fast and slim.
+
+- title: How we don't do things
+  date: 2016-12-06
+  conference: Google PhD Student Summit on Compiler&Programming Technology
+  slides: /talks/muc2016/slides.pdf
+  description: |
+    Compiler conferences are always full with engineers and researchers happy to share how they <b>do</b> things.
+    This talk is a refreshing departure from the trend. I will take a look at my time working on V8, Dart VM and LuaJIT at Google and share with you how we <b>did not do</b> things and why that matters.
+
+- title: JavaScript Performance Through the Spyglass
+  date: 2016-06-14
+  conference: GOTO Amsterdam
+  slides: /talks/goto2016
+  video: https://www.youtube.com/watch?v=r76ZjdzFExg
+  description: |
+    JavaScript performance remains an area of focus for all major browser vendors. Each day VM-engineers across the globe pump their expertise into JavaScript engines powering client and server-side code alike.
+    However our understanding of JavaScript engine internals does not always keep up with those internals.
+    This talk tries to rectify this lag and demonstrate that knowledge of implementation details is crucial not only to writing fast JavaScript code but even to simply measuring the difference between fast and slow.
+
+- title: Производительность JavaScript через подзорную трубу
+  date: 2016-06-05
+  conference: HolyJS
+  slides: /talks/holyjs2016
+  video: https://www.youtube.com/watch?v=HPFARivHJRY
+  description: |
+    Каждый день инженеры-компиляторщики по всему миру увлеченно стучат по своим клавиатурам разгоняя исполнение JavaScript в совершенно различных браузерах и даже на сервере.
+    Общественность, программирующая на JavaScript, однако же, часто отстает в своем понимании от стремительного прогресса, происходящего во внутренностях JS движков.
+    Этот доклад старается покрыть отставание и продемонстрировать, что знание этих самых внутренностей важно не только для написания быстрого JavaScript кода, но и просто для того, чтобы достоверно измерить разницу между "быстрым" и "медленным".
+
+- title: What I learned from LuaJIT
+  date: 2016-06-02
+  conference: Virtual Machines Summer School 2016
+  slides: /talks/vmss16
+  video: https://www.youtube.com/watch?v=EaLboOUG9VQ
+  description: |
+    This talk summarizes my experience from digging into LuaJIT 2.x sources while working as a compiler engineer for Google DeepMind.
+    This is not a deep insight into LuaJIT inner design, but rather a collection of choices made by original LuaJIT implementor which I find interesting and educational.
+
+- title: Benchmarking JavaScript
+  date: 2015-05-11
+  conference: GOTO Chicago
+  slides: /talks/goto2015
+  video: https://www.youtube.com/watch?v=g0ek4vV7nEA
+  description: |
+    JavaScript is everywhere. JavaScript VMs improve by leaps and bounds. Performance graphs are breaking through the ceilings of expectations.
+    And yet from time to time we still find ourselves wondering whether '===' is faster than '=='.
+    What is the right way to approach this question? Is this the question you should be asking to begin with?
+    We will take a look at some microbenchmarks written by JS developers and discover a violent clash between XIX century approach to benchmarking and XXI century virtual machines.
+
+- title: Patterns of VM Design
+  date: 2015-02-02
+  conference: JFokus - VM Tech Day
+  slides: /talks/jfokus2015
+  video: https://www.youtube.com/watch?v=KHS1nC9h_qA
+  description: |
+    The popularity of dynamically typed programming languages has been skyrocketing in the past years. This success can be partially attributed to the advances in VM engineering enabling efficient execution of those languages.
+    Just like boilerplate of any enterprise application can be decomposed into infamous patterns of object oriented design, efficient virtual machines running dynamically typed languages seem to consist of reimplementations of common patterns of "VM design". These patterns often tread the thin line between efficiency, development time and maintainability.
+    This talk discusses the trade offs we encountered while building virtual machines for JavaScript and Dart programming languages.
+
+- title: V8
+  date: 2014-12-07
+  conference: Aarhus University Advanced Web Programming Course
+  slides: /talks/awp2014
+  description: |
+    Overview of V8 compilation pipeline. Guest lecture at Aarhus University <a href="https://services.brics.dk/java/courseadmin/AWP">Advanced Web Programming</a> course.
+
+- title: invokedynamic.js
+  date: 2014-09-14
+  conference: JSConf EU
+  slides: https://mrale.ph/talks/jsconfeu2014/
+  video: https://www.youtube.com/watch?v=YOHBZactXus
+  description: |
+    The apple always falls down attracted by the gravity of the earth. It’s the law of physics. The function is never inlined if it’s source is bigger than 600 characters long. It’s a heuristic - a physical law of our dystopian cyber-world confined inside a JavaScript Virtual Machine.
+    Ever wanted to rebel against the sad immutability of the physics? Lets try to make functions fall upwards and inline all the apples.
+    In an ultimate attempt to create a space-time paradox that will rip our universe apart we will look at Java programmers implementing JavaScript on JVM through invokedynamic and then will implement invokedynamic in a JS VM instead.
+    The true freedom is just one heuristic away..
+
+- title: Handcrafting VMs for dynamic languages, reality and dreams
+  date: 2014-07-28
+  conference: ICOOOLPS
+  slides: https://docs.google.com/presentation/d/1boYUAQZjrRgk6tazlPmtDXJ9Dg2QDbodqfXaUbqA6do/present
+  description: |
+    This is a story of what happens when the art of VM construction meets development constraints. This is a first-person narrative about my experience with the V8 and Dart virtual machines, fundamental engineering decisions, and their implications. I will try to show how production VMs are treading the thin line between "practical reality" and "dreams of academia". Finally I intend to share my own dreams on how ideas borrowed from academia could help to solve practical issues in VM-construction.
+
+- title: Crooked Mirrors of Performance
+  date: 2014-05-23
+  conference: WebRebels 2014
+  slides: https://mrale.ph/talks/webrebels2014/
+  description: |
+    This is a fairy tale of programmer traveling through the strange land of microbenchmarks. Are they reflecting the truth, lies or maybe something in between? We will shatter the illusions and look behind their surface to reveal the fundamental truth: it's easier to spot a bad microbenchmark, than write a good one.
+
+- title: Что за... Dart?
+  date: 2014-03-30
+  conference: CodeFest 2014
+  slides: http://www.slideshare.net/codefest/ss-32910328
+  description: |
+    Introduction to Dart (in Russian).
+
+- title: V8 and Dart VM
+  date: 2014-03-26
+  conference: TechTalks NSU
+  slides: /talks/techtalksnsu2014
+  description: |
+    Overview of Dart VM and V8 compilation pipelines (in Russian). Slide deck built from CWP and Strange Loop ones (see below).
+
+- title: Dart VM Compiler
+  date: 2014-02-08
+  conference: Dart Flight School Oslo
+  slides: /talks/ngdart/index-vm.html
+  video: https://www.youtube.com/watch?v=bNESI-d-tBQ
+  description: |
+    Overview of Dart VM optimizing compiler.
+
+- title: AngularDart
+  date: 2014-02-08
+  conference: Dart Flight School Oslo
+  slides: /talks/ngdart/index.html
+  video: https://www.youtube.com/watch?v=SGb2TDbYNE8
+  description: |
+    Introduction to AngularDart.
+
+- title: V8
+  date: 2013-12-10
+  conference: Aarhus University Client-Based Web Programming Course
+  slides: /talks/cwp2013
+  description: |
+    Overview of V8 compilation pipeline.
+
+- title: Doubt Everything
+  date: 2013-10-03
+  conference: LXJS 2013
+  slides: /talks/lxjs2013
+  video: http://www.youtube.com/watch?v=65-RbBwZQdU
+  description: |
+    This talks walks the listener through various optimizing compiler related pitfalls in microbenchmarking. Greatly inspired by microbenchmarks found on jsPerf.
+
+- title: Building Optimizing Compiler for Dart
+  date: 2013-09-29
+  conference: StrangeLoop
+  slides: /talks/StrangeLoop2013.pdf
+  video: http://www.infoq.com/presentations/dart-compiler
+  description: |
+    The talk describes Dart VM's compilation pipeline, its similarities and differences from V8's approach.
+
+- title: JavaScript глазами JIT компилятора
+  date: 2012-10-17
+  conference: Форум Технологий Mail.Ru Group
+  slides: /talks/TechForum2012.pdf
+  video: http://www.youtube.com/watch?v=tCG0aPNvkTs
+  description: |
+    Walk through V8's implementation details and the ways they might affect performance of your JavaScript code (in Russian).
+
+- title: Exploring JS VM in JS
+  date: 2012-10-07
+  conference: JSConf EU
+  slides: /talks/jsconfeu2012
+  video: http://www.youtube.com/watch?v=y8hVeKMD_oM
+  description: |
+    The talk explores building blocks which could be used to write parts of JavaScript VMs in JavaScript.
+
+- title: V8 Inside Out
+  date: 2012-05-24
+  conference: Web Rebels
+  slides: /talks/webrebels2012.pdf
+  video: http://vimeo.com/43334972
+  description: |
+    An attempt to explain how inline caches and optimizing compilation works using (mostly) only JavaScript on the slides.
+
+- title: Can V8 Do That?!
+  date: 2012-04-02
+  conference: JSConf US
+  slides: /talks/jsconf2012.pdf
+  video: http://www.youtube.com/watch?v=Z_q6iw3h48s
+  description: |
+    Quick walk through the ideas behind V8's optimizing compilation pipeline (aka Crankshaft).
+
+- title: Understanding V8
+  date: 2011-06-09
+  conference: nodecampeu
+  slides: https://mrale.ph/talks/nodecamp.eu/
+  description: |
+    Walk through V8's implementation details and performance tuning recommendations for JavaScript code.

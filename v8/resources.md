@@ -26,7 +26,7 @@ date: 2014-04-20
 
 ### Talks
 
-* Understanding V8 (me, nodecamp.eu 2011) [\[slides\]](http://mrale.ph/s3/nodecamp.eu/#1)
+* Understanding V8 (me, nodecamp.eu 2011) [\[slides\]](http://mrale.ph/talks/nodecamp.eu/#1)
 * V8 Performance Tuning Tricks ([+Daniel Clifford](https://plus.google.com/111909581069462963574), GDD2011 Berlin) [\[slides\]](https://mkw.st/p/gdd11-berlin-v8-performance-tuning-tricks/#1)
 * Console to Chrome ([+Lilli Thompson](https://plus.google.com/111647958621817995641), GDC 2012) [\[slides\]](http://console-to-chrome.appspot.com/#8) [\[video\]](http://www.youtube.com/watch?v=XAqIpGU8ZZk#t=9m0s)
 * Breaking the JavaScript Speed Barrier with V8 ([+Daniel Clifford](https://plus.google.com/111909581069462963574), Google I/O 2012) [\[slides\]](http://v8-io12.appspot.com/index.html) [\[video\]](http://www.youtube.com/watch?v=UJPdhx5zTaw)
