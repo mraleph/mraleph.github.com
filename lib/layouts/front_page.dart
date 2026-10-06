@@ -4,6 +4,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr_content/jaspr_content.dart';
 import 'package:collection/collection.dart';
 
+import '../components/site_nav.dart';
 import '../utils.dart';
 
 class PageRef extends StatelessComponent {
@@ -304,32 +305,8 @@ class FrontPageLayout extends PageLayoutBase {
     ),
   ];
 
-  /// Top-level sections of the site shown in the header navigation.
-  static const postsSection = (name: 'Posts', href: 'index.html');
-  static const talksSection = (name: 'Talks', href: 'talks/index.html');
-  static const sections = [postsSection, talksSection];
-
-  static Component _navLink(String name, String href, {required bool active}) {
-    return li([
-      a(
-        classes: 'group flex items-center ${active ? 'text-lk' : 'hover:text-lk'}',
-        href: href,
-        attributes: {if (active) 'aria-current': 'page'},
-        [
-          // Horizontal line indicator, only shown in the desktop sidebar.
-          span(
-            classes: 'mr-4 hidden h-px bg-current transition-all lg:block ${active ? 'w-16' : 'w-8 group-hover:w-16'}',
-            [],
-          ),
-          span(classes: 'equity-caps text-xl font-bold tracking-widest', [.text(name)]),
-        ],
-      ),
-    ]);
-  }
-
   @override
   Component buildBody(Page page, Component child) {
-    final currentSection = Uri.parse(page.url).pathSegments.firstOrNull == 'talks' ? talksSection : postsSection;
     return div(classes: 'mx-auto min-h-screen max-w-screen-xl px-6 py-12 md:px-12 md:py-16 lg:py-0', [
       div(classes: 'lg:flex lg:justify-between', [
         header(
@@ -367,12 +344,7 @@ class FrontPageLayout extends PageLayoutBase {
                     ),
                 ],
               ),
-              nav(classes: 'site-nav mt-8', attributes: {'aria-label': 'Site sections'}, [
-                ul(classes: 'flex gap-6 lg:flex-col lg:gap-3', [
-                  for (final section in sections)
-                    _navLink(section.name, section.href, active: section == currentSection),
-                ]),
-              ]),
+              const SiteNav(classes: 'mt-8'),
             ]),
           ],
         ),

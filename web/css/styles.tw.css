@@ -69,8 +69,7 @@ p.comments > :first-child {
 
 .title {
   @apply font-bold text-3xl;
-  @apply xl:absolute xl:left-[-260px] xl:max-w-[240px] xl:w-[240px] xl:text-right;
-  @apply max-xl:mb-6;
+  @apply mb-6;
 }
 
 sidenote {
@@ -136,6 +135,15 @@ time {
     position: absolute;
     margin-left: -2.0rem;
     font-size: 1.10rem;
+  }
+
+  /* Site navigation is a list too, but should not be styled as one. */
+  .site-nav li {
+    margin: 0;
+  }
+
+  .site-nav li:before {
+    content: none;
   }
 
 }
