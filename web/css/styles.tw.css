@@ -159,6 +159,18 @@ blockquote {
     text-align: right;
   }
 
+  ul:last-child {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: right;
+    font-family: equity-caps;
+  }
+
+  ul:last-child > li::before {
+    content: "— ";
+  }
+
   &::before,
   &::after{
     position: absolute;
