@@ -27,7 +27,9 @@ Benchmarks are _experiments_. Their results are meaningless without
 interpretation and validation. Our understanding of performance is
 driven by the same cyclic process that drives science in general:
 you formulate a hypothesis, you devise the experiment, you analyze the results,
-you adjust the hypothesis and repeat. <sidenote><a href="https://en.wikipedia.org/wiki/Zen_and_the_Art_of_Motorcycle_Maintenance">"Zen and The Art of Motorcycle Maintenance"</a> has a pretty good <a href="https://kkh.ltrr.arizona.edu/kkh/natsgc/PDFs-2013/Robert-Pirsig-On-Scientific-Method.pdf" target="_blank">description of scientific method</a>, which I think every programmer should read and will likely benefit from.</sidenote>
+you adjust the hypothesis and repeat.
+
+<sidenote><a href="https://en.wikipedia.org/wiki/Zen_and_the_Art_of_Motorcycle_Maintenance">"Zen and The Art of Motorcycle Maintenance"</a> has a pretty good <a href="https://kkh.ltrr.arizona.edu/kkh/natsgc/PDFs-2013/Robert-Pirsig-On-Scientific-Method.pdf" target="_blank">description of scientific method</a>, which I think every programmer should read and will likely benefit from.</sidenote>
 
 I hope next time you see a cool benchmark animation on your favorite social
 network your first question will rather be _"Why have the author spent time
@@ -60,7 +62,9 @@ void main(List<String> args) {
 }
 ```
 
-JavaScript version is: <sidenote>The code is slightly modified compared to the original to make it directly runnable in JavaScriptCore shell: <code>console.log</code> became <code>print</code> and <code>process.argv[2]</code> became <code>arguments[0]</code></sidenote>
+JavaScript version is:
+
+<sidenote>The code is slightly modified compared to the original to make it directly runnable in JavaScriptCore shell: <code>console.log</code> became <code>print</code> and <code>process.argv[2]</code> became <code>arguments[0]</code></sidenote>
 
 ```js
 var u = Number(arguments[0]);           // Get an input number from the command line
@@ -76,7 +80,9 @@ print(a[r]);                         // Print out a single element from the arra
 ```
 
 Running this on nightly versions of Dart and JavaScriptCore yields the
-following: <sidenote>You might be surprised that a former V8 engineer
+following:
+
+<sidenote>You might be surprised that a former V8 engineer
 like me is using JSC for benchmarking here, but that's simply because JSC was
 fastest of two runtimes. Thus it makes sense to look at what it does.</sidenote>
 
@@ -179,7 +185,9 @@ loop:
   b ->loop
 ```
 
-JavaScriptCore does this for comparison:<sidenote>I have stripped information about DFG/B3/Air IL levels because it makes output too verbose for an unprepared eye. Full output for both Dart and JSC is available <a href="https://gist.github.com/mraleph/f0b7addc93b81b598c1b97088c9b1f14" target="_blank">here</a></sidenote>
+JavaScriptCore does this for comparison:
+
+<sidenote>I have stripped information about DFG/B3/Air IL levels because it makes output too verbose for an unprepared eye. Full output for both Dart and JSC is available <a href="https://gist.github.com/mraleph/f0b7addc93b81b598c1b97088c9b1f14" target="_blank">here</a></sidenote>
 
 ```armasm
 loop:
@@ -431,7 +439,9 @@ This means inner loop no longer touches any memory which makes it much faster.
 Dart compiler is <em>relatively</em> good at forwarding loads, but it does not perform
 any load hoisting. Once we manually added <code>a[i]</code> before the loop
 made <code>a[i]</code> inside the loop redundant. Compiler noticed that it has <code>a[i]</code>
-value flowing on all edges and eliminated <code>a[i]</code> load inside the loop:<sidenote>You might be tempted to try combining <code>Int64List</code> change with <code>a[i];</code> hint but that would not work. It turns out that Dart's load forwarding pass is very shy around forwarding stores into typed lists. It is a bug I intend to fix.</sidenote>
+value flowing on all edges and eliminated <code>a[i]</code> load inside the loop:
+
+<sidenote>You might be tempted to try combining <code>Int64List</code> change with <code>a[i];</code> hint but that would not work. It turns out that Dart's load forwarding pass is very shy around forwarding stores into typed lists. It is a bug I intend to fix.</sidenote>
 
 ```dart
 var v = a[i];

@@ -32,7 +32,9 @@ projects went written from the perspective of [Ben Rich][], the lead developer
 behind F-117. Not being an aeronautics buff I read this book mostly as an
 expose on life of a scrappy high expertise R&D team. It was rather interesting
 to note parallels between Skunk Works and a tightly knit senior software
-engineering team. <sidenote>I did find it slightly suspicious that the book
+engineering team.
+
+<sidenote>I did find it slightly suspicious that the book
 contains at least one clearly false statement. In <em>Blowing up Burbank</em>
 Ben Rich writes <em>... Soviets launched their Sputnik 1 into orbit. The rocket
 engine that had carried it into space was hydrogen-fueled. The engine builder
@@ -420,8 +422,9 @@ those living on lower levels of the hierarchy.
 
 The book culminates with blaming [Friedman doctrine][] for everything that
 is wrong with our society today. I don't really disagree with this - but I
-feel that the book spent too many pages to make its point. <sidenote>Despite
-being wordy and in many ways redundant this book did cement my decision to
+feel that the book spent too many pages to make its point.
+
+<sidenote>Despite being wordy and in many ways redundant this book did cement my decision to
 withdraw from people management and focus on the technical leadership
 instead.</sidenote>
 
@@ -438,7 +441,9 @@ company with a track record of originating or contributing to major innovations
 in the first half of 20th century. In the second half of the century the company
 ballooned to a juggernaut which quarter after quarter would beat analysts
 expectations - driving its share price to incredible heights. Then the music
-stopped and GE came crashing down. <sidenote>Somewhere on the shelf we also have <b>Lights Out: Pride, Delusion, and the Fall of General Electric</b> 〈<a href="https://www.goodreads.com/book/show/50086786-lights-out">goodreads</a>〉 which documents collapse of GE under Jeff Immelt who took over from Welch - but I have not read it yet.</sidenote>
+stopped and GE came crashing down.
+
+<sidenote>Somewhere on the shelf we also have <b>Lights Out: Pride, Delusion, and the Fall of General Electric</b> 〈<a href="https://www.goodreads.com/book/show/50086786-lights-out">goodreads</a>〉 which documents collapse of GE under Jeff Immelt who took over from Welch - but I have not read it yet.</sidenote>
 
 Turns out that GEs *profitability* was achieved in the ways which could not be
 sustained long term: endless acquisitions, layoffs, restructurings, offshoring,
@@ -493,7 +498,9 @@ Game development is a famous for unsustainable schedules and people sleeping
 under desks to meet deadlines. I wanted to be a game programmer when I was
 a high-schooler - but then I discovered programming languages and never looked
 back. This book gave me a small opportunity to peak under the covers and see
-how games are made. <sidenote>For what it's worth people are also sleeping under desks in the <b>"The Soul of a New Machine"</b> or <b>"Show Stopper!: The Breakneck Race to Create Windows NT and the Next Generation at Microsoft"</b>. Things were different back in the day. Lots of passion. Unclaimed horizons. No work-life balance.</sidenote>
+how games are made.
+
+<sidenote>For what it's worth people are also sleeping under desks in the <b>"The Soul of a New Machine"</b> or <b>"Show Stopper!: The Breakneck Race to Create Windows NT and the Next Generation at Microsoft"</b>. Things were different back in the day. Lots of passion. Unclaimed horizons. No work-life balance.</sidenote>
 
 I must admit that I have never played a single game of those described in the
 book but that did not make the book less enjoyable to read. Don't think I
@@ -508,14 +515,16 @@ development.
 I got this book because I became interested in learning more about TSMC and
 ASML and the current state of semiconductor technology. I think the book does
 a good job at giving you a historical overview of how things got the way
-they are today. <sidenote>It is especially interesting to read this book keeping
+they are today.
+
+<sidenote>It is especially interesting to read this book keeping
 insights from <b>"Understanding Michael Porter"</b> and <b>"The Man Who Broke Capitalism"</b>
 in mind.</sidenote>
 
 The highlight of the book for me was the description of the extreme ultraviolet
 lithography. The kind of complexity that goes into building one these EUV
-lithography machines - and the web of world binding supply chains this creates
-- is mind boggling. EUV light is produced by hitting a tiny (30 micron) tin droplets
+lithography machines - and the web of world binding supply chains this creates -
+is mind boggling. EUV light is produced by hitting a tiny (30 micron) tin droplets
 flying through a vacuum at 300 km/h with a laser pulse (twice) to evaporate
 it into plasma. The produced bursts of light are collected using special mirrors
 made of hundreds of alternating layers of silicon and molybdenum - each layer
@@ -636,7 +645,9 @@ from this book - I personally skimmed through pages rather than immersed myself
 in them. Though even seasoned software developers might find articulations
 from this book helpful - it is always reassuring to see in writing what you
 just kinda intuitively _felt_. But I can totally recommend it to more junior
-developers. <sidenote> Speaking of great books every developer should read:
+developers.
+
+<sidenote> Speaking of great books every developer should read:
 <b>A Philosophy of Software Design</b> by John Ousterhout 〈<a href="https://www.goodreads.com/book/show/39996759-a-philosophy-of-software-design">good&ZeroWidthSpace;reads</a>〉
 is my absolute favourite from recent years.</sidenote>
 
@@ -669,10 +680,7 @@ is my absolute favourite from recent years.</sidenote>
 
 
 
-> **The Forbidden Code Review** <sidenote>Ok, this rule here is something
-> I learned the hard way in my
-> career: allowing junior programmers to review each other code is a recipe for a
-> a disaster. I was really glad to see Zimmerman laying it out in writing.</sidenote>
+> **The Forbidden Code Review**
 >
 > The last combination, a junior coder reviewing another junior coder’s work,
 > is not useful. In fact, it can be really destructive. All of the benefits I just
@@ -684,6 +692,10 @@ is my absolute favourite from recent years.</sidenote>
 > up in Sucker Punch code (which happens, despite our best efforts), it’s often
 > a result of two junior coders ping-ponging reviews back and forth. So we
 > ban this sort of code review.
+
+<sidenote>Ok, this rule here is something I learned the hard way in my
+career: allowing junior programmers to review each other code is a recipe for a
+a disaster. I was really glad to see Zimmerman laying it out in writing.</sidenote>
 
 ## Good Omens
 
@@ -845,9 +857,11 @@ when I am older and wiser. Maybe. Not sure yet.
 > but the systematic patterns of thought that produced that government are
 > left intact, then those patterns will repeat themselves in the succeeding
 > government. There's so much talk about the system. And so little
-> understanding. <sidenote>This quote was used in <b>The Unaccountability Machine</b>
-> and that's what made me finally read ZAMM, which was patiently standing on the
-> bookshelf for a while</sidenote>
+> understanding.
+
+<sidenote>This quote was used in <b>The Unaccountability Machine</b>
+and that's what made me finally read ZAMM, which was patiently standing on the
+bookshelf for a while</sidenote>
 
 > **Grades really cover up failure to teach.** A bad instructor can go through
 > an entire quarter leaving absolutely nothing memorable in the minds of his
@@ -867,9 +881,12 @@ when I am older and wiser. Maybe. Not sure yet.
 > loose. From this place the snow is less visible, even though closer. These are
 > things you should notice anyway. To live only for some future goal is
 > shallow. It's the sides of the mountain which sustain life, not the top. Here's
-> where things grow.<sidenote>As I understand it Pirsig uses mountain climbing
-> as a metaphor to <em>way of living</em> - I personally found it entertaining
-> to think about it even narrower: as a metaphor to <em>programming</em>.</sidenote>
+> where things grow.
+
+<sidenote>As I understand it Pirsig uses mountain climbing
+as a metaphor to <em>way of living</em> - I personally found it entertaining
+to think about it even narrower: as a metaphor to <em>programming</em>.
+</sidenote>
 
 > You want to know how to paint a perfect painting? It's easy. Make yourself
 > perfect and then just paint naturally. That's the way all the experts do it.

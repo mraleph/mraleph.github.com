@@ -78,6 +78,16 @@ sidenote {
   @apply max-xl:block max-xl:border-1 max-xl:border-l-3 max-xl:p-2 max-xl:mb-4;
 }
 
+/* Standalone sidenote grouped with its preceding element by SidenoteExtension:
+   on wide screens align the sidenote with the top of that element. */
+.sidenote-group {
+  @apply xl:relative;
+}
+
+.sidenote-group > p > sidenote {
+  @apply xl:top-0;
+}
+
 .equity-caps {
   font-family: 'equity-caps';
   text-transform: lowercase;

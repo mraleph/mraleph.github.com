@@ -4,13 +4,13 @@ title: 'Microbenchmarks in the age of clankers'
 date: 2026-10-06
 ---
 
-<sidenote>I really enjoyed reading <a href="https://www.jordanmechner.com/en/books/journals/">The Making of Prince of Persia</a> by Jordan Mechner, who was keeping detailed journals of his game development journey.</sidenote>
-
 One of the first computer games I have encountered on a PC was an MS DOS version
 of [Prince of Persia](https://en.wikipedia.org/wiki/Prince_of_Persia_(1989_video_game)).
 I have not played it for 30+ years, but the image of protagonist falling to
 his death and being impaled by spikes at the bottom of the pit still stands
 vividly before my eyes.
+
+<sidenote>I really enjoyed reading <a href="https://www.jordanmechner.com/en/books/journals/">The Making of Prince of Persia</a> by Jordan Mechner, who was keeping detailed journals of his game development journey.</sidenote>
 
 What does it have to do with microbenchmarks? Well, that's the very same
 image that stands before my eyes when I hear that somebody fell into the
@@ -70,12 +70,12 @@ benchmark is actually measuring what you think it is measuring.
 
 # Benchmarks must be adversarial
 
-<sidenote>It is also well understood that these systems are so complex that they don't always exhibit stable behavior even after warmup, see <a href="https://arxiv.org/abs/1602.00602" target="_blank">Virtual Machine Warmup Blows Hot and Cold</a></sidenote>
-
 It is well understood that to measure peak performance of a dynamically
 optimized system you must include warmup into your benchmark. It is well
 understood that you need to make it harder for compiler to throw the whole
 benchmark away as dead code But that's just a tip of the iceberg.
+
+<sidenote>It is also well understood that these systems are so complex that they don't always exhibit stable behavior even after warmup, see <a href="https://arxiv.org/abs/1602.00602" target="_blank">Virtual Machine Warmup Blows Hot and Cold</a></sidenote>
 
 To write good benchmarks you need to understand more about underlying
 execution layers. Classical example of that is that benchmarking binary search
@@ -92,14 +92,14 @@ model for core operations that your benchmark performs. What is the baseline
 cost of these operations as dictated by language semantics? What is execution
 environment doing to reduce this cost? Can it fail?
 
-<sidenote>Well, the rabbit hole of course goes deeper because the cost of that <code>ldr</code> depends on other factors, like whether or not it hits the CPU cache.</sidenote>
-
 In **C** an array access `a[i]` is just a pointer dereference
 `*(a + i)`, there is nothing complicated going behind the scenes - it's just an
 `ldr` or `mov` instruction at the end. In **Dart** `a[i]` is a method call
 `a.operator[](i)`. How that method call ends up executing on the CPU depends
 on the execution mode (native JIT/AOT, JS, Wasm) and what compiler knows
 about your program.
+
+<sidenote>Well, the rabbit hole of course goes deeper because the cost of that <code>ldr</code> depends on other factors, like whether or not it hits the CPU cache.</sidenote>
 
 Take a look at this program:
 
@@ -201,7 +201,7 @@ certainly write some good ones:
 > from the bottom up if I wished to construct something lasting and
 > unshakeable in the sciences.
 >
-> - First Mediation
+> - First Meditation
 
 In the case of Filip's loop benchmark even ignoring everything else I have
 said above the huge gap between JIT and AOT should have immediately ignited
@@ -297,6 +297,8 @@ that we always recommend anyway: `num` is a type which mixes two completely
 different numeric types: 64-bit integer and double precision floating point
 number. These types can't be efficiently operated upon in a uniform fashion
 so it is better to avoid it.
+
+<sidenote>JIT does not suffer from the same problem because it leans on dynamic type feedback.</sidenote>
 
 ```dart
 int sum = 0;

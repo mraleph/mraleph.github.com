@@ -15,7 +15,9 @@ This post is about JavaScript performance but I would like to start it by tellin
 
 # A story of a C programmer writing JavaScript
 
-*Mr. C.* is a C programmer as you can probably guess from his name. Today he was asked by his boss to write a very simple function: *given an array of numbered 2d points calculate vector sum of all even numbered points*... He opens his favorite text editor and quickly types something like <sidenote>I'll be intentionally skipping some <code>#include</code> boilerplate</sidenote>:
+*Mr. C.* is a C programmer as you can probably guess from his name. Today he was asked by his boss to write a very simple function: *given an array of numbered 2d points calculate vector sum of all even numbered points*... He opens his favorite text editor and quickly types something like:
+
+<sidenote>I'll be intentionally skipping some <code>#include</code> boilerplate</sidenote>
 
 ```cpp
 typedef struct {

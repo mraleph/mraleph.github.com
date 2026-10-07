@@ -4,6 +4,7 @@ import 'package:jaspr_content/theme.dart';
 import 'package:jaspr_router/jaspr_router.dart';
 import 'package:mraleph/grammars.dart';
 
+import 'extensions/sidenote_extension.dart';
 import 'forked/jaspr/filesystem_loader.dart';
 import 'forked/jaspr/code_block.dart';
 import 'layouts/front_page.dart';
@@ -31,7 +32,7 @@ void main() {
           ListOfTalks.component,
           CodeBlock(grammars: allGrammars),
         ],
-        extensions: [],
+        extensions: [SidenoteExtension()],
         secondaryOutputs: [AtomOutput()],
       ),
       eagerlyLoadAllPages: true,

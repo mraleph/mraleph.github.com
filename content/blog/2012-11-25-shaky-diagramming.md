@@ -17,7 +17,9 @@ No idea how this had happened but probably it can be partially explained by wide
 
 So back in the late 90s Delphi suddenly became my tool of choice for literally everything. I need to compute something and plot a graph? I launch Delphi. I need UI to populate some local DB? Delphi! I want to try and implement a [MUD](http://en.wikipedia.org/wiki/MUD) with a friend... What a luck, I still have Delphi opened since last night!
 
-However somewhere in 00s Delphi disappeared from my life and did not come back ever since. <sidenote><a href="http://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Wirth_languages">Wirth languages</a> however did come back and I had a lot of fun at <a href="http://www.excelsior-usa.com/">Excelsior</a> writing mostly Modula-2 and <a href="http://en.wikipedia.org/wiki/Oberon-2_(programming_language)">Oberon-2</a>.</sidenote>
+However somewhere in 00s Delphi disappeared from my life and did not come back ever since.
+
+<sidenote><a href="http://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Wirth_languages">Wirth languages</a> however did come back and I had a lot of fun at <a href="http://www.excelsior-usa.com/">Excelsior</a> writing mostly Modula-2 and <a href="http://en.wikipedia.org/wiki/Oberon-2_(programming_language)">Oberon-2</a>.</sidenote>
 
 Surprisingly in my life it was largely replaced by a tool that was never intended to become an IDE replacement. These days if I suddenly need to create an interactive application that layouts and lets me explore a [CFG](http://en.wikipedia.org/wiki/Control_flow_graph) produced by an optimizing compiler I just launch an editor, throw together some HTML/CSS/JavaScript, start my browser and it will do the job.
 

@@ -45,7 +45,9 @@ V8 goes with the latter approach and *boxes* every number that does not fit into
 
 <img src="images/2011-05-12/v8-array-backing-store.png" alt="V8s array backing store" class="mx-auto">
 
-LuaJIT2 (as well as JSC and SpiderMonkey) on the other side uses a technique called [NaN-tagging](http://blog.mozilla.com/rob-sayre/2010/08/02/mozillas-new-javascript-value-representation/), which allows to store both pointers (or other 32-bit values) and doubles in 64-bit wide slots. Here is how the same array will look like in these VMs: <sidenote>V8's optimizing backend is able to keep local double values and temporaries on the stack and in XMM registers. Boxing only occurs when the value <em>escapes</em> optimized code, that is stored to a property, passed as an arguments or returned from a function. Non-optimized code always works with boxed numbers.</sidenote>
+LuaJIT2 (as well as JSC and SpiderMonkey) on the other side uses a technique called [NaN-tagging](http://blog.mozilla.com/rob-sayre/2010/08/02/mozillas-new-javascript-value-representation/), which allows to store both pointers (or other 32-bit values) and doubles in 64-bit wide slots. Here is how the same array will look like in these VMs:
+
+<sidenote>V8's optimizing backend is able to keep local double values and temporaries on the stack and in XMM registers. Boxing only occurs when the value <em>escapes</em> optimized code, that is stored to a property, passed as an arguments or returned from a function. Non-optimized code always works with boxed numbers.</sidenote>
 
 <img src="images/2011-05-12/luajit-array-backing-store.png" alt="LuaJIT's array backing store" class="mx-auto">
 
@@ -132,7 +134,9 @@ $ time $V8/shell deltablue-10000iterations.js
 $V8/shell deltablue-10000iterations.js  4.64s user 0.04s system 89% cpu 5.213 total
 ```
 
-As you can see V8 is roughly 5-12x times faster. Does it mean that LuaJIT2 is a worse compiler? Definitely not. It's probably just not *tuned* for this kind of workload. <sidenote>Well, the simple truth is that LuaJIT2 is a tracing compiler so it is not very good at handling the type of polymorphism that is pervasive in DeltaBlue benchmark.</sidenote>
+As you can see V8 is roughly 5-12x times faster. Does it mean that LuaJIT2 is a worse compiler? Definitely not. It's probably just not *tuned* for this kind of workload.
+
+<sidenote>Well, the simple truth is that LuaJIT2 is a tracing compiler so it is not very good at handling the type of polymorphism that is pervasive in DeltaBlue benchmark.</sidenote>
 
 # Conclusion
 

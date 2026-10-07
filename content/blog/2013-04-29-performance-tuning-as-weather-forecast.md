@@ -34,7 +34,9 @@ run({
 });
 ```
 
-As you can see they are just computing sum of squares. Both case also check that the `sum` is correct both to verify that the code is doing the right thing and prevent DCE. A more advanced compiler can still sacrifice compilation time and constant fold the whole loop but V8 does not, so I did not try to guard against optimizations any further. <sidenote>In fact at the moment V8 would not be able to DCE these computations even if I were not checking <code>sum</code> after the loop because it is <em>scared</em> by variable assignments. Nevertheless I still like to have my benchmarks verified at completion to catch bug in the optimizer if anything.</sidenote>
+As you can see they are just computing sum of squares. Both case also check that the `sum` is correct both to verify that the code is doing the right thing and prevent DCE. A more advanced compiler can still sacrifice compilation time and constant fold the whole loop but V8 does not, so I did not try to guard against optimizations any further.
+
+<sidenote>In fact at the moment V8 would not be able to DCE these computations even if I were not checking <code>sum</code> after the loop because it is <em>scared</em> by variable assignments. Nevertheless I still like to have my benchmarks verified at completion to catch bug in the optimizer if anything.</sidenote>
 
 Usually when I need to quickly measure performance I use a relatively naive approach with two loops: one for warm up a function and another one to measure performance of the optimized code. This time however I decided to additionally run my code through [Benchmark.js](http://benchmarkjs.com/) which is a much more sophisticated benchmarking framework that powers [jsPerf](http://jsperf.com) itself.
 

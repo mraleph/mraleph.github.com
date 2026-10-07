@@ -77,7 +77,9 @@ I already had a control flow graph display component done as part of my [IRHydra
 
 ### "Everybody stand back. I know regular expressions."
 
-Control flow graph (CFG) consists of _basic blocks_ --- chunks of code with a single entry and single exit, connected with control flow edges. This definition makes CFG reconstruction algorithm obvious:<sidenote>This is an approximation, e.g. we are purposefully ignoring <em>exceptional</em> control flow.</sidenote>
+Control flow graph (CFG) consists of _basic blocks_ --- chunks of code with a single entry and single exit, connected with control flow edges. This definition makes CFG reconstruction algorithm obvious:
+
+<sidenote>This is an approximation, e.g. we are purposefully ignoring <em>exceptional</em> control flow.</sidenote>
 
 1. find all control flow instructions (jumps, returns), these are always last instructions in a block: a block can only have a single exit which means a jump can't jump from inside the block.
 2. find all instructions that are targets of some jump or immediately follow a control flow instruction - these start a block.
@@ -305,7 +307,9 @@ class Use {
 }
 ```
 
-Each node represents an operation performed on its inputs and inputs are always values produced by some other nodes. Every node also keeps a list of places where it is being used so that for example if you need to get the list of nodes using a given <code>node</code> you can just do <code>node.uses.map((use) =&gt; use.at)</code>.<sidenote>In some sense <code>inputs</code> and <code>uses</code> in the data-flow graph are the same as <code>predecessors</code> and <code>successors</code> of the control-flow graph.</sidenote>
+Each node represents an operation performed on its inputs and inputs are always values produced by some other nodes. Every node also keeps a list of places where it is being used so that for example if you need to get the list of nodes using a given <code>node</code> you can just do <code>node.uses.map((use) =&gt; use.at)</code>.
+
+<sidenote>In some sense <code>inputs</code> and <code>uses</code> in the data-flow graph are the same as <code>predecessors</code> and <code>successors</code> of the control-flow graph.</sidenote>
 
 Here is an example of how a DFG could look like for a simple piece of disassembly:
 
@@ -315,7 +319,9 @@ But what if at some point in the program a register contains a value that does n
 
 Here are we again going to steal a page from a compiler construction handbook and use an abstraction called _phi-functions_ (also known as &phi;-functions in ancient Greece) used in [Single Static Assignment form](http://en.wikipedia.org/wiki/Static_single_assignment_form). A phi-function represents a data-flow merge that occurs at a control-flow merge point. Given a block with `N` predecessors a phi-function inside that block would also have `N` inputs. When "executed", the phi-function essentially looks at where control came from into its block and returns the value of the input corresponding to that predecessor.
 
-Consider the following example:<sidenote>A sane optimizing compiler is unlikely to generate this kind of messy machine code from the simple ternary expression above. I just wanted to keep the example simple. For example LLVM would avoid branches by generating<br/><br/><code>cmpq $1, %rax</code><br/><code>movl $1, %ebx</code><br/><code>adcq $0, %rbx</code></sidenote>
+Consider the following example:
+
+<sidenote>A sane optimizing compiler is unlikely to generate this kind of messy machine code from the simple ternary expression above. I just wanted to keep the example simple. For example LLVM would avoid branches by generating<br/><br/><code>cmpq $1, %rax</code><br/><code>movl $1, %ebx</code><br/><code>adcq $0, %rbx</code></sidenote>
 
 <img src="/images/2015-03-29/flow-graph-phi.png" class="mx-auto mix-blend-multiply">
 
@@ -550,7 +556,9 @@ for (int i = 0, j = currentSize - 1; j >= i; i++, j--) {
 return -1;
 ```
 
-Which after some optimizations (e.g. expressing <code>j</code> through <code>i</code>) starts to look more like this:<sidenote>Keep in mind that C2 operates on a representation called <em>sea-of-nodes</em> so when I say "look like this" I actually mean "look like this in a very loose sense of word <em>like</em>".</sidenote>
+Which after some optimizations (e.g. expressing <code>j</code> through <code>i</code>) starts to look more like this:
+
+<sidenote>Keep in mind that C2 operates on a representation called <em>sea-of-nodes</em> so when I say "look like this" I actually mean "look like this in a very loose sense of word <em>like</em>".</sidenote>
 
 ```java
 int S = currentSize;
