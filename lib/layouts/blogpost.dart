@@ -3,6 +3,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/server.dart';
 import 'package:jaspr_content/jaspr_content.dart';
 import 'package:mraleph/components/site_nav.dart';
+import 'package:mraleph/outputs/atom_output.dart';
 import 'package:mraleph/utils.dart';
 
 class BlogpostLayout extends PageLayoutBase {
@@ -18,6 +19,7 @@ class BlogpostLayout extends PageLayoutBase {
     yield link(href: 'css/fonts/mbtype/equity-light.css', rel: 'stylesheet');
     yield link(href: 'css/fonts/mbtype/concourse-index.css', rel: 'stylesheet');
     yield link(href: 'css/styles.css', rel: 'stylesheet');
+    yield atomFeedLink;
   }
 
   @override

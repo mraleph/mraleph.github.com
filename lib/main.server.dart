@@ -8,6 +8,7 @@ import 'forked/jaspr/filesystem_loader.dart';
 import 'forked/jaspr/code_block.dart';
 import 'layouts/front_page.dart';
 import 'layouts/blogpost.dart';
+import 'outputs/atom_output.dart';
 
 import 'main.server.options.dart';
 
@@ -31,6 +32,7 @@ void main() {
           CodeBlock(grammars: allGrammars),
         ],
         extensions: [],
+        secondaryOutputs: [AtomOutput()],
       ),
       eagerlyLoadAllPages: true,
       routerBuilder: (List<List<RouteBase>> routes) {

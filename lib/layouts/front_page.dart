@@ -5,6 +5,7 @@ import 'package:jaspr_content/jaspr_content.dart';
 import 'package:collection/collection.dart';
 
 import '../components/site_nav.dart';
+import '../outputs/atom_output.dart';
 import '../utils.dart';
 
 class PageRef extends StatelessComponent {
@@ -199,6 +200,7 @@ class FrontPageLayout extends PageLayoutBase {
     yield link(href: 'css/styles.css', rel: 'stylesheet');
     yield link(href: 'css/fonts/mbtype/equity-light.css', rel: 'stylesheet');
     yield link(href: 'css/fonts/mbtype/concourse-index.css', rel: 'stylesheet');
+    yield atomFeedLink;
   }
 
   static final socialMedia = [
