@@ -238,7 +238,7 @@ Dart it takes to deserialize JSON into an unstructured `Map`s even though
 Here is a boxplot of times it takes to parse the same 9MB input file from
 Maximilian (30 runs within the same process):
 
-<img src="/images/2017-01-08/plot-0.png" class="mx-auto mix-blend-multiply"/>
+<img src="/images/2017-01-08/plot-0.png" class="centered blend"/>
 
 `dartson` is absent from the picture because it is at least 10x slower than
 anything else...
@@ -256,7 +256,7 @@ loaded data.json: 9389696 bytes
 
 Looking at the CPU profile page in the observatory reveals disturbing picture:
 
-<img src="/images/2017-01-08/profile-0.png" class="mx-auto mix-blend-multiply"/>
+<img src="/images/2017-01-08/profile-0.png" class="centered blend"/>
 
 This picture tells us that `dartson` is spending really large amount of time
 interpolating strings. A quick look at the [source code](https://github.com/eredo/dartson/blob/01a33232bff83bd42366a7762f79a0a2064d8a2c/lib/dartson.dart)
@@ -293,7 +293,7 @@ changing something that has nothing to do with either mirrors or JSON. If we
 look at the profile again then we discover that things are finally starting to
 get interesting:
 
-<img src="/images/2017-01-08/profile-1.png" class="mx-auto mix-blend-multiply"/>
+<img src="/images/2017-01-08/profile-1.png" class="centered blend"/>
 
 Here we seem to repeatedly requesting mirror to compute _metadata_ associated
 with some declaration. Lets look into [`Dartson._fillObject`](https://github.com/eredo/dartson/blob/01a33232bff83bd42366a7762f79a0a2064d8a2c/lib/dartson.dart#L157-L195):
@@ -556,7 +556,7 @@ We have now made dartson **89%** faster than its original performance!
 Furthermore it turns out that warmed up performance of this code is actually
 rivaling that of Go:
 
-<img src="/images/2017-01-08/plot-1.png" class="mx-auto mix-blend-multiply"/>
+<img src="/images/2017-01-08/plot-1.png" class="centered blend"/>
 
 Can we push performance further? Certainly! If we look at our deserialization
 chain: from `String` to `Map` to an actual forest of objects then the very
@@ -775,7 +775,7 @@ final setField = mirrors.$evaluate('''(obj, value) {
 
 ### Results
 
-<img src="/images/2017-01-08/plot-2.png" class="mx-auto mix-blend-multiply"/>
+<img src="/images/2017-01-08/plot-2.png" class="centered blend"/>
 
 Our prototype labeled `μDecode` and `μDecode*` on the plot written in Dart and
 using mirrors is doing respectably well against the competition and is
@@ -827,7 +827,7 @@ We will get back to the last option later, but lets first look at where current
 `dart2js`'s choice gets us. If we compile our benchmark to JavaScript via `dart2js`
 and run it in a relatively new V8 we will see results like this:
 
-<img src="/images/2017-01-08/plot-3.png" class="mx-auto mix-blend-multiply"/>
+<img src="/images/2017-01-08/plot-3.png" class="centered blend"/>
 
 <sidenote><code>dartson</code> comes with a <em>transformer</em> which erases
 <code>dart:mirrors</code> usage but I am intentionally not using it here because I want to

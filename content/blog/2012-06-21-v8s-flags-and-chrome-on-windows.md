@@ -36,4 +36,4 @@ Run it in a directory containing `chrome.exe` and script will patch the executab
 
     chrome.exe --no-sandbox --js-flags="--trace-opt --trace-bailout --trace-deopt"
 
-<img height="400" width="700" class="mx-auto max-w-8/10" src="images/2012-06-21/chrome-windows-v8-output.png" />
+<img height="400" width="700" class="centered" style="max-width: 80%" src="images/2012-06-21/chrome-windows-v8-output.png" />

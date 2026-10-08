@@ -1,0 +1,121 @@
+// Code: inline code, code blocks, syntax highlighting and IR listings.
+@use 'config' as *;
+
+code {
+  font-size: .8em;
+}
+
+code, pre {
+  @include below(md) {
+    overflow: auto;
+  }
+}
+
+pre:not(:has(> code:only-child)) {
+  font-size: .8em;
+  padding: 1em;
+  padding-top: 0;
+}
+
+div.saga-flex {
+  margin-bottom: 1rem;
+}
+
+div.saga-root > pre {
+  padding-top: 1em !important;
+  margin-bottom: 1rem;
+}
+
+li > pre > code {
+  padding-top: 1em !important;
+}
+
+pre.highlight, pre.no-highlight {
+  line-height: initial;
+
+  code {
+    --fg: var(--color-fg);
+    --bg: var(--color-bg);
+    /*--entity: #6f42c1;
+    --keyword: #d73a49;
+    --variable: #e36209;
+    --string-constant: #032f62;
+    --numeric-constant: #005cc5; */
+
+    padding: 1em;
+    padding-top: 0em;
+    background: var(--bg);
+    color: var(--fg);
+    display: inline-block;
+
+    .p { color: var(--punctuation); }
+    .nm { color: var(--entity); }
+    .v { color: var(--variable); }
+    .o { color: var(--operator); }
+    .c { color: var(--comment); font-style: italic; }
+    .k { color: var(--keyword); font-weight: 500; }
+    .s { color: var(--string-constant); background-color: rgb(from var(--comment) r g b / .1); }
+    .m { color: var(--numeric-constant); }
+
+    .gi {
+      color: #22863a;
+      background-color: #f0fff4;
+    }
+
+    .gd {
+      color: #b31d28;
+      background-color: #ffeef0;
+    }
+  }
+}
+
+// IR listings rendered by js/ir.js.
+.hydrogen {
+  /* background-color: white !important; */
+  overflow: auto;
+  font-size: .8em;
+  margin-bottom: 1rem;
+
+  .c { color: var(--comment); font-style: italic; }
+  /* .k { color: var(--keyword); font-weight: 500; } */
+
+  > table {
+    border-spacing: 0px;
+    border-collapse: collapse;
+
+    > tbody > tr > td:first-child {
+      text-align: right;
+      min-width: 3em;
+      padding-right: .2em;
+    }
+
+    > tbody > tr > td:last-child {
+      padding-left: .2em;
+    }
+  }
+
+  .lir {
+    background: rgba(125, 167, 217, 0.15) !important;
+  }
+
+  .src-range {
+    margin-bottom: .2em;
+    margin-top: .2em;
+    display: inline-block;
+  }
+
+  .src-range-transparent { opacity: 0.3; }
+  .src-range-point { position: relative; }
+  .src-range-point::before {
+    position: absolute;
+    left: 0.0em;
+    top: 0.8em;
+    content: "^";
+    font-weight: 900;
+    color: gold;
+  }
+
+  td.loop-1 {
+    border-left: 3px solid #C00;
+  }
+}

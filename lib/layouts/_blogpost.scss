@@ -1,0 +1,76 @@
+// Styles for BlogpostLayout (blogpost.dart).
+//
+//   <body class="blogpost">
+//     <article>
+//       <header>
+//         <nav class="site-nav compact">...</nav>
+//         <div>
+//           <h1>Title</h1>
+//           <time>Jan 1, 2025</time>
+//         </div>
+//       </header>
+//       <section class="content">...</section>
+//       <p class="comments">...</p>
+//     </article>
+//
+// Styles for the post content itself are in styles/_content.scss.
+@use '../styles/config' as *;
+
+body.blogpost {
+  width: 100%;
+  padding-top: 1.5rem;
+
+  > article {
+    // Positioning context for sidenotes in the margin.
+    position: relative;
+    width: 100%;
+
+    @include below(lg) {
+      padding-inline: 1.5rem;
+    }
+
+    @include body-text;
+
+    @include from(lg) {
+      max-width: 800px;
+      margin-inline: auto;
+    }
+  }
+
+  > article > header {
+    margin-bottom: 1.5rem;
+    @include font-size(3xl);
+    font-weight: 700;
+
+    .site-nav {
+      margin-bottom: 1.5rem;
+    }
+
+    > div {
+      border-top: 3px solid;
+
+      > h1 {
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    time {
+      @include font-size(lg);
+      text-transform: lowercase;
+      color: var(--color-tbg);
+    }
+  }
+}
+
+p.comments {
+  padding: 0.5rem;
+  border: 1px solid #f6d391;
+  border-left-width: 3px;
+  background-color: #fdf5e6;
+
+  > :first-child {
+    @include small-caps;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+}

@@ -12,12 +12,12 @@ on a JavaScript VM written in JavaScript. Actually this would not be a unique pr
 from Universit&eacute; de Montr&eacute;al kinda got there first with [Tachyon](https://github.com/Tachyon-Team), but
 I have some ideas I would like to pursue myself.
 
-<img class="mix-blend-multiply" align="left" height="94" src="images/2012-06-03/black-box.png" width="258" /> I however have another dream closely
+<img class="blend" align="left" height="94" src="images/2012-06-03/black-box.png" width="258" /> I however have another dream closely
 connected to (meta)circular virtual machines. I *want* to help JavaScript developers understand how JS engines
 work. I think understanding the tools you are wielding is of uttermost importance in our trade. The more people would
 stop seeing JS VM as a mysterious black box that converts JavaScript source into some zeros-and-ones the better.
 
-<img class="mix-blend-multiply" align="right" height="149" src="images/2012-06-03/wr2012-assembly.png" width="250" /> I should say that I am not
+<img class="blend" align="right" height="149" src="images/2012-06-03/wr2012-assembly.png" width="250" /> I should say that I am not
 alone in my desire to explain how things work internally and help people write a more performant code. A lot of people
 from all over the world are trying to do the same. But there is I think a problem that prevents this knowledge from
 being absorbed efficiently by developers. We are trying to convey our knowledge in the wrong form. I am guilty of
@@ -212,7 +212,7 @@ $ d8 quasi-lua-runtime.js points.js
 737
 ```
 
-<img class="mix-blend-multiply" align="left" height="161" src="images/2012-06-03/wr2012-lookup.png" width="250" /> Now our translated code works
+<img class="blend" align="left" height="161" src="images/2012-06-03/wr2012-lookup.png" width="250" /> Now our translated code works
 but is disappointingly slow because of all those levels of abstraction every load and store have to cross before they
 get to the value. Lets try to reduce this overhead by applying the very same fundamental optimization that most
 JavaScript VMs apply these days: *inline caching*. Even JS VMs written in Java will eventually use it because
@@ -221,7 +221,7 @@ as IC in V8 sources) is actually a very old technique developed roughly 30 years
 
 # Good duck always quacks the same way
 
-<img class="mix-blend-multiply" align="right" height="161" src="images/2012-06-03/wr2012-lookup-ic.png" width="250" /> The idea behind inline
+<img class="blend" align="right" height="161" src="images/2012-06-03/wr2012-lookup-ic.png" width="250" /> The idea behind inline
 caching is very simple: we want to create a bypass or *fast path* that would allow us to quickly, without entering
 runtime system, load object's property if our assumptions about object and it's properties are correct. It's quite
 hard to formulate any meaningful assumptions about object layout in a program written in language full of dynamic t
@@ -238,7 +238,7 @@ our object model. There is no way we can do a fast load from a `Map`, we always 
 
 # Discovering hidden structure
 
-<img class="mix-blend-multiply" align="left" height="199" src="images/2012-06-03/wr2012-hidden-classes.png" width="250" />
+<img class="blend" align="left" height="199" src="images/2012-06-03/wr2012-hidden-classes.png" width="250" />
 
 For efficiency tables that are used like structured data should become more like C `struct`s: a sequence of named
 fields at fixed offsets. The same about tables that are used as arrays: we want numeric properties to be stored in
@@ -454,7 +454,7 @@ cooperation between different parts of VM?).
 
 # Patchwork quilts of generated code
 
-<img class="mix-blend-multiply" align="right" height="303" src="images/2012-06-03/wr2012-inline-cache.png" width="250" /> One of many ways to
+<img class="blend" align="right" height="303" src="images/2012-06-03/wr2012-inline-cache.png" width="250" /> One of many ways to
 implement an inline cache is to split it into two pieces: modifiable call site in the generated code and a set of
 stubs (small pieces of generated native code) that can be called from that call site. It is essential that stubs
 themselves (or runtime system) could find callsite from which they were called: stubs contain only fast paths compiled

@@ -14,14 +14,12 @@ dependencies:
   syntax_highlight_lite: ^0.0.1
 
 dev_dependencies:
-  build: ^4.0.0
   build_runner: ^2.6.0
   build_web_compilers: ^4.2.4
-  glob: ^2.1.0
   jaspr_builder: ^0.23.5
   jaspr_lints: ^0.7.2
   lints: ^6.1.0
-  path: ^1.9.0
+  sass_builder: ^2.4.0+1
 
 jaspr:
   mode: static

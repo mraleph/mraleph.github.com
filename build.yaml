@@ -5,16 +5,3 @@ targets:
         # These are globs for the entrypoints you want to compile.
         generate_for:
         - web/main.dart
-
-builders:
-  tailwind:
-    import: "tool/tailwind_builder.dart"
-    builder_factories: ["tailwindBuilder"]
-    build_extensions:
-      "web/{{file}}.tw.css":
-        - "web/{{file}}.css"
-    auto_apply: root_package
-    build_to: cache
-    defaults:
-      release_options:
-        minify: true

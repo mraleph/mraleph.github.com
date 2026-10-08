@@ -1,0 +1,77 @@
+// Styles for SiteNav (site_nav.dart).
+//
+//   <nav class="site-nav [compact]">
+//     <ul>
+//       <li><a href="..." [aria-current="page"]><span></span>Posts</a></li>
+//       ...
+//
+// The empty <span> is a horizontal line indicator, it is not rendered in
+// compact mode.
+@use '../styles/config' as *;
+
+.site-nav {
+  ul {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    @include small-caps;
+    @include font-size(xl);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+
+    &[aria-current='page'] {
+      color: var(--color-lk);
+    }
+  }
+
+  // Line indicator: only shown on large screens where the navigation is laid
+  // out vertically. Extends on hover and for the current page.
+  a > span {
+    display: none;
+    width: 2rem;
+    height: 1px;
+    margin-right: 1rem;
+    background-color: currentcolor;
+    transition: all 150ms $transition-easing;
+
+    @include from(lg) {
+      display: block;
+    }
+  }
+
+  a[aria-current='page'] > span {
+    width: 4rem;
+  }
+
+  a {
+    @include hover {
+      > span {
+        width: 4rem;
+      }
+    }
+  }
+
+  // Large screens: vertical navigation (in the front page sidebar).
+  &:not(.compact) ul {
+    @include from(lg) {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+  }
+
+  // Compact: small right-aligned row of links (on top of blog posts).
+  &.compact {
+    ul {
+      justify-content: flex-end;
+    }
+
+    a {
+      @include font-size(base);
+    }
+  }
+}

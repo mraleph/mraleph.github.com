@@ -1,0 +1,16 @@
+// Entry point, compiled to styles.css by sass_builder.
+//
+// Shared styles live in lib/styles/, styles for layouts and components next
+// to the corresponding Dart code. Order matters: later rules win over earlier
+// ones with the same specificity.
+@use 'package:mraleph/styles/fonts';
+@use 'package:mraleph/styles/reset';
+@use 'package:mraleph/styles/base';
+@use 'package:mraleph/styles/content';
+@use 'package:mraleph/styles/code';
+@use 'package:mraleph/components/site_nav';
+@use 'package:mraleph/layouts/front_page';
+@use 'package:mraleph/layouts/blogpost';
+
+// Plain CSS import, Sass moves it to the top of the output.
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&display=swap');

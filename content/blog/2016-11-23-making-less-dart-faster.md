@@ -55,7 +55,7 @@ Depending on your background you might also be surprised by a _non-linear growth
 
 Running benchmark with `dart --observe` and looking at [CPU profile](https://dart-lang.github.io/observatory/cpu-profile.html) in [Observatory](https://dart-lang.github.io/observatory/) reveals an unsuprising picture:
 
-<img src="/images/2016-11-23/observatory-cpu-1.png" class="mx-auto mix-blend-multiply">
+<img src="/images/2016-11-23/observatory-cpu-1.png" class="centered blend">
 
 Most of the time is spent doing a substring operation, so why Dart VM's substring is so much slower than V8's? They must be implemented completely differently - and indeed they are.
 
@@ -95,7 +95,7 @@ class String: public Name {
 };
 ```
 
-<img src="/images/2016-11-23/sequential.jpg" class="mx-auto">
+<img src="/images/2016-11-23/sequential.jpg" class="centered">
 
 ```cpp
 // The SeqString abstract class captures sequential string values.
@@ -339,7 +339,7 @@ Turns out that bug was prompted by their investigation into the slowness of `les
 
 Looking at `less_dart` benchmark in the Observatory reveals the following picture:
 
-<img src="/images/2016-11-23/observatory-cpu-2.png" class="max-w-7/10 mx-auto mix-blend-multiply">
+<img src="/images/2016-11-23/observatory-cpu-2.png" class="centered blend" style="max-width: 70%">
 
 That is Less parser is doing exactly what I would not recommend - iterating through the input string using substring operation. Looking into the source reveals the following code and the reason for using substring becomes obvious:
 

@@ -191,7 +191,7 @@ for (var boundary in boundaries) {
 
 However when I ran this code over the disassembly and displayed the resulting CFG on IRHydra's `graph_pane`, it looked even more confusing than the disassembly itself:
 
-<img src="/images/2015-03-29/graph0.svg" class="mx-auto" width="400px">
+<img src="/images/2015-03-29/graph0.svg" class="centered" width="400px">
 
 The most confusing thing here is not even the completely unreadable mess of control flow edges, but the intense red color assigned to some blocks. IRHydra uses a [Brewer palette](http://mkweb.bcgsc.ca/brewer/) to indicate _loop nesting_: deeper nested loops are colored in more intense red. The way it selected colors here indicates that there is a loop of nesting 3 (blocks `B14`, `B15`, `B16`, `B17`). However even a quick glance on the disassembly reveals a strange thing: these blocks indeed form a loop, but they are not nested within any other loop. What's going on?
 
@@ -199,7 +199,7 @@ Turns out that instead of a generic loop finding algorithm IRHydra was using a h
 
 With the loop finding heuristic replaced the graph reshapes into something much closer to my initial expectations:
 
-<img src="/images/2015-03-29/graph1.svg" class="mx-auto" width="240px">
+<img src="/images/2015-03-29/graph1.svg" class="centered" width="240px">
 
 There is still one surprising thing on this graph: I expected to see three independent loops, but there is a fourth one at the very bottom and it seems to be infinite - there are no edges leaving it, only edges coming into it. Lets take a look at the disassembly corresponding to this loop:
 
@@ -313,7 +313,7 @@ Each node represents an operation performed on its inputs and inputs are always 
 
 Here is an example of how a DFG could look like for a simple piece of disassembly:
 
-<img src="/images/2015-03-29/flow-graph.png" class="mx-auto mix-blend-multiply">
+<img src="/images/2015-03-29/flow-graph.png" class="centered blend">
 
 But what if at some point in the program a register contains a value that does not have a unique definition, e.g. it could be produced by several different instructions depending on the execution path taken? A simplest example would be a conditional `x = f ? 1 : 2`.
 
@@ -323,7 +323,7 @@ Consider the following example:
 
 <sidenote>A sane optimizing compiler is unlikely to generate this kind of messy machine code from the simple ternary expression above. I just wanted to keep the example simple. For example LLVM would avoid branches by generating<br/><br/><code>cmpq $1, %rax</code><br/><code>movl $1, %ebx</code><br/><code>adcq $0, %rbx</code></sidenote>
 
-<img src="/images/2015-03-29/flow-graph-phi.png" class="mx-auto mix-blend-multiply">
+<img src="/images/2015-03-29/flow-graph-phi.png" class="centered blend">
 
 Here the block `B3` has two predecessors `B1` and `B2`. At the end of `B1` the register `%rbx` contains the constant `1`. At the end of `B2` the same register `%rbx` contains the value `2`. This means that at the beginning of `B3` this register contains either `1` or `2` depending on where control came from into `B3`. This is captured by a phi-function with two inputs: `Konst(1)` coming from `B1` and `Konst(2)` coming from `B2`.
 
@@ -532,13 +532,13 @@ Here is a fragment of the Saga UI for IR:
 
 As I mentioned before Saga has no way of figuring out whether the call it sees returns normally or always throws. That's why the disassembly view has support for tweaking call-target attributes:
 
-<img src="/images/2015-03-29/noreturn.png" class="mx-auto">
+<img src="/images/2015-03-29/noreturn.png" class="centered">
 
 Marking a call `noreturn` tells the CFG reconstruction algorithm to assume that this calls never returns. As an experiment I also decided to assume that paths that lead to `noreturn` calls are _exceptional_ and _unlikely_. Once all analysis/optimization passes over IR are completed, we fuse blocks together by ignoring conditional branches that lead to _unlikely_ paths: e.g. if `B1` has likely successor `B2` and unlikely successor `B3` and `B2` has a single predecessor we fuse `B1` and `B2`.
 
 Here is a CFG after such fusion (dashed edges are unlikely ones):
 
-<img src="/images/2015-03-29/graph2.svg" class="mx-auto" width="240px">
+<img src="/images/2015-03-29/graph2.svg" class="centered" width="240px">
 
 ## What did C2 do to that loop?
 

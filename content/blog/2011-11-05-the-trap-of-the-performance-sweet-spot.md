@@ -186,13 +186,13 @@ JavaScript program is approximately 10 times slower than original C program. *Hm
 
 C is a low-level programming language. People call it a *portable assembly* sometimes. You just take a piece of memory and say: hey, this smallish sequence of 24 bytes is actually a `Point` which has one `uint32_t` field followed by two `double` fields.
 
-<img src="images/2011-11-05/point-structure-c.png" class="mx-auto mix-blend-multiply" />
+<img src="images/2011-11-05/point-structure-c.png" class="centered blend" />
 
 Small chunk of unused memory between `n` and `x` appears to make `x` and `y` fields nicely aligned. CPUs &hearts; aligned doubles. On some architectures you can't even read an unaligned one directly from memory into a floating point register (you'll get punished if you try).
 
 Arrays in C are also nice and tight: you just take a bigger region of memory and assume that it contains a sequence of `Point`s one after another.
 
-<img src="images/2011-11-05/array-of-points-structure-c.png" class="mx-auto mix-blend-multiply" />
+<img src="images/2011-11-05/array-of-points-structure-c.png" class="centered blend" />
 
 But in JavaScript things are destined to get hairy. You can't take a flat piece of memory and call it `Point` with this and that as fields. Instead you have an extremely flexible thing called `Object`. `Object` can have *properties* which can come and go as they wish (almost). You can write constructor:
 
@@ -203,7 +203,7 @@ function Point(n, x, y) { /* ... */ }
 
 but nothing actually prevents you from modifying `Point` instances after they were created. VM that runs JavaScript has to be always ready for virtually anything that can happen with your object (new properties added, old properties deleted, property *descriptor* modified). Because of this flexibility it can't pack Point objects into 24 bytes and has to go with something like this (example layout used by V8):
 
-<img src="images/2011-11-05/point-structure-javascript.png" class="mx-auto mix-blend-multiply"/>
+<img src="images/2011-11-05/point-structure-javascript.png" class="centered blend"/>
 
 V8 actually tries to make the object more *struct* like. It attempts to figure out how much space should be preallocated directly inside the object for properties by looking at the constructor and/or doing allocation profiling. Some VMs just use a fixed constant or even store all properties outside of an object in a separate array. Another thing to notice is that V8 always boxes numbers that are not 31-bit integers (32-bit on x64). Some VMs (e.g. SpiderMonkey and JSC) don't box doubles but instead use *NaN-tagging* instead.
 
@@ -211,7 +211,7 @@ Nevertheless `Point` object will be 3.3 times as big on x64 version of V8 than i
 
 Array of points object looks basically the same:
 
-<img src="images/2011-11-05/array-of-points-structure-javascript.png" class="mx-auto mix-blend-multiply" />
+<img src="images/2011-11-05/array-of-points-structure-javascript.png" class="centered blend" />
 
 Array is a JavaScript object and thus it also has hidden class, pointer to the properties backing store and pointer to the elements backing store. Backing stores can have different representations. For example VMs usually try to represent sparse arrays as *dictionaries* and non-sparse arrays should have flat backing stores. In our program array of points is always non-sparse and it gets a flat backing store.
 

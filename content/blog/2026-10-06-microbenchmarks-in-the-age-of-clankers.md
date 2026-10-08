@@ -28,7 +28,7 @@ rather _WHY_ these numbers are the way they are. Deriving decisions from
 numbers without knowing the reason hiding behind these numbers will invariably
 lead to incorrect conclusions.
 
-<img src="/images/2026-10-06/prince-of-persia.png" class="mx-auto">
+<img src="/images/2026-10-06/prince-of-persia.png" class="centered">
 
 Few days ago I saw a [post](https://filiph.net/text/dart-for-loops-performance.html)
 from Filip Hráček comparing execution speed of different Dart loops. As I was

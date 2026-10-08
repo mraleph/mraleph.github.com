@@ -16,60 +16,57 @@ class BlogpostLayout extends PageLayoutBase {
   Iterable<Component> buildHead(Page page) sync* {
     // Add common meta tags.
     yield* super.buildHead(page);
-    yield link(href: 'css/fonts/mbtype/equity-light.css', rel: 'stylesheet');
-    yield link(href: 'css/fonts/mbtype/concourse-index.css', rel: 'stylesheet');
     yield link(href: 'css/styles.css', rel: 'stylesheet');
     yield atomFeedLink;
   }
 
+  /// Styles are in `_blogpost.scss`.
   @override
   Component buildBody(Page page, Component child) {
-    return div(classes: 'flex lg:justify-center max-lg:px-6 w-full max-w-full', [
-      Document.body(attributes: {'class': 'pt-6 w-full blogpost'}),
-      div(classes: 'w-full lg:max-w-[800px] md:text-xl relative', [
-        div(classes: 'title', [
-          const SiteNav(compact: true, classes: 'mb-6'),
-          div(classes: 'border-t-3', [
-            div(classes: 'mb-2', [
-              .text(page.title!),
-            ]),
-            Component.element(
-              tag: 'time',
-              attributes: {'class': 'text-lg lowercase text-tbg', 'datetime': '{{ page.date }}'},
-              children: [
-                .text(DateFormat.yMMMd().format(page.date!)),
-              ],
-            ),
+    return article([
+      Document.body(attributes: {'class': 'blogpost'}),
+      header([
+        const SiteNav(compact: true),
+        div([
+          h1([
+            .text(page.title),
           ]),
+          Component.element(
+            tag: 'time',
+            attributes: {'datetime': DateFormat('yyyy-MM-dd').format(page.date)},
+            children: [
+              .text(DateFormat.yMMMd().format(page.date)),
+            ],
+          ),
         ]),
-        child,
-        p(classes: 'comments', [
-          span([
-            .text('Comments?'),
-          ]),
-          .text('''
+      ]),
+      child,
+      p(classes: 'comments', [
+        span([
+          .text('Comments?'),
+        ]),
+        .text('''
 
             Drop me a mail '''),
-          code([
-            .text('me@mrale.ph'),
-          ]),
-          .text(''' or find me on
-            '''),
-          a(href: 'https://mastodon.social/@mraleph', [
-            .text('Mastodon'),
-          ]),
-          .text(''',
-            '''),
-          a(href: 'https://x.com/mraleph', [
-            .text('X'),
-          ]),
-          .text(' or '),
-          a(href: 'https://bsky.app/profile/mrale.ph', [
-            .text('Bluesky'),
-          ]),
-          .text('''.
-          '''),
+        code([
+          .text('me@mrale.ph'),
         ]),
+        .text(''' or find me on
+            '''),
+        a(href: 'https://mastodon.social/@mraleph', [
+          .text('Mastodon'),
+        ]),
+        .text(''',
+            '''),
+        a(href: 'https://x.com/mraleph', [
+          .text('X'),
+        ]),
+        .text(' or '),
+        a(href: 'https://bsky.app/profile/mrale.ph', [
+          .text('Bluesky'),
+        ]),
+        .text('''.
+          '''),
       ]),
     ]);
   }

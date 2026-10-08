@@ -43,13 +43,13 @@ wide enough to contain a 64-bit double or to store 64-doubles as *boxed* values.
 
 V8 goes with the latter approach and *boxes* every number that does not fit into 31-bit integer range. Here is for example a backing store of an array `[3.14, 1, 2.71, 2]` on 32-bit architecture:
 
-<img src="images/2011-05-12/v8-array-backing-store.png" alt="V8s array backing store" class="mx-auto">
+<img src="images/2011-05-12/v8-array-backing-store.png" alt="V8s array backing store" class="centered">
 
 LuaJIT2 (as well as JSC and SpiderMonkey) on the other side uses a technique called [NaN-tagging](http://blog.mozilla.com/rob-sayre/2010/08/02/mozillas-new-javascript-value-representation/), which allows to store both pointers (or other 32-bit values) and doubles in 64-bit wide slots. Here is how the same array will look like in these VMs:
 
 <sidenote>V8's optimizing backend is able to keep local double values and temporaries on the stack and in XMM registers. Boxing only occurs when the value <em>escapes</em> optimized code, that is stored to a property, passed as an arguments or returned from a function. Non-optimized code always works with boxed numbers.</sidenote>
 
-<img src="images/2011-05-12/luajit-array-backing-store.png" alt="LuaJIT's array backing store" class="mx-auto">
+<img src="images/2011-05-12/luajit-array-backing-store.png" alt="LuaJIT's array backing store" class="centered">
 
 V8's approach allows to save heap space when numbers mostly fit into 31-bit integer range but it also incurs overhead
 of double indirection and extra allocation when application starts working with dense arrays of floating point numbers.

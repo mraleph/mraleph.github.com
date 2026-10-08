@@ -17,15 +17,15 @@ class PageRef extends StatelessComponent {
   Component build(BuildContext context) {
     final date = page.date; // {{include.post.date | date:\'%b %Y\'}}
     final title = page.title;
-    return article(classes: 'mb-2', [
-      h2(classes: 'text-l font-bold', [
-        a(classes: 'hover:text-lk', href: page.url, [
+    return article([
+      h2([
+        a(href: page.url, [
           .text(title),
         ]),
       ]),
-      p(classes: 'leading-relaxed', [
+      p([
         ..._withInlineCode(page.summary ?? ''),
-        span(classes: 'text-gray-400 ml-1 text-sm whitespace-pre', [
+        span(classes: 'date', [
           .text(DateFormat.yMMM().format(date)),
         ]),
       ]),
@@ -57,12 +57,12 @@ class ListOfPosts extends StatelessComponent {
     final posts = context.pages.where((p) => p.layout == 'blogpost').toList();
     final byYear = posts.groupListsBy((e) => e.date.year);
 
-    return div([
+    return div(classes: 'posts', [
       for (var e in byYear.entries.sorted((l, r) => r.key.compareTo(l.key))) ...[
-        h1(classes: 'border-t-3 equity-caps font-bold text-2xl my-6', [
+        h1([
           Component.text('${e.key}'),
         ]),
-        div(classes: 'lg:grid lg:grid-cols-3 lg:gap-3', [
+        div([
           for (var page in e.value..sort((l, r) => r.date.compareTo(l.date))) PageRef(page: page),
         ]),
       ],
@@ -139,20 +139,20 @@ class TalkRef extends StatelessComponent {
       if (talk.video case final video?) (name: 'video', href: video),
     ];
     // Same date styling as in [PageRef].
-    final date = span(classes: 'text-gray-400 ml-1 text-sm whitespace-pre', [
+    final date = span(classes: 'date', [
       .text(DateFormat.yMMM().format(talk.date)),
     ]);
     final paragraphs = talk.description.isEmpty ? const [''] : talk.description;
 
-    return article(classes: 'mb-2', [
-      h2(classes: 'equity-caps text-l font-bold', [.text(talk.title)]),
+    return article([
+      h2([.text(talk.title)]),
       if (talk.conference != null || links.isNotEmpty)
-        p(classes: 'text-sm font-bold mb-1', [
-          if (talk.conference case final conference?) span(classes: 'mr-1', [.text(conference)]),
-          for (final link in links) a(classes: 'hover:text-lk mr-1', href: link.href, [.text('[${link.name}]')]),
+        p(classes: 'meta', [
+          if (talk.conference case final conference?) span([.text(conference)]),
+          for (final link in links) a(href: link.href, [.text('[${link.name}]')]),
         ]),
       for (final (i, paragraph) in paragraphs.indexed)
-        p(classes: 'leading-relaxed', [
+        p([
           RawText(paragraph),
           if (i == paragraphs.length - 1) date,
         ]),
@@ -167,12 +167,12 @@ class ListOfTalks extends StatelessComponent {
   Component build(BuildContext context) {
     final byYear = Talk.all(context).groupListsBy((e) => e.date.year);
 
-    return div([
+    return div(classes: 'talks', [
       for (var e in byYear.entries.sorted((l, r) => r.key.compareTo(l.key))) ...[
-        h1(classes: 'border-t-3 equity-caps font-bold text-2xl my-6', [
+        h1([
           Component.text('${e.key}'),
         ]),
-        div(classes: 'space-y-6', [
+        div([
           for (var talk in e.value..sort((l, r) => r.date.compareTo(l.date))) TalkRef(talk: talk),
         ]),
       ],
@@ -198,8 +198,6 @@ class FrontPageLayout extends PageLayoutBase {
     // Add common meta tags.
     yield* super.buildHead(page);
     yield link(href: 'css/styles.css', rel: 'stylesheet');
-    yield link(href: 'css/fonts/mbtype/equity-light.css', rel: 'stylesheet');
-    yield link(href: 'css/fonts/mbtype/concourse-index.css', rel: 'stylesheet');
     yield atomFeedLink;
   }
 
@@ -208,7 +206,6 @@ class FrontPageLayout extends PageLayoutBase {
       name: 'GitHub',
       href: 'https://github.com/mraleph',
       icon: svg(
-        classes: 'h-6 w-6',
         viewBox: '0 0 16 16',
         attributes: {
           'width': '24',
@@ -229,7 +226,6 @@ class FrontPageLayout extends PageLayoutBase {
       name: 'LinkedIn',
       href: 'https://www.linkedin.com/in/mraleph/',
       icon: svg(
-        classes: 'h-6 w-6',
         viewBox: '0 0 24 24',
         attributes: {
           'width': '24',
@@ -250,7 +246,6 @@ class FrontPageLayout extends PageLayoutBase {
       name: 'X',
       href: 'https://x.com/mraleph/',
       icon: svg(
-        classes: 'h-6 w-6',
         viewBox: '0 0 1200 1227',
         attributes: {
           'width': '24',
@@ -270,7 +265,6 @@ class FrontPageLayout extends PageLayoutBase {
       name: 'Bluesky',
       href: 'https://bsky.app/profile/mrale.ph',
       icon: svg(
-        classes: 'h-6 w-6',
         viewBox: '0 0 600 530',
         attributes: {
           'width': '24',
@@ -307,51 +301,38 @@ class FrontPageLayout extends PageLayoutBase {
     ),
   ];
 
+  /// Styles are in `_front_page.scss`.
   @override
   Component buildBody(Page page, Component child) {
-    return div(classes: 'mx-auto min-h-screen max-w-screen-xl px-6 py-12 md:px-12 md:py-16 lg:py-0', [
-      div(classes: 'lg:flex lg:justify-between', [
-        header(
-          classes: 'lg:sticky lg:top-0 lg:flex lg:max-h-screen lg:w-[30%] lg:flex-col lg:justify-between lg:py-24',
-          [
-            div([
-              h1(classes: 'text-4xl font-bold sm:text-5xl', [
-                Component.text('Slava Egorov'),
-              ]),
-              ul(
-                classes: 'ml-1 mt-8 flex items-center',
-                attributes: {'aria-label': 'Social media'},
+    return div([
+      Document.body(attributes: {'class': 'front-page'}),
+      header([
+        h1([
+          Component.text('Slava Egorov'),
+        ]),
+        ul(classes: 'social', attributes: {'aria-label': 'Social media'}, [
+          for (final (:name, :href, :icon) in socialMedia)
+            li([
+              a(
+                href: href,
+                target: Target.blank,
+                attributes: {
+                  'rel': 'noreferrer noopener',
+                  'aria-label': '$name (opens in a new tab)',
+                  'title': name,
+                },
                 [
-                  for (final (:name, :href, :icon) in socialMedia)
-                    li(
-                      classes: 'mr-5 shrink-0 text-xs',
-                      [
-                        a(
-                          classes: 'block hover:text-lk',
-                          href: href,
-                          target: Target.blank,
-                          attributes: {
-                            'rel': 'noreferrer noopener',
-                            'aria-label': '$name (opens in a new tab)',
-                            'title': name,
-                          },
-                          [
-                            span(classes: 'sr-only', [
-                              Component.text(name),
-                            ]),
-                            icon,
-                          ],
-                        ),
-                      ],
-                    ),
+                  span([
+                    Component.text(name),
+                  ]),
+                  icon,
                 ],
               ),
-              const SiteNav(classes: 'mt-8'),
             ]),
-          ],
-        ),
-        main_(classes: 'pt-24 lg:w-[52%] lg:py-24', [child]),
+        ]),
+        const SiteNav(),
       ]),
+      main_([child]),
     ]);
   }
 }

@@ -1,0 +1,80 @@
+// Shared design tokens and mixins. Emits no CSS by itself.
+@use 'sass:list';
+@use 'sass:map';
+
+$breakpoints: (
+  sm: 40rem,
+  md: 48rem,
+  lg: 64rem,
+  xl: 85rem,
+);
+
+// Styles applied when the viewport is at least as wide as breakpoint $bp.
+@mixin from($bp) {
+  @media (width >= #{map.get($breakpoints, $bp)}) {
+    @content;
+  }
+}
+
+// Styles applied when the viewport is narrower than breakpoint $bp.
+@mixin below($bp) {
+  @media (width < #{map.get($breakpoints, $bp)}) {
+    @content;
+  }
+}
+
+// Only rendered on devices which support hovering (i.e. not on touch screens).
+@mixin hover {
+  @media (hover: hover) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+// Hides an element visually while keeping it accessible to screen readers.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@mixin small-caps {
+  font-family: 'equity-caps';
+  text-transform: lowercase;
+}
+
+// Font size with a matching line height (Tailwind's type scale).
+$font-sizes: (
+  xs: (0.75rem, calc(1 / 0.75)),
+  sm: (0.875rem, calc(1.25 / 0.875)),
+  base: (1rem, 1.5),
+  lg: (1.125rem, calc(1.75 / 1.125)),
+  xl: (1.25rem, calc(1.75 / 1.25)),
+  2xl: (1.5rem, calc(2 / 1.5)),
+  3xl: (1.875rem, calc(2.25 / 1.875)),
+  4xl: (2.25rem, calc(2.5 / 2.25)),
+  5xl: (3rem, 1),
+);
+
+@mixin font-size($size) {
+  $entry: map.get($font-sizes, $size);
+  font-size: list.nth($entry, 1);
+  line-height: list.nth($entry, 2);
+}
+
+// Size of the main text (blog posts, front page content): larger on wider
+// screens.
+@mixin body-text {
+  @include from(md) {
+    @include font-size(xl);
+  }
+}
+
+$transition-easing: cubic-bezier(0.4, 0, 0.2, 1);

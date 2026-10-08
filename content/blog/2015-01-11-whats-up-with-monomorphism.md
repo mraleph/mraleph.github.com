@@ -18,7 +18,7 @@ I have explained this notion in so many different ways before that I finally dec
 Dynamic lookup 101
 ------------------
 
-<img src="/images/2015-01-11/v8-vs-ox.png" class="float-left mix-blend-multiply">
+<img src="/images/2015-01-11/v8-vs-ox.png" class="left blend">
 
 For simplicity this post will mostly concentrate on the simplest property access in JavaScript, like `o.x` in the code below. At the same time it's important to understand that everything we are going to talk about applies to any _dynamically bound_ operation be it a property lookup or an arithmetic op and even goes beyond JavaScript.
 
@@ -64,7 +64,7 @@ This is an absolutely valid way to implement property lookup, however it has one
 
 Our interpreter is _amnesiac_: every time it does a property lookup it has to execute a generic property lookup algorithm, it does not learn anything from the previous attempts and has to pay full price again and again. That's why performance oriented VMs implement property lookup in a different way.
 
-<img src="/images/2015-01-11/ic.png" class="float-left mix-blend-multiply">
+<img src="/images/2015-01-11/ic.png" class="left blend">
 
 What if each property access in our program was capable of learning from objects that it saw before and apply this knowledge to similar objects? Potentially that would allow us to save a lot of time by avoiding costly generic lookup algorithm and instead use a quicker one that only applies to objects of certain _shape_.
 
@@ -89,7 +89,7 @@ Given that <code>{x: 1}</code> and <code>{x: 2}</code> have the same shape (aka 
 
 <sidenote>mono- ("one") + -morphic ("of a form")</sidenote>
 
-<img src="/images/2015-01-11/ic-poly.png" class="float-right mix-blend-multiply">
+<img src="/images/2015-01-11/ic-poly.png" class="right blend">
 
 What happens if we now call `f` with an object of a different shape?
 
@@ -111,7 +111,7 @@ f({ x: 6, a: 1 }) // polymorphic, degree 4
 f({ x: 7, b: 1 }) // megamorphic
 ```
 
-<img src="/images/2015-01-11/ic-mega.png" class="float-left mix-blend-multiply">
+<img src="/images/2015-01-11/ic-mega.png" class="left blend">
 
 Megamorphic state exists to prevent uncontrolled growth of polymorphic caches, it means _"I have seen too many shapes **here**, I give up tracking them"_. In V8 megamorphic ICs can still continue to cache things but instead of doing it locally they will put what they want to cache into a global hashtable. This hashtable has a fixed size and entries are simply overwritten on collisions.
 
@@ -180,11 +180,11 @@ As it was already stressed above human written JavaScript usually does not conta
 1. Polymorphic cache of degree N says "I've **only** seen A<sub>1</sub>, ..., A<sub>N</sub>";
 1. Megamorphic cache says "I've seen a lot of things.";
 
-<img src="/images/2015-01-11/opt-0.png" class="float-left mix-blend-multiply">
+<img src="/images/2015-01-11/opt-0.png" class="left blend">
 
 Optimizing compiler looks at the information collected by inline caches and builds _intermediate representation_ (IR) accordingly. IR instructions are usually more specific and low level than generic JS operations. For example if IC for `.x` saw only objects of shape `{x, y}` then optimizer can take an IR instruction that loads property from a fixed offset inside an object and use it to load `.x`. Of course it is unsafe to apply such instruction to arbitrary objects so optimizer prepends a _type guard_ before it. Type guard checks the shape of the object before it reaches specialized operation and if it does not match an expected shape the execution of the optimized code **can not** continue - instead we have to jump into the unoptimized code and continue execution there. This process is called _deoptimization_. Deoptimization reasons however are not limited to type guard violations: arithmetic operation can be specialized for 32bit integers and will deoptimize if result overflows this representation, an indexed property load `arr[idx]` can be specialized for a inbounds access and will deoptimize if `idx` is out of bounds or `arr` has no property `idx` (it's a _hole_), etc.
 
-<img src="/images/2015-01-11/opt-deopts.png" class="float-right mix-blend-multiply">
+<img src="/images/2015-01-11/opt-deopts.png" class="right blend">
 
 It should now become clear that the process of optimization tries to address two previously outlined weaknesses:
 
@@ -192,7 +192,7 @@ It should now become clear that the process of optimization tries to address two
 each operation has arbitrary unknown side effects because it is generic and implements full semantics | code specializations limit or eliminate unpredictability, side-effects are well defined (e.g. load of property by offset has no side-effects)
 each operation is on its own, learns individually and does not exchange information with neighbors | operations are decomposed into lower level IR instructions which are then optimized together, this allows to discover and eliminate redundancies between them
 
-<img src="/images/2015-01-11/opt-se.png" class="float-left mix-blend-multiply">
+<img src="/images/2015-01-11/opt-se.png" class="left blend">
 
 Indeed building specialized IR based on the type feedback is just the first step in the optimization pipeline. Once IR is ready compiler will run multiple passes over it trying to discover invariants and eliminate redundancies. Analyses that are run at this stage usually are _intraprocedural_ and compiler is forced to assume the worst arbitrary side-effects every time it encounters a call. Here it is important to realize that generic unspecialized operations are essentially _calls_ themselves: e.g. `+` evaluation can call `valueOf` and a property access `o.x` can easily result in a getter invocation. This means any operation which optimizer for some reason failed to specialize completely might become a stumbling block for subsequent optimization passes.
 
@@ -474,7 +474,7 @@ If in the middle of your tight number crunching loop you see IR instruction call
 
 <h1 style="text-align: center;">THE END</h1>
 
-<img class="max-w-7/10 mx-auto mix-blend-multiply" src="/images/2015-01-11/characters.png">
+<img class="centered blend" style="max-width: 70%" src="/images/2015-01-11/characters.png">
 
 <script type="text/javascript" src="/js/ir.js">
 </script>

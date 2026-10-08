@@ -5,15 +5,13 @@ import 'package:jaspr_content/jaspr_content.dart';
 /// Site-wide navigation between top-level sections (posts and talks).
 ///
 /// The current section is derived from the URL of the page being rendered.
+/// Styles are in `_site_nav.scss`.
 class SiteNav extends StatelessComponent {
   /// Renders a small right-aligned row of links without line indicators
   /// (used on blog post pages) instead of the large sidebar navigation.
   final bool compact;
 
-  /// Additional classes applied to the `<nav>` element.
-  final String? classes;
-
-  const SiteNav({super.key, this.compact = false, this.classes});
+  const SiteNav({super.key, this.compact = false});
 
   static const postsSection = (name: 'Posts', href: 'index.html');
   static const talksSection = (name: 'Talks', href: 'talks/index.html');
@@ -33,8 +31,8 @@ class SiteNav extends StatelessComponent {
   @override
   Component build(BuildContext context) {
     final current = sectionOf(context.page.url);
-    return nav(classes: ['site-nav', ?classes].join(' '), attributes: {'aria-label': 'Site sections'}, [
-      ul(classes: compact ? 'flex gap-6 justify-end' : 'flex gap-6 lg:flex-col lg:gap-3', [
+    return nav(classes: compact ? 'site-nav compact' : 'site-nav', attributes: {'aria-label': 'Site sections'}, [
+      ul([
         for (final section in sections) _link(section.name, section.href, active: section == current),
       ]),
     ]);
@@ -43,21 +41,13 @@ class SiteNav extends StatelessComponent {
   Component _link(String name, String href, {required bool active}) {
     return li([
       a(
-        classes: 'group flex items-center ${active ? 'text-lk' : 'hover:text-lk'}',
         href: href,
         attributes: {if (active) 'aria-current': 'page'},
         [
-          if (!compact)
-            // Horizontal line indicator, only shown on large screens where the
-            // navigation is laid out vertically.
-            span(
-              classes: 'mr-4 hidden h-px bg-current transition-all lg:block ${active ? 'w-16' : 'w-8 group-hover:w-16'}',
-              [],
-            ),
-          span(
-            classes: 'equity-caps font-bold tracking-widest ${compact ? 'text-base' : 'text-xl'}',
-            [.text(name)],
-          ),
+          // Horizontal line indicator, only shown on large screens where the
+          // navigation is laid out vertically.
+          if (!compact) span([]),
+          .text(name),
         ],
       ),
     ]);

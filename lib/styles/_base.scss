@@ -1,0 +1,49 @@
+// Site-wide variables and default element styles.
+
+:root {
+  --font-mono: "Google Sans Code";
+  --font-serif: "equity-text", "Times New Roman", Times, "PT Astra Serif", "Liberation Serif", serif;
+
+  --color-fg: #111111;
+  --color-bg: #fffff8;
+  --color-tbg: #6a737d;
+  --color-lk: #a33;
+  --color-date: oklch(70.7% 0.022 261.325);
+
+  // Syntax highlighting palette.
+  --comment: var(--color-tbg);
+  --punctuation: inherit;
+  --operator: inherit;
+  --keyword: inherit;
+  --variable: inherit;
+  --numeric-constant: inherit;
+  --string-constant: inherit;
+}
+
+body {
+  color: var(--color-fg);
+  background-color: var(--color-bg);
+}
+
+a {
+  text-decoration: underline;
+}
+
+a:hover {
+  color: var(--color-lk);
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+time {
+  font-family: 'equity-caps';
+  white-space: pre;
+  line-break: strict;
+}
+
+.equity-caps {
+  font-family: 'equity-caps';
+  text-transform: lowercase;
+}

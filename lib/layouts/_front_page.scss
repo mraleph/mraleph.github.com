@@ -1,0 +1,193 @@
+// Styles for FrontPageLayout and the lists of posts and talks
+// (front_page.dart).
+//
+//   <body class="front-page">
+//     <div>
+//       <header>
+//         <h1>Name</h1>
+//         <ul class="social">...</ul>
+//         <nav class="site-nav">...</nav>
+//       </header>
+//       <main>
+//         <section class="content">
+//           <section>...</section>  (from Markdown)
+@use '../styles/config' as *;
+
+.front-page > div {
+  max-width: 85rem;
+  min-height: 100vh;
+  margin-inline: auto;
+  padding: 3rem 1.5rem;
+
+  @include from(md) {
+    padding: 4rem 3rem;
+  }
+
+  // Large screens: sticky sidebar on the left, content on the right.
+  @include from(lg) {
+    display: flex;
+    justify-content: space-between;
+    padding-block: 0;
+  }
+
+  > header {
+    @include from(lg) {
+      position: sticky;
+      top: 0;
+      width: 30%;
+      max-height: 100vh;
+      padding-block: 6rem;
+    }
+
+    h1 {
+      @include font-size(4xl);
+      font-weight: 700;
+
+      @include from(sm) {
+        @include font-size(5xl);
+      }
+    }
+
+    .site-nav {
+      margin-top: 2rem;
+    }
+  }
+
+  > main {
+    padding-top: 6rem;
+    @include body-text;
+
+    @include from(lg) {
+      width: 52%;
+      padding-block: 6rem;
+    }
+  }
+
+  // Top-level sections of the page content, written in Markdown as
+  //
+  //   <section>
+  //     <h2>About</h2>  (screen reader only on large screens)
+  //     ...
+  //
+  //   or
+  //
+  //   <section>
+  //     <h1>My Talks</h1>
+  //     ...
+  .content > section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 4rem;
+
+    @include from(md) {
+      margin-bottom: 6rem;
+    }
+
+    @include from(lg) {
+      margin-bottom: 9rem;
+      scroll-margin-top: 6rem;
+    }
+
+    > h1 {
+      @include font-size(4xl);
+      font-weight: 700;
+    }
+
+    > h2 {
+      margin-bottom: 1rem;
+      padding-block: 1.25rem;
+      @include small-caps;
+      @include font-size(base);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+
+      @include from(lg) {
+        @include visually-hidden;
+      }
+    }
+  }
+}
+
+// Social media links in the sidebar. Each link contains a screen reader only
+// label and an icon.
+.social {
+  display: flex;
+  align-items: center;
+  margin-top: 2rem;
+  margin-left: 0.25rem;
+
+  li {
+    flex-shrink: 0;
+    margin-right: 1.25rem;
+    @include font-size(xs);
+  }
+
+  a {
+    display: block;
+  }
+
+  span {
+    @include visually-hidden;
+  }
+}
+
+// ListOfPosts and ListOfTalks: entries grouped by year.
+//
+//   <div class="posts|talks">
+//     <h1>2025</h1>
+//     <div>
+//       <article>
+//         <h2>Title</h2>
+//         <p class="meta">...</p>  (talks only)
+//         <p>... <span class="date">Jan 2025</span></p>
+.posts, .talks {
+  > h1 {
+    margin-block: 1.5rem;
+    border-top: 3px solid;
+    @include small-caps;
+    @include font-size(2xl);
+    font-weight: 700;
+  }
+
+  article {
+    margin-bottom: 0.5rem;
+
+    h2 {
+      font-weight: 700;
+    }
+  }
+
+  // Slightly smaller than the surrounding text.
+  .date {
+    margin-left: 0.25rem;
+    font-size: 0.875em;
+    line-height: calc(1.25 / 0.875);
+    white-space: pre;
+    color: var(--color-date);
+  }
+}
+
+.posts > div {
+  @include from(lg) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+.talks {
+  h2 {
+    @include small-caps;
+  }
+
+  // Conference name and links to slides/video. Slightly smaller than the
+  // surrounding text.
+  .meta {
+    font-size: 0.875em;
+    line-height: calc(1.25 / 0.875);
+    font-weight: 700;
+
+    > * {
+      margin-right: 0.25rem;
+    }
+  }
+}

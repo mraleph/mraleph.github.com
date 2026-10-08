@@ -1,0 +1,26 @@
+// Web fonts. WOFF2 files are in web/css/fonts/mbtype/ (licensed from MB TYPE,
+// see the README there). URLs are relative to the compiled css/styles.css.
+
+@mixin font-face($family, $file, $style: normal, $weight: normal, $display: swap) {
+  @font-face {
+    font-family: $family;
+    font-style: $style;
+    font-weight: $weight;
+    font-stretch: normal;
+    font-display: $display;
+    src: url('fonts/mbtype/#{$file}.woff2') format('woff2');
+  }
+}
+
+// Body text.
+@include font-face(equity-text, 'equity_a_regular');
+@include font-face(equity-text, 'equity_a_italic', $style: italic);
+@include font-face(equity-text, 'equity_a_bold', $weight: bold);
+@include font-face(equity-text, 'equity_a_bold_italic', $style: italic, $weight: bold);
+
+// Small caps.
+@include font-face(equity-caps, 'equity_a_caps_regular');
+@include font-face(equity-caps, 'equity_a_caps_bold', $weight: bold);
+
+// Numbers of ordered list items in blog posts.
+@include font-face(concourse-index, 'concourse_index_regular', $display: auto);

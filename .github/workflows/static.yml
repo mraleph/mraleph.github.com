@@ -28,21 +28,48 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      # Keep in sync with the `jaspr` dependency in pubspec.yaml.
+      JASPR_CLI_VERSION: 0.23.5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Setup Tailwind CLI
-        run: |
-          wget https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 -O /usr/local/bin/tailwindcss
-          chmod +x /usr/local/bin/tailwindcss
       - name: 'Setup Dart'
-        uses: dart-lang/setup-dart@v1.3
-      - name: 'Build Jaspr'
+        id: setup-dart
+        uses: dart-lang/setup-dart@v1
+      # Packages and globally activated jaspr_cli. Snapshots of global
+      # packages are specific to the Dart SDK version, hence it is part of the
+      # key.
+      - name: 'Cache pub packages'
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: pub-${{ runner.os }}-dart-${{ steps.setup-dart.outputs.dart-version }}-jaspr_cli-${{ env.JASPR_CLI_VERSION }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-dart-${{ steps.setup-dart.outputs.dart-version }}-jaspr_cli-${{ env.JASPR_CLI_VERSION }}-
+            pub-${{ runner.os }}-dart-${{ steps.setup-dart.outputs.dart-version }}-
+      # build_runner state: the AOT compiled build script (which takes a while
+      # to compile) and outputs of the previous build for incremental builds.
+      # Caches are immutable, so the key includes the commit to save a fresh
+      # cache on every run and restore the most recent one.
+      - name: 'Cache build_runner'
+        uses: actions/cache@v4
+        with:
+          path: .dart_tool/build
+          key: build-${{ runner.os }}-dart-${{ steps.setup-dart.outputs.dart-version }}-${{ hashFiles('pubspec.lock', 'build.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            build-${{ runner.os }}-dart-${{ steps.setup-dart.outputs.dart-version }}-${{ hashFiles('pubspec.lock', 'build.yaml') }}-
+      - name: 'Activate jaspr CLI'
         run: |
-          dart pub global activate jaspr_cli
-          jaspr build --verbose
+          if dart pub global list | grep -qx "jaspr_cli $JASPR_CLI_VERSION"; then
+            echo "jaspr_cli $JASPR_CLI_VERSION restored from cache"
+          else
+            dart pub global activate jaspr_cli "$JASPR_CLI_VERSION"
+          fi
+      - name: 'Build Jaspr'
+        run: jaspr build --verbose
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

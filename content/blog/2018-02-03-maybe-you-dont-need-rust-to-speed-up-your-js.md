@@ -456,7 +456,7 @@ sortOriginal:  896.3589999999995
 Here is how parsing and sorting times look like in V8 and SpiderMonkey per
 benchmark iteration run:
 
-<img src="/images/2018-02-03/parse-sort-0.png" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-0.png" class="centered blend">
 
 In V8 we seem to be spending roughly as much time parsing mappings as
 sorting them. In SpiderMonkey parsing is considerably faster - while sorting
@@ -849,7 +849,7 @@ function decodeNoCachingNoStringPreEncoded(arr) {
 Here are the results I've gotten by running my microbenchmark in Chrome Dev
 `66.0.3343.3` (V8 `6.6.189`) and Firefox Nightly `60.0a1 (2018-02-11)`:
 
-<img src="/images/2018-02-03/different-decodes.png" alt="Different Decodes" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/different-decodes.png" alt="Different Decodes" class="centered blend">
 
 There are few things to notice here:
 
@@ -879,7 +879,7 @@ and onward, which indicated to me that performance of `charCodeAt` is being
 actively worked on. Out of curiosity I decided to rerun my microbenchmark
 in Chrome Beta and compare against Chrome Dev
 
-<img src="/images/2018-02-03/different-decodes-v8s.png" alt="Different Decodes" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/different-decodes-v8s.png" alt="Different Decodes" class="centered blend">
 
 This comparison does in fact confirm that all those commits by the V8 team were
 not for nothing: performance of `charCodeAt` improved drastically from
@@ -923,7 +923,7 @@ string `charCodeAt`.
 In light of these discoveries lets remove caching of parsed segments from
 `source-map` parsing code and measure the effect.
 
-<img src="/images/2018-02-03/parse-sort-1.png" alt="Parse and Sort times" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-1.png" alt="Parse and Sort times" class="centered blend">
 
 Just like our microbenchmarking predicted caching was detrimental to the
 overall performance rather than being beneficial: removing it actually
@@ -1023,7 +1023,7 @@ constructed each `originalMappings[i]` array.
 
 <sidenote>Parse time improvement is likely due to the reduction of costs associated with managing <code>originalMappings</code> array: growing a single gigantic <code>originalMappings</code> array is more expensive than growing multiple smaller <code>originalMappings[i]</code> arrays individually. However this is just my guess, which is not confirmed by any rigorous analysis.</sidenote>
 
-<img src="/images/2018-02-03/parse-sort-2.png" alt="Parse and Sort times" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-2.png" alt="Parse and Sort times" class="centered blend">
 
 This algorithmic change improves sorting times on both V8 and SpiderMonkey and
 additionally improves parsing times on V8.
@@ -1156,7 +1156,7 @@ function sortGenerated(array, start) {
 
 This yields the following result:
 
-<img src="/images/2018-02-03/parse-sort-3.png" alt="Parse and Sort times" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-3.png" alt="Parse and Sort times" class="centered blend">
 
 Sorting times drop drastically, while parsing times slightly increase - that
 happens because the code sorting `generatedMappings` as part of the parsing
@@ -1165,7 +1165,7 @@ cumulative timings (parsing and sorting together)
 
 ## Improvements to Total Time
 
-<img src="/images/2018-02-03/parse-sort-3-total.png" alt="Parse and Sort times" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-3-total.png" alt="Parse and Sort times" class="centered blend">
 
 Now it becomes obvious that we considerably improved overall mappings parsing
 performance.
@@ -1324,9 +1324,9 @@ and error prone code.
 Rerunning benchmark confirms that alleviating GC pressure yields a nice
 improvement
 
-<img src="/images/2018-02-03/parse-sort-4.png" alt="After reworking allocation" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-4.png" alt="After reworking allocation" class="centered blend">
 
-<img src="/images/2018-02-03/parse-sort-4-total.png" alt="After reworking allocation" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-4-total.png" alt="After reworking allocation" class="centered blend">
 
 Interestingly enough on SpiderMonkey this approach improves both parsing
 *and* sorting times, which came as a surprise to me.
@@ -1338,7 +1338,7 @@ cliff in SpiderMonkey: when I increased the size of preallocated memory
 buffer from 4MB to 64MB to gauge reallocation costs, benchmark showed a sudden
 drop in performance after 7th iteration.
 
-<img src="/images/2018-02-03/parse-sort-5-total.png" alt="After reworking allocation" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-5-total.png" alt="After reworking allocation" class="centered blend">
 
 This looked like some sort of polymorphism to me, but I could not immediately
 figure out how changing the size of an array can result in a polymorphic
@@ -1356,7 +1356,7 @@ yet another small improvement.
 
 <sidenote>This improvement is predicated on rewriting <code>source-map</code> to parse mappings directly from typed arrays, instead of using JavaScript string and parsing it with <code>JSON.decode</code>. I did not do such rewrite but I don't anticipate any issues.</sidenote>
 
-<img src="/images/2018-02-03/parse-sort-6-total.png" alt="After reworking allocation" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-6-total.png" alt="After reworking allocation" class="centered blend">
 
 # Total Improvements Against the Baseline
 
@@ -1382,9 +1382,9 @@ $ sm bench-shell-bindings.js
 [Stats samples: 31, total: 25247 ms, mean: 814.4193548387096 ms, stddev: 5.591064299397745 ms]
 ```
 
-<img src="/images/2018-02-03/parse-sort-final.png" alt="After reworking allocation" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-final.png" alt="After reworking allocation" class="centered blend">
 
-<img src="/images/2018-02-03/parse-sort-final-total.png" alt="After reworking allocation" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-final-total.png" alt="After reworking allocation" class="centered blend">
 
 This is a factor of 4 improvement!
 
@@ -1405,7 +1405,7 @@ arrays lazily whenever we actually need to search one of them.
 Finally a comparison of V8 from Jan 19th to V8 from Feb 19th with and without
 [untrusted code mitigations](https://github.com/v8/v8/wiki/Untrusted-code-mitigations).
 
-<img src="/images/2018-02-03/parse-sort-v8-vs-v8-total.png" alt="After reworking allocation" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-sort-v8-vs-v8-total.png" alt="After reworking allocation" class="centered blend">
 
 # Comparing to Oxidized `source-map` Version
 
@@ -1421,9 +1421,9 @@ I adjusted my JS version by commenting out sorting of `originalMappings[i]` arra
 Here are benchmark results for just parsing (which also includes sorting `generatedMappings`)
 and for parsing and then iterating over all `generatedMappings`.
 
-<img src="/images/2018-02-03/parse-only-rust-wasm-vs-js.png" alt="Parse only times" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-only-rust-wasm-vs-js.png" alt="Parse only times" class="centered blend">
 
-<img src="/images/2018-02-03/parse-iterate-rust-wasm-vs-js.png" alt="Parse and iterate times" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-iterate-rust-wasm-vs-js.png" alt="Parse and iterate times" class="centered blend">
 
 **Note that the comparison is slightly misleading because Rust version does not
 optimize sorting of `generatedMappings` in the same way as my JS version does.**
@@ -1439,7 +1439,7 @@ Nick Fitzgerald, the author of `source-map`, [has updated](http://fitzgeraldnick
 algorithmic improvements described in this article. Here is an amended
 performance graph for *parse and iterate* benchmark:
 
-<img src="/images/2018-02-03/parse-iterate-rust-wasm-vs-js-2.png" alt="Parse and iterate times" class="mx-auto mix-blend-multiply">
+<img src="/images/2018-02-03/parse-iterate-rust-wasm-vs-js-2.png" alt="Parse and iterate times" class="centered blend">
 
 As you can see WASM+Rust version is now around 15% faster on SpiderMonkey and
 approximately the same speed on V8.

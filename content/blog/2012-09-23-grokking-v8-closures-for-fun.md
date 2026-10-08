@@ -85,11 +85,11 @@ In this code closure `innerG` stored in the variable `o` will retain:
 * `GIANT` through a link to a shared `Context` that was used by `innerF` to access variable `y`;
 * `HUGE` through a link to a shared `Context` that links to the parent `Context` created for `inner`.
 
-<img src="/images/2012-09-23/contexts-1.png" class="mx-auto"/>
+<img src="/images/2012-09-23/contexts-1.png" class="centered"/>
 
 <div><span style=" color: white; border: 1px #7A0026 solid; padding: 0px 2px; background: #7a0026;">Update 25 May 2013</span> In fact picture looks a bit more complicated: contexts retain closures that created them. For the code above it means that <code>inner</code> itself will survive as long as <code>o</code> points to <code>innerG</code>, because <code>inner</code> is retained by the context it created for <code>innerF</code> and <code>innerG</code>. The same is true for <code>outer</code> (except that <code>outer</code> is also retained through global variable, so there is no leak): context it created for <code>inner</code> points back to it. For the asynchronous code with deeply nested callbacks it might mean that outermost callback will be kept alive until the inner most dies. This will in turn increase the pressure on garbage collection and in the worst case outer callback might even end up being promoted to the old generation. Avoiding deep callback nesting in hot places might improve your app's performance by reducing the pressure on GC.</div>
 
-<img src="/images/2012-09-23/contexts-1-v2.png" class="mx-auto"/>
+<img src="/images/2012-09-23/contexts-1-v2.png" class="centered"/>
 
 It is useful to keep this picture in mind when debugging memory leaks in *callback-centric* code bases.
 
@@ -400,11 +400,11 @@ Calls to `getX` and `getY` are no longer inlined and even more --- V8 does not u
 
 Why did this happen? The short answer: type feedback from two instances of `getSum` got mixed up together turning `getX` and `getY` call sites into megamorphic calls. The easiest way to explain it is to draw a picture:
 
-<img src="/images/2012-09-23/contexts-2.png" class="mx-auto"/>
+<img src="/images/2012-09-23/contexts-2.png" class="centered"/>
 
 V8 shares unoptimized code across all closures produced from the same function literal. At the same time inline caches and other facilities collecting type feedback are attached to unoptimized code. As the result *type feedback is shared and mixed*. Everything is mostly fine while type feedback is based on hidden classes because they capture organization of objects --- objects constructed the same way have the same hidden class. However for `getX` and `getY` callsites V8 collects *call targets*. If you have only one `ClosureObject` with a single `getSum` everything will seem monomorphic to V8 because `getX` and `getY` are always the same. However if you create and start using another `ClosureObject` those callsites will become megamorphic: identity of call targets does not match anymore.
 
-<img src="/images/2012-09-23/contexts-3.png" class="mx-auto"/>
+<img src="/images/2012-09-23/contexts-3.png" class="centered"/>
 
 There are multiple things that V8 could do better here like utilizing static information about immutability of bindings that parser can recover from the source and using `SharedFunctionInfo` identity instead of closure identity for call target feedback and inlining guards ([Issue 2206](https://code.google.com/p/v8/issues/detail?id=2206)).
 

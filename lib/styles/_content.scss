@@ -1,0 +1,174 @@
+// Styles for the Markdown content of pages: notes, sidenotes, headings, lists,
+// quotes and images.
+@use 'config' as *;
+
+p.warn {
+  padding: 0.5rem;
+  border: 1px solid #ffb989;
+  border-left-width: 3px;
+  background-color: #fff5ee;
+}
+
+// <sidenote> elements: in the left margin on wide screens, inline boxes
+// otherwise.
+sidenote {
+  @include font-size(base);
+  color: var(--color-tbg);
+
+  @include from(xl) {
+    display: inline-block;
+    position: absolute;
+    left: -260px;
+    max-width: 240px;
+    text-align: right;
+  }
+
+  @include below(xl) {
+    display: block;
+    border: 1px solid;
+    border-left-width: 3px;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  code {
+    white-space: normal;
+  }
+}
+
+// Standalone sidenote grouped with its preceding element by SidenoteExtension:
+// on wide screens align the sidenote with the top of that element.
+@include from(xl) {
+  .sidenote-group {
+    position: relative;
+  }
+
+  .sidenote-group > p > sidenote {
+    top: 0;
+  }
+}
+
+.blogpost .content {
+  h1, h2, h3, h4, h5 {
+    @include small-caps;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.blogpost {
+  ol {
+    counter-reset: foobar;
+    position: relative;
+  }
+
+  li ol, li ul {
+    margin-top: 1rem;
+  }
+
+  ol li, ul li {
+    margin-left: 2.5rem;
+    list-style: none;
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  ol li:before {
+    counter-increment: foobar;
+    content: counter(foobar);
+    font-family: "concourse-index";
+    font-size: 1.10rem;
+    position: absolute;
+    margin-left: -2.0rem;
+    top: .2rem;
+  }
+
+  ul li:before {
+    content: "❥";
+    position: absolute;
+    margin-left: -2.0rem;
+    font-size: 1.10rem;
+  }
+
+  // Site navigation is a list too, but should not be styled as one.
+  .site-nav li {
+    margin: 0;
+  }
+
+  .site-nav li:before {
+    content: none;
+  }
+}
+
+blockquote {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+  position: relative;
+  overflow: hidden;
+
+  div:last-of-type {
+    text-align: right;
+  }
+
+  // Attribution.
+  ul:last-child {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: right;
+    font-family: equity-caps;
+  }
+
+  ul:last-child > li::before {
+    content: "— ";
+  }
+
+  &::before,
+  &::after {
+    position: absolute;
+    color: var(--color-tbg);
+  }
+
+  &::before {
+    content: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='%23777777'><path d='M9.983 3v7.391C9.983 16.095 6.252 19.961 1 21l-.995-2.151C2.437 17.932 4 15.211 4 13H0V3h9.983zM24 3v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151C16.437 17.932 18 15.211 18 13h-3.983V3H24z'/></svg>");
+    left: 0;
+  }
+
+  /*
+  &::after {
+    content: "";
+    left: calc(2em + 5px);
+    top: 25px;
+    width: 3px;
+    height: 100%;
+    background-color: currentColor;
+  }*/
+}
+
+// Images.
+//
+//   <img class="centered">     centered horizontally
+//   <img class="left|right">   floated, text flows around
+//   <img class="blend">        multiplied with the page background, so that
+//                              white backgrounds of diagrams disappear
+.content > img {
+  margin-bottom: 1rem;
+}
+
+img {
+  &.centered {
+    margin-inline: auto;
+  }
+
+  &.left {
+    float: left;
+  }
+
+  &.right {
+    float: right;
+  }
+
+  &.blend {
+    mix-blend-mode: multiply;
+  }
+}
