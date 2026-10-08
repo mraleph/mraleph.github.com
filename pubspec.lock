@@ -66,7 +66,7 @@ packages:
     source: hosted
     version: "1.1.5"
   build:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: build
       sha256: "45d14a0fb23e018d8287c32fc98d726ce466b231928ed9b9200f29bd3ccd39ae"
@@ -266,7 +266,7 @@ packages:
     source: hosted
     version: "0.0.5+1"
   glob:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: glob
       sha256: "218aeb56050c714f62a3182775320dfa04602b55074873e24e31bbd39bda96fb"
@@ -385,15 +385,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.0"
-  jaspr_tailwind:
-    dependency: "direct dev"
-    description:
-      path: "."
-      ref: HEAD
-      resolved-ref: f6369350bd38fb01bb0393fe5931b6ff7c018962
-      url: "https://github.com/mraleph/jaspr_tailwind.git"
-    source: git
-    version: "0.3.6"
   json_annotation:
     dependency: transitive
     description:
@@ -467,7 +458,7 @@ packages:
     source: hosted
     version: "2.2.0"
   path:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: path
       sha256: "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5"

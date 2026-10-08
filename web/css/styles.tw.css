@@ -1,8 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&display=swap');
-@import "tailwindcss" /* source(none)*/;
+@import "tailwindcss" source(none);
 /*
-TODO: find a way to reduce
+Automatic source detection would scan the whole repository (including
+legacy pages and IR dumps under web/), so list sources explicitly.
+Paths are relative to this file.
 */
+@source "../../lib";
+@source "../../content";
+/* False positives from IR listings in 2014-02-23-the-black-cat-of-microbenchmarks.md */
+@source not inline("[constant:446] [constant:472] [stack:26]");
 
 @source inline("mix-blend-multiply float-left float-right");
 
